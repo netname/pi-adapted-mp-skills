@@ -782,3 +782,377 @@ failed-child demonstration.
   `fetch-upstream.mjs` and `smoke-test.sh` as M6 work.
 - The fixture (`C:/x/on/projs/m3-fixture`) is left in place as the raw evidence for the acceptance
   run; it is outside this repository and is not part of the package.
+
+
+---
+
+## M4 — On-ramps, discovery, and health (2026-09-19)
+
+Scope: the M4 slice only — `wayfinder`, `research`, `triage` (+ `AGENT-BRIEF.md`, `OUT-OF-SCOPE.md`),
+`diagnosing-bugs` (+ `scripts/hitl-loop.template.sh`), `improve-codebase-architecture` (+
+`HTML-REPORT.md`), `resolving-merge-conflicts`, and `wizard` (+ `template.sh`): **7 skills, 12 files**.
+Nothing from M5 was ported. `docs/ADAPTATION_PLAN.md` and `docs/skill-inventory.json` were not edited.
+
+**Baseline note.** The task said HEAD was `7a582db`; the actual HEAD at the start of M4 was
+`d677cca` ("Add M4 hand-off prompt", which only adds `docs/M4-PROMPT.md`). `git diff 7a582db..d677cca`
+touches no plan or inventory file, so `docs/ADAPTATION_PLAN.md` and the D5 table are byte-identical
+to `7a582db`; that is the baseline this section compares against. Verified:
+`git diff --quiet 7a582db -- docs/ADAPTATION_PLAN.md docs/skill-inventory.json` exits 0.
+
+### 1. Decisions taken before implementation (the three questions asked)
+
+1. **Trap A — `wayfinder`'s throwaway `research/<name>` branch: option A (the parent branches and
+   commits; the child writes files only).** `mp-researcher`'s ceiling is
+   `read, write, web_search, fetch_content, get_search_content, source_check` — no `bash` — so the
+   parent creates `research/<name>` and commits each child's note to it. No `mp-*` tool ceiling was
+   widened. Proven live in §5.
+2. **`mp-evidence-auditor` vs built-in `evidence-auditor`: option A, and the outcome is keep.** Both
+   were run live on the same claim/source (§8). They returned the same verdict and evidence chain;
+   the input was non-discriminating, so the custom agent is retained with the collapse condition and
+   a discriminating M6 re-test recorded.
+3. **Acceptance scope: option A (live).** Discovery probe plus a live detached `mp-researcher`
+   dispatch, a live `mp-evidence-auditor`/`evidence-auditor` comparison, a live `wayfinder`
+   concurrency run, a live `triage` local-Markdown pass, and a live
+   `improve-codebase-architecture` report. Everything below is live unless marked structural.
+
+### 2. Per-file diff notes (D9)
+
+`PATCHED` = fork-and-patch regions; `VERBATIM` = byte-for-byte from the pin. Every `SKILL.md` gained
+the D2 frontmatter block (`license: MIT` plus `metadata.upstream`, `metadata.upstream-commit`,
+`metadata.upstream-path`, `metadata.invocation`, `metadata.adapted-for`) and dropped its
+`agents/openai.yaml` (D5-17); those two changes are not repeated in every row.
+
+| Ported file | Upstream source | Changed regions |
+|---|---|---|
+| `skills/engineering/wayfinder/SKILL.md` | same name | PATCHED. Frontmatter metadata. `/setup-matt-pocock-skills` → `/skill:setup-matt-pocock-skills` (D5-16, user hand-off). Ticket-type list: Research → `../research/SKILL.md` load + one detached `mp-researcher` child per ticket; Prototype → `../prototype/SKILL.md` load; Grilling → two loads (`../../productivity/grilling/SKILL.md`, `../domain-modeling/SKILL.md`). Chart-the-map step 1 → the same two grilling/domain-modeling loads; step 5 → the research load plus the concurrent-batch / unique-`output:` / parent-branch / child-never-touches-the-map contract. Work-the-map step 3: the dynamic "call the Skill tool for whichever skills the `## Notes` block names" → "read that skill's `SKILL.md` and follow it" (no invented `d4Path`), plus the two grilling/domain-modeling loads. |
+| `skills/engineering/research/SKILL.md` | same name | PATCHED (**adapt**; the 12-line body is wholly replaced). The "Spin up a **background agent**" body became the dispatch contract: D10 gates for `subagent` and for `web_search`/`fetch_content`/`get_search_content`/`source_check` with the pinned remedies; one detached `mp-researcher` child; unique explicit `output:`; save run identity; collect before answering; a failed/refused/abandoned child leaves the question unresolved. |
+| `skills/engineering/triage/SKILL.md` | same name | PATCHED. Frontmatter metadata. Hand-off label → `/skill:setup-matt-pocock-skills`; `/triage` → `/skill:triage`; step-4 grill → the two D4 loads. |
+| `skills/engineering/triage/AGENT-BRIEF.md` | same name | PATCHED. The sample acceptance criterion's `/triage` → `/skill:triage` (D5-16, a label inside a sample story, not a load). |
+| `skills/engineering/triage/OUT-OF-SCOPE.md` | same name | VERBATIM (no harness tokens). |
+| `skills/engineering/diagnosing-bugs/SKILL.md` | same name | PATCHED. Frontmatter metadata only; body verbatim. No cross-skill load (the M1 finding that the pinned file never names `improve-codebase-architecture` is unchanged). |
+| `skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh` | same name | VERBATIM. |
+| `skills/engineering/improve-codebase-architecture/SKILL.md` | same name | PATCHED. Frontmatter metadata. `Skill tool` ×3 → D4 loads (`../codebase-design/SKILL.md` at the vocabulary bullet and the design-it-twice bullet, `../../productivity/grilling/SKILL.md`, `../domain-modeling/SKILL.md`); "spawn a sub-agent" → "dispatch a bounded read-only child with the `subagent` tool" (D5-04, mechanics left to the bundled `pi-subagents` skill); the OS-temp report paragraph → `.scratch/reports/<ISO>-architecture.html` with the git-ignore instruction and the absolute-path print, keeping the `xdg-open`/`open`/`start` step; `/codebase-design` → `/skill:codebase-design`. |
+| `skills/engineering/improve-codebase-architecture/HTML-REPORT.md` | same name | PATCHED. "OS temp directory" → `.scratch/reports/`; `/codebase-design` ×3 → `/skill:codebase-design`. The Tailwind/Mermaid CDN links are third-party runtime fetches by the generated HTML, not harness tokens, and are untouched. |
+| `skills/engineering/resolving-merge-conflicts/SKILL.md` | same name | PATCHED. Frontmatter metadata only; the body is identical to the pin (already harness-neutral — no token substitutions exist). |
+| `skills/engineering/wizard/SKILL.md` | same name | PATCHED. Frontmatter metadata only; body verbatim. |
+| `skills/engineering/wizard/template.sh` | same name | PATCHED. Line 4 comment `/wizard` → `/skill:wizard`; the library and example stage are otherwise byte-identical. |
+
+Totals: 7 skills, 12 files. Three files VERBATIM (`triage/OUT-OF-SCOPE.md`,
+`diagnosing-bugs/scripts/hitl-loop.template.sh`, and — body-only — `resolving-merge-conflicts/SKILL.md`
+counted as PATCHED because of its added frontmatter).
+
+### 3. D4 cross-skill loads
+
+The inventory records **9 M4 loads with a non-null `d4Path`** (improve 3, triage 2, wayfinder 4) plus
+**2 user hand-offs with `d4Path: null`** (`triage`, `wayfinder` → `/skill:setup-matt-pocock-skills`).
+Every recorded `d4Path` appears backticked and the validator resolves it against the target's
+declared `name`.
+
+Full enumeration of backticked `../…/SKILL.md` references under `skills/**` — **20 occurrences across
+7 distinct paths** (M3 contributed the first 5). There is no cross-milestone trap: every target
+exists by the end of M4, including `research` and `prototype`.
+
+```
+skills/engineering/grill-with-docs/SKILL.md:14                ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/grill-with-docs/SKILL.md:16                ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/implement/SKILL.md:26                      ../tdd/SKILL.md                         -> skills/engineering/tdd/SKILL.md                name=tdd                  OK
+skills/engineering/implement/SKILL.md:30                      ../code-review/SKILL.md                 -> skills/engineering/code-review/SKILL.md        name=code-review          OK
+skills/engineering/tdd/SKILL.md:33                            ../codebase-design/SKILL.md             -> skills/engineering/codebase-design/SKILL.md    name=codebase-design      OK
+skills/engineering/improve-codebase-architecture/SKILL.md:20  ../codebase-design/SKILL.md             -> skills/engineering/codebase-design/SKILL.md    name=codebase-design      OK
+skills/engineering/improve-codebase-architecture/SKILL.md:71  ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/improve-codebase-architecture/SKILL.md:73  ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/improve-codebase-architecture/SKILL.md:78  ../codebase-design/SKILL.md             -> skills/engineering/codebase-design/SKILL.md    name=codebase-design      OK
+skills/engineering/triage/SKILL.md:83                         ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/triage/SKILL.md:83                         ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/wayfinder/SKILL.md:84                      ../research/SKILL.md                    -> skills/engineering/research/SKILL.md           name=research             OK
+skills/engineering/wayfinder/SKILL.md:85                      ../prototype/SKILL.md                   -> skills/engineering/prototype/SKILL.md          name=prototype            OK
+skills/engineering/wayfinder/SKILL.md:86                      ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/wayfinder/SKILL.md:86                      ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/wayfinder/SKILL.md:118                     ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/wayfinder/SKILL.md:118                     ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/wayfinder/SKILL.md:122                     ../research/SKILL.md                    -> skills/engineering/research/SKILL.md           name=research             OK
+skills/engineering/wayfinder/SKILL.md:131                     ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/wayfinder/SKILL.md:131                     ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+total: 20 occurrences / 7 distinct paths
+```
+
+Occurrence note: `wayfinder`'s "call the Skill tool twice, for "grilling" and "domain-modeling"" appears
+three times (ticket-type list, chart step 1, work step 3) and each became **two** load instructions.
+Its research load appears twice (ticket type, chart step 5) and its prototype load once. Work step 3's
+generic dynamic load ("whichever skills the `## Notes` block names") was rewritten as "read that
+skill's `SKILL.md` and follow it" with no invented `d4Path`.
+
+### 4. The `research` / `wayfinder` dispatch contract, as run
+
+Encoded in the two skills (not the orchestration mechanics, which stay with the bundled
+`pi-subagents` skill, per D16):
+
+- **`research` (the single-question site):** one detached `mp-researcher` child per question; D10
+  gate on `subagent` and on all four web tools with the pinned remedies; a unique explicit `output:`
+  path; run identity saved; the result collected before the question is answered; a
+  failed/refused/abandoned child leaves the question unresolved and visible.
+- **`wayfinder` (the frontier site):** one bounded `mp-researcher` child per independent `research`
+  ticket, all in **one `runs.all` concurrent batch**; distinct `output:` per child; children never
+  edit the map or a ticket; the **parent serializes** every map/ticket write; the parent creates the
+  throwaway `research/<name>` branch and commits each note; a failed child leaves its ticket open and
+  is recorded as not completed.
+
+**The exact `research` call observed live** (session
+`--C--x-on-projs-m4-fixture--/2026-09-19T01-48-18-555Z_…`, run `7314d49e`):
+
+```js
+subagent({
+  agent: "mp-researcher",
+  context: "fresh",
+  async: true,
+  output: ".scratch/research/schedule-url.md",
+  task: "<the question, stated in the asker's terms, plus the required cited-note output>",
+})
+```
+
+**The exact `wayfinder` concurrent call observed live** (session
+`--C--x-on-projs-m4-fixture--/2026-09-19T01-35-29-194Z_…`; two children, runs `623fcebe` and
+`a3499275`):
+
+```js
+subagent({
+  async: true,
+  cwd: "C:/x/on/projs/m4-fixture",
+  workflowScript: `
+    const results = await runs.all([
+      { key: "market-model", label: "Research line-item discount data models",
+        agent: "mp-researcher", context: "fresh", task: marketModel,
+        output: ".scratch/research/per-item-discount-market-models.md" },
+      { key: "rounding-allocation", label: "Research discount rounding and allocation",
+        agent: "mp-researcher", context: "fresh", task: roundingAllocation,
+        output: ".scratch/research/per-item-discount-rounding-allocation.md" },
+    ]);
+    return results.map((r) => ({ key: r.key, ok: r.ok, runId: r.runId,
+      outputPath: r.outputPath, outputReference: r.outputReference, error: r.error }));
+  `,
+})
+```
+
+Both `runs.all` children launch before either is read; the workflow returns only after both complete.
+Each child's brief inlines its own ticket question and forbids editing anything but its assigned note.
+
+**Result collection and a real routing detail.** The runtime's `output:` binding routes a *relative*
+path into `pi-subagents`' managed artifact storage
+(`…/subagent-artifacts/outputs/<runId>/.scratch/research/<name>.md`), not into the repo worktree
+directly — observed twice. So the parent reads/collects the child's artifact and **persists it to the
+repo path it chose**; that is recorded in the `research` skill's step 3. It also means concurrent
+children never write the same repo file, which reinforces Trap C's "children never edit shared
+files" rule.
+
+**Failure handling observed live:** the single-child `research` run and both `wayfinder` children
+completed; §9 records a refused read-only launch and its retry. No ticket was resolved without its
+child's evidence.
+
+### 5. Trap A live resolution: the parent owns the `research/<name>` branch
+
+The live `wayfinder` run confirms option A end to end. The parent:
+
+- created the map and three tickets on `main` (commit `763a0ae`);
+- fired both `research` children in one concurrent batch;
+- collected both cited notes, force-added them under `.scratch/research/` (which `.scratch/` in the
+  fixture's `.gitignore` would otherwise exclude), and committed them to the throwaway branch
+  **`research/per-item-discounts`** (commit `241c0ec`);
+- left the working tree clean and `main` free of research artifacts
+  (`git ls-tree -r --name-only research/per-item-discounts` lists the two notes; `git log main`
+  does not).
+
+The two `mp-researcher` children (36 KB and 35 KB notes, ~50 primary-source URLs each) never ran a
+`git` command and never touched the tracker. This is the upstream "primary source out of main"
+property preserved without widening any tool ceiling.
+
+### 6. `improve-codebase-architecture` report relocation (D5-14)
+
+Live run in the fixture: the skill wrote
+`C:\x\on\projs\m4-fixture\.scratch\reports\2026-09-19T01-46-architecture.html` (26 KB), printed that
+absolute path, and opened it. `git status --porcelain` shows only the triage-modified issue file —
+the report is **not** listed — and `git check-ignore -v` resolves it to the fixture's
+`.gitignore:2:.scratch/`. The `$TMPDIR`/`/tmp`/`%TEMP%` resolution paragraph is gone; the body now
+uses `.scratch/reports/<ISO>-architecture.html` and checks `.gitignore`, exactly like `handoff`.
+No `.scratch/reports/` entry was added to any *committed* ignore file in **this** package: the report
+is target-repo output and setup already covers it (D6/§4). The `xdg-open`/`open`/`start` step is kept.
+
+### 7. `wizard` and `diagnosing-bugs` shell templates, and Windows limits
+
+Both templates are kept as shell (not rewritten in JS) and pass under Pi's `bash` here:
+
+```
+$ bash -n skills/engineering/wizard/template.sh                                  -> OK
+$ bash -n skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh       -> OK
+$ bash --version                                                                 -> GNU bash 5.2.26(1)-release (x86_64-pc-msys)
+$ command -v shellcheck                                                          -> not installed
+```
+
+`wizard/template.sh` keeps the library verbatim except the comment fix; it uses `mktemp`, `tput`,
+`read -rs`, `gh secret`/`gh variable`, and `wslview`/`explorer.exe`/`xdg-open`/`open`.
+`hitl-loop.template.sh` uses `read -r -p` and `printf -v`.
+
+**Windows limits (recorded, M4 → M6):** the templates were *syntax-checked* here, not run
+end-to-end, and on Windows under Git-Bash/MSYS they depend on: `mktemp` (present in MSYS, but the
+temp path is a POSIX path `mv` can use — a native Windows `cmd`/PowerShell host would not have it);
+`tput` for colour/clear (absent by default, and the library already falls back to no colour);
+`xdg-open`/`open` (absent; `wslview`/`explorer.exe` are the branches that fire, and `open_url`
+falls back to printing the URL); interactive `read -rs` for hidden secret input (needs a real
+terminal, so these scripts cannot be driven by `pi -p`); and `gh` for `set_secret`/`set_var`
+(absent or unauthenticated → the library records it in `SKIPPED` and warns rather than failing).
+The `wizard` body's own Step 4 already says not to run the script end-to-end and to trace it
+statically, which is what was done.
+
+### 8. `mp-evidence-auditor` vs built-in `evidence-auditor` (D16 item 5)
+
+**Run.** Both agents audited the identical claim/source in one concurrent batch, fresh context each,
+async, run `79ad8908` (custom) and `51eee6af` (built-in):
+
+- Claim: *"Node.js v24 entered Active LTS on 2025-10-28."*
+- Cited source: `https://raw.githubusercontent.com/nodejs/Release/main/schedule.json`
+
+**Result.** Both returned `supported`, high confidence, via the same evidence chain: the verbatim
+`"v24": { … "lts": "2025-10-28" … }` passage, the same field-to-"Active LTS Start" normalization
+using the same repository's README column, the same odd-numbered-lines-have-no-`lts` corroboration,
+the same `main`-branch mutability caveat, and the same independent v24.11.0 announcement. The
+parent's own comparison: *"Functionally the same … the differences are formatting and emphasis, not
+distinguishable method or conclusions."* Observable differences were structural only: the built-in
+used its fixed 7-section template; the custom used its 5-section claim-centric template with an
+explicit "Claims left unaudited" section. The custom also stated the strictness condition ("if
+`schedule.json` had been the only source I would have downgraded to `unclear`") while the built-in
+said the source supports the claim in combination with the README column.
+
+**Decision: keep `mp-evidence-auditor`; do not collapse.** Under D16 item 5 the collapse condition is
+"functionally identical **in practice**". The comparison shows equivalent *outcomes* on a single,
+non-disputed, well-sourced claim — the least discriminating input available, where any two competent
+auditors are expected to agree — so it does not establish functional identity; the parent's own
+conclusion was that the input "corroborate[s] rather than discriminate[s]". Two further reasons: the
+observable output contracts differ, and the frozen D5-07 row ("Fresh `mp-evidence-auditor` child
+checks claim/source support independently") and D16 item 4 both name the agent, which this milestone
+cannot edit (the plan is frozen). Collapsing would desynchronise the shipped tree from the frozen
+map without a sanctioned plan edit. **Scheduled follow-up (M6):** re-run the comparison on a
+discriminating seam — a disputed or contradicted claim, or the custom auditor restricted to the
+cited URL with corroboration barred — before any collapse; the full comparison artifact is
+`.scratch/out-audit-compare.txt` in the fixture.
+
+### 9. Trap B: the pre-spawn refusal, as run live
+
+Dispatched the read-only `evidence-auditor` (ceiling `read, web_search, fetch_content,
+get_search_content, source_check` — no `write`, no `bash`) with a deliberately
+implementation-phrased task. The `pi-subagents` task classifier refused it before spawning:
+
+```
+Agent 'evidence-auditor' was given an implementation task, but its tool allowlist has no
+mutation-capable tools. Add bash, edit, write, or another mutation-capable tool to the agent,
+or use a read-only task/agent.
+```
+
+Run `27b37159-…`, mission `4589c832-…`, failed, 0 turns; the note was byte-unchanged and
+`git status --porcelain` stayed empty. A correctly-phrased retry then exposed the D14 fact live: the
+same agent run **foreground** failed with *"ran as a foreground child, which never loads the parent's
+ambient extensions, and these child tools were unavailable: web_search, fetch_content,
+get_search_content, source_check"* (run `f381bd9b-…`), and the documented remedy worked — the same
+read-only audit with `async: true` completed in ~1m11s with `supported`, high confidence (run
+`f9ccc1f5-…`). So the contract stands: phrase an audit as an audit, and run it detached. No failed
+launch was silently dropped.
+
+### 10. Discovery, model visibility, and `/skill:` resolution (fixture outside this repo)
+
+Fixture `C:/x/on/projs/m4-fixture` (git repo, local-Markdown tracker), `pi 0.85.1`, this package
+installed project-locally plus pinned `pi-subagents@0.69.0` and `pi-web-access@0.29.0`. The M3
+Windows backslash-path defect reproduced (`pi install … -l` wrote `"..\\..\\pi-adapted-mp-skills"`,
+and the two npm installs first refused with *"Project is not trusted"* until run with `--approve`);
+the package entry was repaired to `"../../pi-adapted-mp-skills"` and `discoverAgents()` then listed
+all four `mp-*` agents with no diagnostics.
+
+**Visibility, read from the rendered `<available_skills>` block** (not from
+`systemPromptOptions.skills`, per the M3 finding):
+
+- Model-visible M4 skills: `diagnosing-bugs`, `research`, `resolving-merge-conflicts`, `wizard`.
+- Not model-visible (user-invoked): `wayfinder`, `triage`, `improve-codebase-architecture` — they
+  appear in `systemPromptOptions.skills` but not in the rendered block, the exact
+  availability-vs-visibility distinction.
+- All 7 resolve as `skill:<name>` with `origin: "package"`, `scope: "project"`, and a path inside
+  this package; `/skill:<name>` expanded the body live for all 7 and each run exited 0 (the M2
+  interactive-skill caveat does not apply to these either).
+- Registered tools in the parent: `read, bash, edit, write, subagent, bg_wait, web_search,
+  source_check, fetch_content, get_search_content, subagent_supervisor`.
+
+Expansion markers confirmed for the user-invoked three (`../research/SKILL.md`,
+`../prototype/SKILL.md`, `../../productivity/grilling/SKILL.md`, `../domain-modeling/SKILL.md`,
+`../codebase-design/SKILL.md`, `.scratch/reports/`, `/skill:triage`, `/skill:codebase-design`,
+`/skill:setup-matt-pocock-skills`, `mp-researcher`, and the pinned web remedy). The three
+no-cross-load skills (`diagnosing-bugs`, `resolving-merge-conflicts`, `wizard`) expanded with no D4
+markers, as intended.
+
+**`triage` local-Markdown pass (live).** `/skill:triage` on `docs/issues/02-cart-total-rounding.md`:
+read the tracker, mapped labels through `docs/agents/triage-labels.md`, posted the mandated
+"*This was generated by AI during triage.*" disclaimer, ran the redundancy and prior-rejection
+checks against the real repo, **reproduced the claim** (`3 × 6.665` → `19.995`, not the reported
+`19.999999999`), and applied `bug` + `needs-info` (`needs-triage` → `needs-info`) with specific
+reporter questions. The `gh`/`glab` tracker paths are untested and remain M6 work.
+
+### 11. Where the plan was silent or wrong, and what was done instead
+
+1. **`research` is 12 lines whose entire body is one harness sentence** ("Spin up a background
+   agent"). The plan calls it `adapt`; the whole body was replaced with the dispatch contract, and
+   the model-facing description (including "background agent") was kept verbatim so the trigger
+   phrasing survives.
+2. **`wayfinder`'s chart step 5 conflates the ticket's decision with the first research dispatch.**
+   Upstream fires research children while charting but also defines `research` as a ticket type
+   resolved later. The port keeps both: the ticket type names the `research` load, and chart step 5
+   states the batch/branch/serialization contract once.
+3. **The generic "call the Skill tool for whichever skills the `## Notes` block names" has no fixed
+   target**, so it is not a recorded load. It was rewritten as "read that skill's `SKILL.md` and
+   follow it" per the confirmed approach, with no invented `d4Path`.
+4. **`improve-codebase-architecture`'s "spawn a sub-agent" is a real `subagent` token but the plan's
+   §1 prerequisite table does not list this skill.** Followed the M3 `codebase-design` precedent:
+   name the `subagent` tool and defer mechanics to the bundled skill, without adding a D10 gate the
+   plan does not schedule. The live report run exercised it.
+5. **`output:` is a runtime-managed binding, not a repo write.** Both live runs showed a relative
+   `output:` routed under pi-subagents' managed artifact storage, so the parent persists the
+   collected note to the repo path. Step 3 of `research` now says so; `wayfinder` already had the
+   parent persist. This is a plan silence, not a contradiction.
+6. **`wizard`/`diagnosing-bugs` Windows limits** were recorded in §7 rather than in the skill bodies,
+   to keep the ports closer to upstream; the plan allowed either.
+7. **The evidence-auditor decision (§8) is a scheduled M4 decision** and is recorded there rather
+   than as a plan edit, since the plan and the D5 table are frozen.
+8. **No `docs/agents/`, `.claude-plugin/`, or `extensions/` were added**, and no `.scratch/` ignore
+   entry was committed in this package. No runtime dependency was added; the validator still runs on
+   a bare Node install.
+
+### 12. Acceptance evidence (commands and results)
+
+- **Validator:** `node scripts/validate-skills.mjs` → exit 0,
+  `ok: skills/** clean (39 file(s) scanned, 20 SKILL.md)`, D5 `tokenMap v2` hash
+  `9e86593bef1167039b66b4eb7d8dc69b5cda1cb647cde6e9fb086ad1e4bcda10` matches.
+- **D4 enumeration:** 20/20 backticked references resolve to a target whose `name` matches
+  (§3); the 9 M4-recorded loads are all present.
+- **Discovery/visibility and `/skill:` resolution:** §10 — all 7 skills correct, 4 model-visible,
+  3 user-invoked, all 7 `/skill:<name>` expansions exit 0.
+- **`research`:** live detached `mp-researcher` child (run `500ee444`, 1m14s, 10 turns, 16 tools),
+  cited note `.scratch/research/node-lts.md` (15 KB, 42 URLs); child tools exactly
+  `read, write, web_search, fetch_content, get_search_content, source_check` with
+  `disableAmbientExtensions: false` (ambient `pi-web-access`); a second run (`7314d49e`) captured
+  the exact call in §4.
+- **`wayfinder`:** live concurrent batch of two `mp-researcher` children (runs `623fcebe`,
+  `a3499275`), parent-created `research/per-item-discounts` branch (`241c0ec`), map + 3 tickets on
+  `main` (`763a0ae`), parent-serialized tracker writes, clean tree.
+- **`triage`:** live local-Markdown pass, `bug`/`needs-info` applied (§10).
+- **`improve-codebase-architecture`:** live report at
+  `.scratch/reports/2026-09-19T01-46-architecture.html`, absolute path printed, untracked and
+  git-ignored (§6).
+- **`wizard`/`diagnosing-bugs`:** both templates `bash -n` OK; Windows limits recorded (§7).
+- **`evidence-auditor` comparison:** live, both agents, recorded with its keep decision (§8).
+- **Trap B:** live refused launch plus foreground-extension failure plus `async:true` success (§9).
+- **D5 freeze:** plan and inventory byte-identical to `7a582db`; no D5 row added, removed, or edited.
+
+### 13. Deliverables not produced (and why)
+
+- No `docs/agents/`, `.claude-plugin/`, or `extensions/`.
+- No new committed script: the probes (`probe.ts`, the D4 enumerator) were run ad hoc and are
+  recorded here rather than shipped; §4's `scripts/` tree still lists `fetch-upstream.mjs` and
+  `smoke-test.sh` as M6 work.
+- The fixture `C:/x/on/projs/m4-fixture` is left in place as raw evidence; it is outside this
+  repository and is not part of the package.
+- `gh`/`glab` triage paths and the `pi install` backslash-path README entry remain M6 work;
+  `git-guardrails` packaging remains M5.

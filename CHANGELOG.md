@@ -12,9 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - M1: upstream inventory and frozen adaptation contract (`docs/skill-inventory.json`).
 - M2: convention layer — **landed 2026-09-18**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M2.
 - M3: main flow — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M3.
-- M4: on-ramps and health — `wayfinder`, `research`, `triage`, `diagnosing-bugs`,
-  `improve-codebase-architecture`, `resolving-merge-conflicts`, `wizard` (`codebase-design` moved
-  to M3; see `docs/NOTES.md` §M3 Trap A).
+- M4: on-ramps and health — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M4.
 - M5: productivity and misc — `grill-me`, `to-questionnaire`, `wait-what`,
   `writing-for-agents`, `teach`, `git-guardrails`.
 - M6: validator, smoke tests, README finalization, `v0.1.0` tag, npm publish.
@@ -91,6 +89,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The D5 `tokenMap` is untouched, so the frozen hash still matches.
 - Per-file diff notes (D9), deviation notes, the dispatch contract as run, the Windows
   `pi install` backslash-path finding, and the acceptance evidence are in `docs/NOTES.md` §M3.
+
+#### M4 on-ramps, discovery, and health (landed 2026-09-19)
+
+- `skills/engineering/wayfinder/SKILL.md` — the richest D4 case: the three "call the Skill tool
+  twice" occurrences each became two `../domain-modeling/SKILL.md` and
+  `../../productivity/grilling/SKILL.md` loads; the research load (`../research/SKILL.md`) and the
+  prototype load (`../prototype/SKILL.md`); the chart step now fires one detached `mp-researcher`
+  child per `research` ticket in one concurrent batch, with a unique `output:` per child, children
+  forbidden from touching the map/tickets, the parent serializing every tracker write, and the
+  parent creating and committing the throwaway `research/<name>` branch (Trap A, option A).
+- `skills/engineering/research/SKILL.md` — adapted: the harness-only body became the dispatch
+  contract (one detached `mp-researcher` child, D10 gates with the pinned `pi-subagents` and
+  `pi-web-access` remedies, unique `output:`, run identity saved, result collected before the
+  question is answered, failed/refused child leaves the question unresolved).
+- `skills/engineering/triage/` — `SKILL.md` (label + `/skill:` fixes and the two D4 loads),
+  `AGENT-BRIEF.md` (sample `/skill:triage`), and verbatim `OUT-OF-SCOPE.md`. Labels map to the
+  target repo's `docs/agents/triage-labels.md`.
+- `skills/engineering/diagnosing-bugs/` — `SKILL.md` (metadata only) plus verbatim
+  `scripts/hitl-loop.template.sh`; no cross-skill load (the pinned file has none).
+- `skills/engineering/improve-codebase-architecture/` — `SKILL.md` (three D4 loads, the `subagent`
+  tool named for the codebase walk, `/skill:codebase-design` labels, and the report relocated from
+  the OS temp directory to `.scratch/reports/<ISO>-architecture.html`, git-ignored by default with
+  the absolute path printed) plus `HTML-REPORT.md` (same report path and labels; CDN links kept).
+- `skills/engineering/resolving-merge-conflicts/SKILL.md` — harness-neutral body ported verbatim,
+  D2 metadata added.
+- `skills/engineering/wizard/` — `SKILL.md` (metadata only) plus `template.sh` with the
+  `/wizard` → `/skill:wizard` comment fix; both shell templates pass `bash -n`, and the Windows
+  limits are recorded.
+- The live `pi-subagents` dispatch contract (exact `subagent`/`runs.all` calls, concurrency,
+  output paths, result collection, failure handling), the Trap A and Trap B evidence, the
+  `mp-evidence-auditor` vs built-in `evidence-auditor` comparison and its keep decision, the report
+  relocation, and the Windows notes are in `docs/NOTES.md` §M4.
 
 [Unreleased]: https://github.com/netname/pi-adapted-mp-skills/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/netname/pi-adapted-mp-skills/releases/tag/v0.1.0
