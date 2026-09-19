@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 
 - M1: upstream inventory and frozen adaptation contract (`docs/skill-inventory.json`).
-- M2: convention layer — `setup-matt-pocock-skills` templates, `ask-matt` router,
-  and the four `mp-*` agent definitions under `agents/`.
+- M2: convention layer — **landed 2026-09-18**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M2.
 - M3: main flow — `grill-with-docs`, `grilling`, `domain-modeling`, `to-spec`,
   `to-tickets`, `implement`, `tdd`, `code-review`, `prototype`, `handoff`.
 - M4: on-ramps and health — `wayfinder`, `research`, `triage`, `diagnosing-bugs`,
@@ -43,6 +42,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   adds the four `mp-*` agent definitions.
 - `skills/placeholder/SKILL.md` — temporary discovery probe used by the M0 acceptance test,
   removed once discovery was verified.
+
+#### M2 convention layer (landed 2026-09-18)
+
+- `scripts/validate-skills.mjs` — dependency-free linter: D5-hash freeze check, Pi frontmatter
+  rules, dropped-field (D2), cross-skill `SKILL.md` resolution (D4), forbidden tokens (D5),
+  invocation/description consistency (D3), duplicate names (D11), and inventory consistency.
+- `agents/mp-researcher.md`, `agents/mp-evidence-auditor.md`, `agents/mp-review-standards.md`,
+  `agents/mp-review-spec.md` — contract-encoded package agents (D16). The two web-using agents
+  default to detached launches and inherit `pi-web-access` ambiently, which closes D14 as
+  documentation only; `agents/.gitkeep` removed.
+- `skills/engineering/setup-matt-pocock-skills/` — `SKILL.md` rewritten for Pi (D6) with the ordered
+  preflight (capability-scoped `subagent` and web checks; blocking collision and
+  `enableSkillCommands` checks), plus the adapted sidecars `issue-tracker-{github,gitlab,local}.md`,
+  `domain.md`, and `triage-labels.md`; `skills/.gitkeep` removed.
+- `skills/engineering/ask-matt/` — `SKILL.md` + `PHASE-BOUNDARIES.md` adapted: 24 `/skill:<name>`
+  labels, `/clear` → `/new`, `/compact` kept, and a Pi-appropriate harness-swap example.
+- Per-file diff notes (D9) and the full M2 record, deviations, and acceptance evidence are in
+  `docs/NOTES.md` §M2.
 
 [Unreleased]: https://github.com/netname/pi-adapted-mp-skills/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/netname/pi-adapted-mp-skills/releases/tag/v0.1.0

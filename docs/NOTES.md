@@ -325,3 +325,217 @@ location as a post-v1 target.
 No `skills/` subdirectory was created, no upstream file was copied into this repo, no script from
 §4's tree was written, and no package-level `docs/agents/` was created (D7). The only §5 change is
 the six appended D5 rows; D1–D16 are otherwise untouched.
+
+---
+
+## M2 — Convention layer: validator, agents, setup, router (2026-09-18)
+
+Scope: the M2 slice only — `scripts/validate-skills.mjs`, the four `agents/mp-*.md` definitions,
+the two adapted skills (`setup-matt-pocock-skills` + sidecars, `ask-matt` + `PHASE-BOUNDARIES.md`),
+and this record. Nothing from M3–M5 was ported. `docs/ADAPTATION_PLAN.md` and
+`docs/skill-inventory.json` were not edited; `git diff 8f7d7a1 -- docs/ADAPTATION_PLAN.md
+docs/skill-inventory.json` is empty, so the plan and the D5 table are byte-identical to the M1
+commit.
+
+### 1. Decisions confirmed before implementation
+
+1. **D14 closes as documentation only.** `mp-review-standards` / `mp-review-spec` stay
+   repo-read-only, and the two web-using agents run detached, so no foreground child needs web
+   tools. No `pi-web-access` path-resolution code was written. Evidence in §4.
+2. **`enableSkillCommands` probe = read both settings files.** `.pi/settings.json` overrides
+   `~/.pi/agent/settings.json`; absent both, the Pi default is `true`. Chosen over a
+   `pi.getCommands()` probe because that probe cannot tell "commands disabled" from "no skills
+   installed", and setup must also work on a fresh repo. Chosen over asking the user because it is
+   deterministic. Caveat recorded in the skill: project settings only load when the project is
+   trusted.
+3. **Gating confirmed.** Only D11 skill-name collisions and `enableSkillCommands` block. The
+   `subagent` and web capability checks are capability-scoped and record-and-continue (D10), so a
+   missing package never blocks repository configuration.
+
+### 2. Validator checks and the D5 freeze
+
+`scripts/validate-skills.mjs` is dependency-free (Node built-ins only; no `npm install`). It runs
+the following, prints `path:line: message`, and exits non-zero on any error with **no
+warnings-only mode**:
+
+| # | Check | Contract |
+|---|---|---|
+| 0 | Recompute `sha256(JSON.stringify(tokenMap.rows.map(r => [r.rowId, r.upstream, r.pi])))` and compare to `tokenMap.hash` | D5 freeze |
+| 1 | `name` present, `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤64 chars; `description` present, ≤1024; only Pi-read keys (`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`, `disable-model-invocation`) | Pi spec |
+| 2 | Any key in the row's `droppedFrontmatter`, plus `argument-hint` | D2 |
+| 3 | Every backticked `.../SKILL.md` reference resolves from the referencing file's directory, uses the right same/cross-bucket form, and names a target whose frontmatter `name` matches | D4 |
+| 4 | Literal `Skill tool`, `Task tool`, `/clear`, `CLAUDE.md`, `agents/openai.yaml` anywhere under `skills/**`, sidecars included, no allowlist. `Task tool` is literal, so a bare Wayfinder `**Task**` never false-positives | D5 |
+| 5 | A `disable-model-invocation: true` description contains no model-facing trigger phrasing | D2/D3 |
+| 6 | No two `skills/**/SKILL.md` declare the same `name` | D11 |
+| 7 | Every ported `SKILL.md` has an inventory row with `disposition ∈ {port, adapt, rename}` and the expected `piPath`; bucket and verbatim name match; every recorded `d4Path` is used | inventory |
+
+The `ask-matt` carve-out is structural rather than a special case: its 24 `/skill:<name>` labels
+are not backticked `.../SKILL.md` references, so check 3 never demands those targets exist, while
+check 4 still bans the raw `/clear`. For M2 the model-load/slash-load set is empty, so check 3 is
+vacuously clean on the shipped tree; it was proven both ways against fixtures (§7).
+
+**Freeze result:** `tokenMap v2` hash
+`9e86593bef1167039b66b4eb7d8dc69b5cda1cb647cde6e9fb086ad1e4bcda10` matches on every run. Exit 0
+with 8 files scanned (2 `SKILL.md`). No D5 row was added, removed, or edited.
+
+### 3. Package agents (D16)
+
+Four files under `agents/`, discovered through the frozen `pi.subagents.agents: ["./agents"]`
+manifest key. Each encodes a **contract**, not bundled `pi-subagents` prose; no text was copied
+from `parallel-review.md`, `parallel-research.md`, or the builtin agent files. Generic
+orchestration (fresh vs fork, angle generation, run identity, steering) is left to the bundled
+`pi-subagents` skill.
+
+| Agent | Role | Tool ceiling | Default launch | Contract encoded |
+|---|---|---|---|---|
+| `mp-researcher` | Background research child | `read, write, web_search, fetch_content, get_search_content, source_check` | `async: true` | The question, cited primary sources, and exactly where the note was saved |
+| `mp-evidence-auditor` | Fresh claim-vs-source audit | `read, web_search, fetch_content, get_search_content, source_check` | `async: true` | Per-claim status supported/contradicted/unclear/missing-evidence, evidence vs interpretation vs inference |
+| `mp-review-standards` | Standards axis only | `read, grep, find, ls` | foreground | Cite the documented repo rule, separate hard violations from judgement calls, apply the Fowler smell baseline, skip what tooling enforces |
+| `mp-review-spec` | Spec axis only | `read, grep, find, ls` | foreground | Fidelity to the originating ticket's acceptance criteria and exclusions, including scope creep |
+
+The two review agents are read-only by allowlist, so they cannot mutate the repo or run `git`;
+if the parent does not supply a diff they report that the diff was not supplied rather than
+reconstructing it. `mp-evidence-auditor` is retained alongside the builtin `evidence-auditor`
+deliberately (D16 item 5).
+
+### 4. D14 resolution and its evidence
+
+Read from the pinned `pi-subagents@0.69.0` tree (`docs/agents.md`, §"Tool and extension selection")
+and `docs/tool-reference.md`:
+
+- Foreground children are sessions inside the parent process and **never** load the parent's
+  ambient extensions; background (detached) children are separate processes and **do** load them.
+- `async` defaults on for single-agent native launches, and the frontmatter `async` field sets the
+  default when a call omits it. Explicit call values still win.
+- `subagentOnlyExtensions` / `extensions` take **filesystem paths**, not package IDs, which is why
+  a path would have to be resolved per install scope.
+
+Decision: no foreground child needs web tools. `mp-review-*` are repo-read-only, and the two
+web-using agents declare `async: true`, so they run detached and inherit `pi-web-access` ambiently.
+D14 is therefore a documentation note, and **no path-resolution code exists**. Setting `async: true`
+on the two web agents is the only code-shaped expression of this decision, and explicit call
+values can still force them foreground (in which case the runtime fails closed, naming the missing
+web tools, rather than silently continuing).
+
+### 5. D6 deviations and Pi-native probes
+
+| Item | D6 as written | What M2 did | Why |
+|---|---|---|---|
+| Preflight position | Step 6, after the write steps | Step **0**, before any write | The two blocking checks must not run after `AGENTS.md` and `docs/agents/*` are already written; a blocked setup would otherwise leave a half-configured repo. Content and internal order a→d are unchanged. |
+| "Is `triage` installed?" probe | "a `triage` skill folder alongside this one, or `triage` in your available skills" | Read Pi's skill catalog: the `<available_skills>` block in the system prompt (`systemPromptOptions.skills`) | Pi-native provenance; a folder alongside the skill is not how Pi discovers skills. Verified: the M2 probe showed `skills: ["find-skills", "ask-matt", "setup-matt-pocock-skills"]`. |
+| Collision provenance | `pi.getCommands()` `sourceInfo` | `pi.getCommands()` `sourceInfo` **plus** an on-disk Node scan | See the shadowing finding below: provenance alone cannot see a shadowed copy. |
+| `enableSkillCommands` | "confirm it is not disabled" | Read `.pi/settings.json` then `~/.pi/agent/settings.json` | Concrete, non-model, deterministic; survives a repo with zero skills installed. |
+| Context file | upstream picks whichever of the two context-file names exists | Write `AGENTS.md` only | D5-15/D6; the compatibility file is never created or forked to. |
+| `gh` / `glab` | no harness note | Each tracker template says the commands run through Pi's `bash` | D6; makes the assumption explicit. |
+
+**Shadowing finding (important).** `pi.getCommands()` exposes the **winner** of a name collision
+and nothing else: with a decoy `ask-matt` in `.pi/skills/`, the probe returned exactly one
+`skill:ask-matt` entry — `origin: "top-level"`, `scope: "project"`, path `.pi/skills/ask-matt/SKILL.md`
+— and the package copy was absent entirely. So D11's "report that it could not be attributed"
+cannot be implemented from `pi.getCommands()` alone. The skill pairs it with an on-disk scan that
+reads the user/project skill directories **and** every package `pi list --approve` resolves. That
+last part matters: a local path install is recorded as a relative path in `.pi/settings.json`, so
+the obvious `node_modules` glob misses it (the first version of the recipe did exactly that and
+failed to detect the decoy/package pair; the shipped recipe detects it).
+
+### 6. Sidecar and body token ledger
+
+Rewritten (D5-16 for bare labels, D5-01 for `/clear`):
+
+- `ask-matt/SKILL.md` — all 24 bare `/…` skill labels → `/skill:<name>`; `/clear` → `/new`; the
+  gerund "``/clear``ing context" rephrased to "`/new` between each one"; `/compact` kept.
+- `ask-matt/PHASE-BOUNDARIES.md` — `/clear` → `/new` in the five-options table, question 2, and the
+  primary/secondary table; `/handoff` ×3 → `/skill:handoff` (it is a skill name); the
+  "Claude → Codex" harness-swap example replaced with "Pi to another agent harness, or the
+  reverse".
+- `setup-matt-pocock-skills/domain.md` — `/domain-modeling` ×2, `/grill-with-docs`,
+  `/improve-codebase-architecture` → `/skill:<name>`.
+- `setup-matt-pocock-skills/issue-tracker-github.md` — `/triage`, `/wayfinder` → `/skill:<name>`;
+  added "run through Pi's `bash` tool".
+- `setup-matt-pocock-skills/issue-tracker-gitlab.md` — same as GitHub.
+- `setup-matt-pocock-skills/issue-tracker-local.md` — `/wayfinder` → `/skill:wayfinder`; added a
+  note that the files are read/written with Pi's `read`/`write`/`edit` tools.
+- `setup-matt-pocock-skills/SKILL.md` — the upstream `CLAUDE.md` branch removed (the string never
+  appears, so there is no residue) and the preflight added.
+
+Left untouched, with reason:
+
+- `/compact` everywhere — D5-02 keeps it unchanged.
+- `triage-labels.md` — no harness tokens; copied verbatim.
+- External links (`aihero.dev` smart-zone, `gitlab.com/gitlab-org/cli`), repository paths,
+  benchmark-ish `/dev`, `/docs`, `/issues` fragments, and the `wayfinder:*` label strings.
+- `ask-matt`'s 24 human-facing labels stay labels: they are router prose, not load instructions
+  (D4 carve-out), and `crossSkillLoads` is `[]` for both M2 skills in the inventory.
+
+### 7. Where the plan was silent or wrong, and what was done instead
+
+1. **`agents/.gitkeep` and `skills/.gitkeep`.** The task authorises removing `agents/.gitkeep`
+   once the agents exist; M2 also removed `skills/.gitkeep`, because M0's stated reason for it
+   ("the manifest path would be absent again") no longer holds once real skills exist. Both
+   directories now contain real content and the §4 tree lists neither placeholder.
+2. **The setup skill is interactive by design**, so a real `pi -p` run cannot answer its questions:
+   with a fully pre-answered prompt it made no writes and did not terminate within 240 s. M2's
+   acceptance therefore (a) proved the skill loads and is attributed to the package with a
+   `before_agent_start` probe (`origin: "package"`, `scope: "project"`, correct `sourceInfo.path`;
+   `"/skill:setup-matt-pocock-skills"` expands the body), (b) exercised the preflight through an
+   executable mirror of step 0 against real settings/tool state, and (c) executed steps 4–6 against
+   a scratch repo. Recorded rather than papered over.
+3. **The preflight harness is evidence, not package content.** `scripts/` ships only
+   `validate-skills.mjs`, because that is the M2 deliverable; a committed preflight script was not
+   in scope and would duplicate the skill's prose for no runtime gain.
+4. **§6/M2 also asks to "define the exact `pi-subagents` calls the ported skills use".** Neither M2
+   skill dispatches a child — `setup-matt-pocock-skills` and `ask-matt` only probe and route — so
+   that bullet has no M2 dispatch site. It lands with the M3/M4 skills that call the agents.
+5. **D4's model-load set is empty for M2.** The validator's cross-skill check was proven with
+   fixtures (a correct same-bucket and cross-bucket pair, and dangling/cross-form negatives) rather
+   than by shipped references, because the two M2 skills own no model-load or slash-load paths.
+6. **`pi-subagents` is not installed in this environment.** The four agent files could not be
+   launched through the runtime here; they were checked structurally and against the pinned
+   `0.69.0` docs (`docs/agents.md`, `docs/tool-reference.md`), and the M6 smoke test is where a real
+   child launch belongs (already scheduled in §10).
+7. **`pi.getCommands()` shadowing** — see §5. This is a real limitation of the API relative to
+   D11's wording, not a mistake in D11, and the on-disk pairing is the fix.
+8. **The D5 `tokenIndex` has a `review-axes` label but no token row for it in `bans`.** No M2 file
+   needs it, so it was left alone; a missing token was **not** added (D5 is frozen).
+
+### 8. CHANGELOG convention
+
+The established convention is mixed: M0's landed files sit under `[0.1.0] → Added`, while M1 only
+annotated the `[Unreleased] → Planned` roadmap. M2 followed M0: a new `### Added` block under
+`[0.1.0]` records the landed M2 files, and the `[Unreleased]` M2 roadmap bullet is marked landed.
+This is the smallest change that keeps the roadmap readable without rewriting M1's history.
+
+### 9. Per-file diff notes (D9)
+
+| Ported file | Upstream source | Changed regions |
+|---|---|---|
+| `skills/engineering/setup-matt-pocock-skills/SKILL.md` | `skills/engineering/setup-matt-pocock-skills/SKILL.md` | Frontmatter metadata added; `CLAUDE.md` branch removed; Pi preflight (capability, collision, `enableSkillCommands`) added; context-file and scratch-pointer steps adapted |
+| `…/issue-tracker-github.md` | same name | `/triage`, `/wayfinder` → `/skill:` forms; Pi `bash` note |
+| `…/issue-tracker-gitlab.md` | same name | `/triage`, `/wayfinder` → `/skill:` forms; Pi `bash` note |
+| `…/issue-tracker-local.md` | same name | `/wayfinder` → `/skill:` form; Pi `read`/`write`/`edit` note |
+| `…/domain.md` | same name | `/domain-modeling` ×2, `/grill-with-docs`, `/improve-codebase-architecture` → `/skill:` forms |
+| `…/triage-labels.md` | same name | none (verbatim) |
+| `skills/engineering/ask-matt/SKILL.md` | `skills/engineering/ask-matt/SKILL.md` | Frontmatter metadata added; 24 `/…` labels → `/skill:`; `/clear` → `/new` |
+| `skills/engineering/ask-matt/PHASE-BOUNDARIES.md` | same name | `/clear` → `/new`; `/handoff` → `/skill:handoff`; harness-swap example |
+
+### 10. Acceptance evidence (commands and results)
+
+- `node scripts/validate-skills.mjs` → exit 0; D5 hash matches; 8 files / 2 `SKILL.md`.
+- Seven deliberate breaks (bad name, long description, `argument-hint`, `Skill tool`, `/clear`,
+  dangling `../../productivity/grilling/SKILL.md`, duplicate `ask-matt`) each exited 1 with a
+  `path:line` message naming the rule; run against throwaway copies, so the real tree was never
+  mutated.
+- Positive D4 fixture (a same-bucket and a cross-bucket reference to real targets) → exit 0.
+- Scratch repo (outside this package) produced `AGENTS.md`,
+  `docs/agents/{issue-tracker,domain,triage-labels}.md`, and `.gitignore` entries; this repo still
+  has **no** `docs/agents/`.
+- Preflight mirror: missing `subagent` → `research`/`wayfinder`/`code-review`/`implement` marked
+  unavailable + `pi install npm:pi-subagents@0.69.0`; missing web tools → only `research`/`wayfinder`
+  + `pi install npm:pi-web-access@0.29.0`; a decoy `ask-matt` → one collision with both paths and
+  exit 1; `enableSkillCommands: false` → blocking settings remedy and exit 1.
+- Router test: four situations routed to `/skill:grill-with-docs`, `/skill:triage`,
+  `/skill:diagnosing-bugs`, `/skill:wayfinder`; no `/clear` (or other banned token) survives.
+- Cross-skill resolution: zero backticked `.../SKILL.md` references exist under `skills/**` for
+  M2, and the validator's resolver is clean; the resolver itself was proven by the negative and
+  positive fixtures above.
+
