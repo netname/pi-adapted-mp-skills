@@ -16,7 +16,7 @@ This skill reviews through a `pi-subagents` child, so first confirm the `subagen
 and print:
 
 ```
-pi install npm:pi-subagents@0.69.0
+pi install npm:pi-subagents
 ```
 
 Then continue.

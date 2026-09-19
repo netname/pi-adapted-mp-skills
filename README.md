@@ -95,6 +95,53 @@ pi install npm:pi-adapted-mp-skills@0.1.0
 
 Both routes install the same tree — there is no divergent build.
 
+### Scope: user or project
+
+Scope is chosen on the command line; `pi install` never prompts.
+
+| Command | Applies to | Registered in | Package tree |
+|---|---|---|---|
+| `pi install <source>` | every project (user scope) | `~/.pi/agent/settings.json` | `~/.pi/agent/npm/node_modules/pi-adapted-mp-skills/` |
+| `pi install -l <source>` | this repository only | `<repo>/.pi/settings.json` | `<repo>/.pi/npm/node_modules/pi-adapted-mp-skills/` |
+
+Installing in both scopes is safe — for the same package identity the project entry wins and
+the user entry is dropped — but it is redundant. A project install also only takes effect while
+the project is trusted.
+
+### Where the skills end up
+
+Pi reads this package's skills **from the installed package tree**, through the `pi.skills`
+manifest listed under [What the package ships](#what-the-package-ships). They are not copied or
+symlinked into a skills directory, so they do not appear under `.agents/skills/` or `.pi/skills/`.
+
+That is deliberate. The same manifest carries the four `mp-*` subagent definitions and the
+`git-guardrails` extension, and only an installed package delivers all three: `research`,
+`code-review`, and `implement` dispatch `mp-researcher` / `mp-evidence-auditor` / `mp-review-*`
+by name, so a skills-only install would fail when those skills delegate rather than when they
+start. The reasoning is recorded as D17 in [`docs/ADAPTATION_PLAN.md`](docs/ADAPTATION_PLAN.md).
+
+### One route per skill set
+
+A skill that ships nothing but itself belongs in `.agents/skills/` — the cross-harness
+convention. Pi scans both scopes natively, so no settings entries are needed:
+
+| Scope | Directory |
+|---|---|
+| Project | `<repo>/.agents/skills/<name>/SKILL.md` |
+| User | `~/.agents/skills/<name>/SKILL.md` |
+
+Place it there directly, or use `npx skills add <source>`. The skills CLI's `pi` target currently
+writes `.pi/skills/` and `~/.pi/agent/skills/`; it reaches `.agents/skills/` when multiple agents
+are targeted (for example `--all`) or after the upstream change tracked in D17.
+
+That is **not** a second home for this package's skills. Pi ranks package resources *below*
+auto-discovered project resources, so a copy under `.agents/skills/` would shadow the package's
+copy for every duplicated name, emit a `name "<skill>" collision` diagnostic per skill, leave
+your skills coming from one place and the agents and extension from another, and give you two
+update streams (`npx skills update` vs `pi update`) for one contract.
+
+If a set ships anything beyond `SKILL.md` files, it is a package — install it with `pi install`.
+
 ## Prerequisites (per capability, not all-or-nothing)
 
 The adapted collection delegates work to Pi packages. **Setup needs neither**, and neither
@@ -102,14 +149,14 @@ is an npm dependency of this package: install them as their own Pi packages so P
 their extensions.
 
 ```bash
-pi install npm:pi-subagents@0.69.0     # subagent tool: isolated children, parallel + background work
-pi install npm:pi-web-access@0.29.0    # web_search, fetch_content, get_search_content, source_check
+pi install npm:pi-subagents            # subagent tool: isolated children, parallel + background work
+pi install npm:pi-web-access           # web_search, fetch_content, get_search_content, source_check
 ```
 
 | Prerequisite | Required by |
 |---|---|
-| `pi-subagents@0.69.0` | `research`, `wayfinder`, `code-review`, `implement` (because `implement` invokes `code-review`) |
-| `pi-web-access@0.29.0` | `research`, and `wayfinder` only for its research tickets |
+| `pi-subagents` | `research`, `wayfinder`, `code-review`, `implement` (because `implement` invokes `code-review`) |
+| `pi-web-access` | `research`, and `wayfinder` only for its research tickets |
 
 Consequences worth stating plainly:
 
@@ -119,42 +166,36 @@ Consequences worth stating plainly:
 - Repository setup (`/skill:setup-matt-pocock-skills`) runs with neither installed.
 
 These are hard prerequisites, not graceful-degradation hints. A skill whose capability is
-missing stops with the applicable pinned install command; it does not silently fall back to
-sequential work or uncited research (D10). Only the pinned versions above are validated.
+missing stops with the applicable install command; it does not silently fall back to
+sequential work or uncited research (D10).
 
 ### Compatibility note
 
-Only the pinned versions above are validated. Newer versions are *allowed* but not
-*guaranteed*: a floating or manually upgraded `pi-subagents` or `pi-web-access` may change the
-surface these skills depend on — the `subagent` tool, background dispatch and result
-retrieval, run identity, child-extension path semantics, and the four web tool names.
+Neither prerequisite is pinned, so no version is *guaranteed*: a newer `pi-subagents` or
+`pi-web-access` may change the surface these skills depend on — the `subagent` tool,
+background dispatch and result retrieval, run identity, child-extension path semantics, and
+the four web tool names.
 
-At the time of the `0.1.0` release the pin is also the newest published version of both
-packages, so there is no newer-version result to report. When a pin is bumped, re-run
-`npm run smoke` against the pinned install **and** against the floating install
-(`SMOKE_STAGES=latest bash scripts/smoke-test.sh`) and record any drift here.
-
-If an upgrade breaks a skill's preflight, **reinstall the pinned version**. Do not weaken the
+`npm run smoke` installs whatever the registry currently serves and exercises that, so it
+tracks the floating pair rather than a validated pair. If an upgrade breaks a skill's
+preflight, **install a known-good version explicitly** and record it here. Do not weaken the
 capability check to make a newer version fit:
 
 ```bash
-pi install npm:pi-subagents@0.69.0
-pi install npm:pi-web-access@0.29.0
+pi install npm:pi-subagents@<known-good>
+pi install npm:pi-web-access@<known-good>
 ```
 
-## Pinned vs. floating
+## Updates
 
-"Pinned" means *validated at this version and skipped by bulk updates* — never hard-locked.
-What happens on an update depends on how you installed the package:
+Both prerequisites install **floating**: `pi update --extensions` / `pi update --all`
+advance them to the newest published version. There is no validated version to fall back on.
 
 | Installed as | Update behavior |
 |---|---|
-| `npm:pi-subagents@0.69.0` (the documented command) | **Version-pinned.** `pi update --extensions` / `pi update --all` skip it. It moves only on an explicit `pi install npm:pi-subagents@<new>` or `pi update npm:pi-subagents`. |
-| `npm:pi-subagents` (no version) | **Floating.** Bulk updates advance it automatically. |
+| `npm:pi-subagents` (the documented command) | **Floating.** Bulk updates advance it automatically. |
+| `npm:pi-subagents@<version>` | **Version-pinned** by Pi: skipped by bulk updates; moves only on an explicit `pi install npm:pi-subagents@<new>` or `pi update npm:pi-subagents`. |
 | `git:...@v1.0.0` | **Ref-pinned**, same as a versioned npm spec: bulk updates reconcile to the ref but do not move it to a newer one. |
-
-If an upgrade breaks a skill's preflight, reinstall the pinned version rather than weakening
-the check.
 
 ## What the package ships
 
@@ -323,7 +364,7 @@ above; the agents are not skills and do not appear in this index.
 shows no `mp-*` agents. Everything looks installed.
 
 **Cause.** Pi writes the local package entry into `.pi/settings.json` as a **backslash**
-relative path, for example `"..\\..\\pi-adapted-mp-skills"`. `pi-subagents@0.69.0`'s
+relative path, for example `"..\\..\\pi-adapted-mp-skills"`. `pi-subagents`'s
 `resolveSettingsPackageRoot` accepts only forward-slash relative sources (`./`, `../`), so it
 never reads this package's `pi.subagents.agents` manifest and none of the `mp-*` agents are
 discovered. The same entry is also fragile for the other manifest paths.
@@ -334,7 +375,7 @@ discovered. The same entry is also fragile for the other manifest paths.
 // .pi/settings.json
 {
   "packages": [
-    "npm:pi-subagents@0.69.0",
+    "npm:pi-subagents",
     "../../pi-adapted-mp-skills"   // was "..\\..\\pi-adapted-mp-skills"
   ]
 }

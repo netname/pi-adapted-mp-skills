@@ -7,7 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet. `v0.1.0` is the first release; its scope is the M0–M6 milestones recorded below.
+### Added
+
+- D17 — installation route and scope (see `docs/ADAPTATION_PLAN.md`): `pi install` is the only
+  route for this package because it ships skills, subagent definitions, and an extension in one
+  manifest; scope is chosen by flag (`pi install` vs `pi install -l`) and never prompted;
+  `.agents/skills` remains the documented convention for skill sets that ship nothing else; and
+  the two routes are never mixed for the same skill set, because package resources rank last in
+  Pi's skill precedence and the `.agents/skills` copy would shadow the package's.
+- `docs/upstream/vercel-labs-skills-pi-agents-dir.md` — drafted upstream issue asking
+  `vercel-labs/skills` to map its `pi` agent to `.agents/skills` instead of `.pi/skills`, with
+  before/after evidence and the universal-agent side effect disclosed. Not filed.
+
+### Changed
+
+- Unpinned the runtime prerequisites. `pi-subagents` and `pi-web-access` are installed without
+  a version — `pi install npm:pi-subagents`, `pi install npm:pi-web-access` — in the skills'
+  preflight remedies and in the README. `pi update` advances both; no version is validated or
+  guaranteed. Amends D13.
+- `scripts/smoke-test.sh` installs the floating pair instead of parsing pinned versions out of
+  the README. The separate `latest` stage is removed because the main run now *is* the floating
+  run; the versions actually resolved are reported in the summary. `MP_SUBAGENTS_SPEC` /
+  `MP_WEB_SPEC` override either spec for a single run.
+- README: the "Pinned vs. floating" section is now "Updates", and the compatibility note states
+  that no version is validated rather than that only the pinned pair is.
+- README Install section now documents the two install scopes (`pi install` vs `pi install -l`)
+  with their settings files and package trees, states that the skills resolve from the package
+  tree rather than `.agents/skills/`, and adds the "one route per skill set" warning (D17).
 
 ## [0.1.0] - 2026-09-19
 

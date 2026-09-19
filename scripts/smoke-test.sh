@@ -2,7 +2,7 @@
 #
 # smoke-test.sh — the installed-package test for `pi-adapted-mp-skills` (M6 / §6/M6).
 #
-# It installs the pinned `pi-subagents`, the pinned `pi-web-access`, and a **copy** of
+# It installs `pi-subagents`, `pi-web-access`, and a **copy** of
 # this package into a fixture repo *outside* this repository, then asserts — from the
 # installed copy, never from the working tree (Trap D) — the discovery, invocation,
 # collision, parallelism, child-extension, and tracker behaviour the frozen plan
@@ -17,7 +17,7 @@
 #   bash scripts/smoke-test.sh                       # core stages
 #   SMOKE_STAGES="probe invocation" bash scripts/smoke-test.sh
 #   SMOKE_ROOT=/path/outside/repo bash scripts/smoke-test.sh
-#   bash scripts/smoke-test.sh latest                # informational D13 floating run
+#   MP_SUBAGENTS_SPEC=npm:pi-subagents@0.67.0 bash scripts/smoke-test.sh   # pin one run
 #
 # Windows/Git-Bash limits (recorded, not hidden):
 #   - The fixture is a native sibling directory (`../mp-smoke-fixture`), never a
@@ -39,24 +39,22 @@ CHECK="$PROBES/check.mjs"
 SCRATCH="$FIXTURE/.scratch"
 RESULTS="$SCRATCH/smoke"
 
-# Pinned dependency versions. The README's `## Prerequisites` section is the single source of
-# truth, but the parse is **anchored to that section** so a version example elsewhere in the
-# README (a compatibility table, an upgrade note, a troubleshooting snippet) can no longer
-# silently change which versions this test installs. A failed parse is fatal instead of
-# falling back to a hard-coded default, because a silent fallback is the same bug in a
-# quieter suit. Override with MP_PINNED_SUBAGENTS / MP_PINNED_WEB.
-read_pin() { # <package> <override>
-	if [ -n "$2" ]; then printf '%s' "$2"; return 0; fi
-	awk '/^## Prerequisites/{in_section=1; next} /^## /{in_section=0} in_section' "$REPO_ROOT/README.md" \
-		| grep -oE "$1@[0-9]+\.[0-9]+\.[0-9]+" | head -1 | cut -d@ -f2
+# Dependency install specs. These are deliberately **unpinned** (D13 as amended): both packages
+# float, so this test installs whatever the registry currently serves and then reports the
+# versions it actually resolved. Override either spec to test a fixed version or range for a
+# single run, e.g. MP_SUBAGENTS_SPEC=npm:pi-subagents@0.67.0. There is no README parse and no
+# fatal fallback: a hard-coded default was the same bug in a quieter suit.
+SUBAGENTS_SPEC="${MP_SUBAGENTS_SPEC:-npm:pi-subagents}"
+WEB_SPEC="${MP_WEB_SPEC:-npm:pi-web-access}"
+SUBAGENTS_VERSION="?"
+WEB_VERSION="?"
+read_installed_version() { # <fixture> <package-dir>
+	node -e '
+		try {
+			process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).version ?? "?");
+		} catch { process.stdout.write("?"); }
+	' "$1/.pi/npm/node_modules/$2/package.json"
 }
-PINNED_SUBAGENTS="$(read_pin pi-subagents "${MP_PINNED_SUBAGENTS:-}")"
-PINNED_WEB="$(read_pin pi-web-access "${MP_PINNED_WEB:-}")"
-if [ -z "$PINNED_SUBAGENTS" ] || [ -z "$PINNED_WEB" ]; then
-	printf 'error: could not read the pinned versions from the README "## Prerequisites" section.\n' >&2
-	printf '       Restore that section, or set MP_PINNED_SUBAGENTS and MP_PINNED_WEB.\n' >&2
-	exit 2
-fi
 
 STAGES="${SMOKE_STAGES:-setup static probe packaging invocation collision parallel childext tracker workflow}"
 PASS=0
@@ -118,7 +116,7 @@ stream_check() { # <label> [check flags...]
 }
 
 # ---------------------------------------------------------------------------
-# setup — fresh fixture, pinned installs, installed copy, Windows path defect
+# setup — fresh fixture, floating installs, installed copy, Windows path defect
 # ---------------------------------------------------------------------------
 stage_setup() {
 	banner "setup"
@@ -133,8 +131,10 @@ stage_setup() {
 	mkdir -p "$FIXTURE"
 	(cd "$FIXTURE" && git init -q . && git config user.email "smoke@example.com" && git config user.name "M6 Smoke" && printf '# fixture\n' > README.md && git add -A && git commit -qm "fixture init")
 
-	(cd "$FIXTURE" && pi install "npm:pi-subagents@$PINNED_SUBAGENTS" -l -a >/dev/null 2>&1)
-	(cd "$FIXTURE" && pi install "npm:pi-web-access@$PINNED_WEB" -l -a >/dev/null 2>&1)
+	(cd "$FIXTURE" && pi install "$SUBAGENTS_SPEC" -l -a >/dev/null 2>&1)
+	(cd "$FIXTURE" && pi install "$WEB_SPEC" -l -a >/dev/null 2>&1)
+	SUBAGENTS_VERSION="$(read_installed_version "$FIXTURE" pi-subagents)"
+	WEB_VERSION="$(read_installed_version "$FIXTURE" pi-web-access)"
 	# Install the copy by *relative* path: this is the install shape that reproduces
 	# the Windows backslash defect NOTES §M3.5 records and the README documents.
 	(cd "$FIXTURE" && pi install "../pkg/pi-adapted-mp-skills" -l -a >/dev/null 2>&1)
@@ -160,11 +160,11 @@ stage_setup() {
 	' "$FIXTURE/.pi/settings.json"
 	assert $? "package entries repaired to forward slashes"
 
-	# The pinned installs must be the versions the README documents.
+	# The floating installs must have landed in the fixture.
 	[ -f "$FIXTURE/.pi/npm/node_modules/pi-subagents/package.json" ]
-	assert $? "pi-subagents@$PINNED_SUBAGENTS is installed into the fixture"
+	assert $? "pi-subagents@$SUBAGENTS_VERSION is installed into the fixture"
 	[ -f "$FIXTURE/.pi/npm/node_modules/pi-web-access/index.ts" ]
-	assert $? "pi-web-access@$PINNED_WEB extension entry exists at .pi/npm/node_modules/pi-web-access/index.ts"
+	assert $? "pi-web-access@$WEB_VERSION extension entry exists at .pi/npm/node_modules/pi-web-access/index.ts"
 }
 
 # ---------------------------------------------------------------------------
@@ -540,8 +540,8 @@ stage_packaging() {
 	# the discovery assertions against it, so packaging is tested and not assumed.
 	mkdir -p "$fixture"
 	(cd "$fixture" && git init -q . && git config user.email "smoke@example.com" && git config user.name "M6 Smoke" && printf '# fixture\n' > README.md && git add -A && git commit -qm "fixture init")
-	(cd "$fixture" && pi install "npm:pi-subagents@$PINNED_SUBAGENTS" -l -a >/dev/null 2>&1)
-	(cd "$fixture" && pi install "npm:pi-web-access@$PINNED_WEB" -l -a >/dev/null 2>&1)
+	(cd "$fixture" && pi install "$SUBAGENTS_SPEC" -l -a >/dev/null 2>&1)
+	(cd "$fixture" && pi install "$WEB_SPEC" -l -a >/dev/null 2>&1)
 	(cd "$fixture" && pi install "$(native_path "$pkg")" -l -a >/dev/null 2>&1)
 	node -e '
 		const fs = require("fs"); const p = process.argv[1];
@@ -567,28 +567,11 @@ stage_packaging() {
 }
 
 # ---------------------------------------------------------------------------
-# latest — D13 informational floating run
-# ---------------------------------------------------------------------------
-stage_latest() {
-	banner "latest (D13, informational)"
-	local latest_sub latest_web
-	latest_sub="$(npm view pi-subagents version 2>/dev/null)"
-	latest_web="$(npm view pi-web-access version 2>/dev/null)"
-	log "  pinned: pi-subagents@$PINNED_SUBAGENTS pi-web-access@$PINNED_WEB"
-	log "  latest: pi-subagents@$latest_sub pi-web-access@$latest_web"
-	if [ "$latest_sub" = "$PINNED_SUBAGENTS" ] && [ "$latest_web" = "$PINNED_WEB" ]; then
-		ok "the pin is the newest published version of both packages: the latest leg cannot drift today"
-	else
-		skip "a newer version exists; run the floating install and record any drift in the README compatibility note"
-	fi
-}
-
-# ---------------------------------------------------------------------------
 
 mkdir -p "$RESULTS" "$SCRATCH"
 log "repo        : $REPO_ROOT"
 log "smoke root  : $SMOKE_ROOT"
-log "pins        : pi-subagents@$PINNED_SUBAGENTS pi-web-access@$PINNED_WEB (README Prerequisites, or MP_PINNED_* if set)"
+log "deps        : resolve during the setup stage (see the summary)"
 log "stages      : $STAGES"
 
 for stage in $STAGES; do
@@ -603,7 +586,6 @@ for stage in $STAGES; do
 		childext) stage_childext ;;
 		tracker) stage_tracker ;;
 		workflow) stage_workflow ;;
-		latest) stage_latest ;;
 		*) bad "unknown stage: $stage" ;;
 	esac
 done
@@ -611,6 +593,9 @@ done
 banner "summary"
 log "  passed : $PASS"
 log "  failed : $FAIL"
+if [ "$SUBAGENTS_VERSION" != "?" ]; then
+	log "  deps   : pi-subagents@$SUBAGENTS_VERSION ($SUBAGENTS_SPEC) pi-web-access@$WEB_VERSION ($WEB_SPEC)"
+fi
 if [ "${#SKIPPED[@]}" -gt 0 ]; then
 	log "  skipped:"
 	for entry in "${SKIPPED[@]}"; do log "    - $entry"; done

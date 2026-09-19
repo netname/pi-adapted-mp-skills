@@ -26,7 +26,7 @@ the `pi-subagents` extension; `pi list --approve` shows the package). If it is m
 print:
 
 ```
-pi install npm:pi-subagents@0.69.0
+pi install npm:pi-subagents
 ```
 
 ## Process

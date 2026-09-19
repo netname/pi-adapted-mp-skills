@@ -17,14 +17,14 @@ available (registered by the `pi-subagents` extension; `pi list --approve` shows
 missing, stop and print:
 
 ```
-pi install npm:pi-subagents@0.69.0
+pi install npm:pi-subagents
 ```
 
 Then confirm the child's web tools are registered: `web_search`, `fetch_content`,
 `get_search_content`, and `source_check` (from `pi-web-access`). If any is missing, stop and print:
 
 ```
-pi install npm:pi-web-access@0.29.0
+pi install npm:pi-web-access
 ```
 
 A missing tool is a setup failure, not permission to do the research yourself or to weaken the

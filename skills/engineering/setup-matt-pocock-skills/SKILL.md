@@ -37,7 +37,7 @@ If it is missing, mark `research`, `wayfinder`, `code-review`, and `implement` u
 capability report and print:
 
 ```
-pi install npm:pi-subagents@0.69.0
+pi install npm:pi-subagents
 ```
 
 Then continue. Setup does not need this package, so its absence never blocks repository
@@ -49,7 +49,7 @@ available to you; they are registered by the `pi-web-access` extension.
 If any is missing, mark `research` and `wayfinder` (research tickets only) unavailable and print:
 
 ```
-pi install npm:pi-web-access@0.29.0
+pi install npm:pi-web-access
 ```
 
 Then continue, and say plainly that a user who only wants `grill-with-docs` → `to-spec` →
@@ -223,7 +223,7 @@ Add a short pointer-only block — lines that point at the files and facts, neve
 
 - The Pi invocation model: user-invoked skills run only as `/skill:<name>`; model-invoked skills load on demand; skill commands require `enableSkillCommands`.
 - The capability report from step 0 (which of `pi-subagents` / `pi-web-access` were found, and what that makes unavailable).
-- The pin line: this package was adapted from `mattpocock/skills` at commit `c55ee46073ed923f86ce59a5eb3b6d895095d1b7`, and the `pi-subagents` / `pi-web-access` versions it was validated against (`0.69.0` / `0.29.0`).
+- The provenance line: this package was adapted from `mattpocock/skills` at commit `c55ee46073ed923f86ce59a5eb3b6d895095d1b7`. Its prerequisites (`pi-subagents` / `pi-web-access`) are installed unpinned, so record the versions actually resolved in this environment — not a pinned pair.
 
 ### 6. Keep scratch artifacts out of git
 

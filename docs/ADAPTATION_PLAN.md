@@ -1,12 +1,12 @@
 # Adaptation Plan: Matt Pocock's Skills → Pi Skills
 
-Status: **Decisions frozen — implementation not started** (decisions D1–D16 recorded; §9 open questions closed; next action is M0)
+Status: **Decisions frozen — implementation not started** (decisions D1–D17 recorded; §9 open questions closed; next action is M0)
 Guide of record: [`docs/Matt_Pocock_Skills_Project_Workflow_Guide.md`](./Matt_Pocock_Skills_Project_Workflow_Guide.md)
 Upstream: [`mattpocock/skills`](https://github.com/mattpocock/skills) @ `main` (`c55ee46`, checked 2026-09-18)
 Target harness: [Pi coding agent](https://github.com/earendil-works/pi-mono) (this repo: `pi-adapted-mp-skills`)
 
 > [!note] Reading order for reviewers
-> §5 holds every binding decision (D1–D16). §9 is closed. §10 lists what is deliberately deferred and what is scheduled but not yet built.
+> §5 holds every binding decision (D1–D17). §9 is closed. §10 lists what is deliberately deferred and what is scheduled but not yet built.
 
 ---
 
@@ -26,11 +26,11 @@ Port Matt Pocock's engineering-workflow skill collection so it runs natively in 
 
 ### Runtime prerequisites
 
-The adapted collection depends on these Pi packages, pinned to the versions validated during implementation:
+The adapted collection depends on these Pi packages, installed unpinned:
 
 ```bash
-pi install npm:pi-subagents@0.69.0     # required by any delegating skill
-pi install npm:pi-web-access@0.29.0    # required only for research
+pi install npm:pi-subagents            # required by any delegating skill
+pi install npm:pi-web-access           # required only for research
 ```
 
 | Package | Purpose | Which skills need it |
@@ -40,7 +40,7 @@ pi install npm:pi-web-access@0.29.0    # required only for research
 
 So the dependency is **per capability, not all-or-nothing**. A user who only wants the main flow — `grill-with-docs` → `to-spec` → `to-tickets` → `implement` — needs `pi-subagents` but not `pi-web-access`. `pi-web-access` becomes necessary the moment they do research. Setup itself needs neither, so a missing package never blocks repository configuration.
 
-These packages are part of the target runtime contract, not optional enhancements. A skill whose capability is unavailable must stop with the applicable pinned installation instruction; it must not silently degrade to sequential work or uncited research. This is a deliberate, recorded deviation from upstream's graceful-degradation behavior; the options considered and the rationale are in **D10**. See **D11** for the related decision to keep upstream skill names verbatim and fail loud on name collisions.
+These packages are part of the target runtime contract, not optional enhancements. A skill whose capability is unavailable must stop with the applicable installation instruction; it must not silently degrade to sequential work or uncited research. This is a deliberate, recorded deviation from upstream's graceful-degradation behavior; the options considered and the rationale are in **D10**. See **D11** for the related decision to keep upstream skill names verbatim and fail loud on name collisions.
 
 Installation alone is not sufficient for web-enabled **foreground** children. Child extension loading depends on where the child runs: local foreground children are sessions inside the parent Pi process and never load the parent's ambient extensions, while *background* (detached) children are separate processes and do load them. Extension selection is not available as a **per-call** dispatch parameter, so it is configured per agent (frontmatter `extensions` / `subagentOnlyExtensions`), once per settings file (`subagents.defaultExtensions`), or registered by a host extension (`registerRequiredChildExtensions`). See D14 for how the path is resolved. Before launch, `pi-subagents` verifies that `web_search`, `fetch_content`, `get_search_content`, and `source_check` are registered; naming tools in an allowlist does not load their provider.
 
@@ -196,7 +196,7 @@ Note the naming difference: templates are variant-specific (`issue-tracker-local
 
 ### D1 — Ship as a Pi package with explicit runtime prerequisites
 
-- Installation documentation and setup preflight require the tested `pi-subagents` and `pi-web-access` versions to be installed and active.
+- Installation documentation and setup preflight require `pi-subagents` and `pi-web-access` to be installed and active.
 - Keep both as separately installed Pi packages rather than ordinary npm dependencies: Pi must activate their extension resources, not merely place their modules under `node_modules`.
 - `package.json` gets `"keywords": ["pi-package"]` and:
   ```json
@@ -307,7 +307,7 @@ Cross-skill loads this convention must cover, in the v1 set (all are model-invok
 
 Three rows above are settled policy, not open questions:
 
-- **Hard gate (D10).** Every subagent/web row here assumes the pinned `pi-subagents` and `pi-web-access` packages are active. No row offers a sequential or `curl` fallback. The options considered and the reason for rejecting graceful degradation are in D10.
+- **Hard gate (D10).** Every subagent/web row here assumes the `pi-subagents` and `pi-web-access` packages are active. No row offers a sequential or `curl` fallback. The options considered and the reason for rejecting graceful degradation are in D10.
 - **Handoff and architecture report are git-ignored by default.** Upstream writes both to the OS temp directory because both are *temporary* artifacts — a briefing for one next session, and a one-off visual review. Committing either by default would promote throwaway output into shared history, exactly the failure mode the guide's "do not use a handoff as permanent documentation" rule warns about. The port keeps the ephemeral intent but relocates both into the repo (`.scratch/handoffs/`, `.scratch/reports/`) so they are easy to find and link from a session, while `.gitignore` keeps them out of shared history. Setup ensures both paths are ignored (D6); a repo that deliberately wants them committed may opt in, but that is never the default.
 - **Substitution is total; no residue in ported bodies.** A replaced token must not survive anywhere in `skills/**`, not even in explanatory prose. `ask-matt`'s phase-boundary list therefore reads "`/new`: start a fresh session when nothing here matters to what's next" — it never mentions `/clear`, because the ported skill has no reason to. The mapping is recorded once, here, and in `CHANGELOG.md`; it is not something a skill needs to teach. Consequently the M2 validator bans `/clear` outright with **no allowlist**: any occurrence in a ported body is a porting error, not a legitimate reference. The same logic applies to `CLAUDE.md` and `agents/openai.yaml`.
 
@@ -321,8 +321,8 @@ Three rows above are settled policy, not open questions:
 4. Never pre-create `.scratch/` feature folders or issues.
 5. Record the Pi version assumptions and the package's own pinned upstream commit in `AGENTS.md` as a **pointer only** — no copying skill text.
 6. **Preflight, in order.** Two of these are **blocking for everything**; two are **capability-scoped**, because setup itself needs neither `pi-subagents` nor `pi-web-access`:
-   a. *(capability-scoped, D10)* confirm `pi-subagents` is active and the `subagent` tool is available. If missing, mark `research`, `wayfinder`, `code-review`, and `implement` unavailable with the pinned install command, and continue.
-   b. *(capability-scoped, D10)* confirm `pi-web-access` is active and `web_search`, `fetch_content`, `get_search_content`, and `source_check` are available. If missing, mark `research` and `wayfinder` (research tickets) unavailable with the pinned install command, and continue. Do not tell a user who only wants the main flow to install this.
+   a. *(capability-scoped, D10)* confirm `pi-subagents` is active and the `subagent` tool is available. If missing, mark `research`, `wayfinder`, `code-review`, and `implement` unavailable with the install command, and continue.
+   b. *(capability-scoped, D10)* confirm `pi-web-access` is active and `web_search`, `fetch_content`, `get_search_content`, and `source_check` are available. If missing, mark `research` and `wayfinder` (research tickets) unavailable with the install command, and continue. Do not tell a user who only wants the main flow to install this.
    c. *(blocking, D11)* look for duplicate definitions of any skill name this package defines across this package, project/global skill directories, and other installed packages, and attribute them using the provenance Pi does expose (`pi.getCommands()` `sourceInfo.path` / `origin` / `scope`). Report every duplicate found with its source where known. Because Pi offers no documented "which source won" API, this check is best-effort: where a name cannot be attributed, report that it could not be attributed rather than assuming it resolved to this package. Fail with the colliding name and the remove/rename/reorder remedy; the README's symptom-and-remedy entry is the primary mitigation.
    d. *(blocking, D3)* confirm `enableSkillCommands` is not disabled. It defaults to `true`; if a user has turned it off, all 14 user-invoked skills become unreachable and no skill can report why. Fail with the exact remedy (re-enable it in `/settings` or `settings.json`).
    Setup writes the capability report into `AGENTS.md` as a pointer, and never renames, removes, or reconfigures anything itself. Each capability-scoped skill repeats its own check at start and stops with the same message, so the gate holds even if setup has not been re-run.
@@ -352,7 +352,7 @@ Upstream itself tolerates a harness without background/parallel execution: "a ha
 
 | Option | Mechanism | Cost | Risk |
 |---|---|---|---|
-| A — Hard gate (chosen) | Skill checks for the tool it needs once; if missing, stops and prints the pinned `pi install` command. No fallback path is written or executed. | One short, identical preflight paragraph per affected skill. No branching logic. | The affected skills are unusable until the package they need is installed and active — `research`/`wayfinder` need both, `code-review`/`implement` need `pi-subagents` only, even for HITL-only work that upstream defines as working without them. |
+| A — Hard gate (chosen) | Skill checks for the tool it needs once; if missing, stops and prints the `pi install` command. No fallback path is written or executed. | One short, identical preflight paragraph per affected skill. No branching logic. | The affected skills are unusable until the package they need is installed and active — `research`/`wayfinder` need both, `code-review`/`implement` need `pi-subagents` only, even for HITL-only work that upstream defines as working without them. |
 | B — Graceful degradation, decided per skill run | Each affected skill checks availability at run time and follows a written sequential fallback when absent. | A capability check *and* a described fallback *and* a rule for when the fallback is unacceptable (e.g., don't claim cited web evidence without a real web tool), in each of four skills. | The model makes a judgment call every run about which branch applies and whether the fallback is safe; more surface for the model to get subtly wrong (e.g., silently degrading a review axis without saying so). |
 | C — Graceful degradation, decided once at setup | `setup-matt-pocock-skills` preflights once, records the outcome in `docs/agents/parallel-work.md`; later skills read the recorded fact instead of re-deciding. | One shared doc + one preflight step + one-line pointers in affected skills. | Still requires writing and validating a fallback code path per skill, and the recorded fact can go stale if packages are installed/removed after setup without a re-run. |
 
@@ -381,26 +381,28 @@ pi install git:github.com/<owner>/pi-adapted-mp-skills
 
 At the `v0.1.0` tag the package is also published to npm so it can be installed by version and listed in the Pi gallery via the `pi-package` keyword. The git URL stays first in the README because it tracks the pinned upstream commit recorded in `NOTICE` most transparently; npm is the convenience route. Both routes install the same tree — there is no divergent build. This affects only the README install section and the M6 release checklist, not the §4 layout or the `pi` manifest.
 
-### D13 — Dependency packaging: separate pinned installs, not bundled dependencies
+### D13 — Dependency packaging: separate floating installs, not bundled dependencies
 
-**Decision (was open question #3):** `pi-subagents` and `pi-web-access` remain **separately installed Pi packages**, pinned in the documentation to the versions validated during implementation (currently `pi-subagents@0.69.0`, `pi-web-access@0.29.0`). They are **not** declared as ordinary npm `dependencies` of this package.
+**Decision (was open question #3; amended 2026-09-19 — see below):** `pi-subagents` and `pi-web-access` remain **separately installed Pi packages**, installed **unpinned**. They are **not** declared as ordinary npm `dependencies` of this package.
 
 Why not bundle them: Pi activates extension resources per *installed* package — the package is registered in settings and Pi reads its `pi.extensions` manifest. A transitive dependency under `node_modules` is not an activated package, so bundling would require this package to declare `pi.extensions` paths pointing into `node_modules`, which is fragile across install scopes and package managers, and would also contradict D10's fail-loud preflight (a missing prerequisite must be visible, not silently satisfied by a nested copy). Bundling also cannot serve the `pi-web-access` child-extension path in D14, which resolves against the actual install root.
 
-**Upgrade policy — "can newer versions be installed without breaking anything?"** Newer versions are *allowed* but not *guaranteed*. A user may upgrade either package independently. What "pinned" means in practice depends on the install command, and the README must say so explicitly:
+**Amendment (2026-09-19): version pinning removed.** The original decision pinned both packages in the documentation to the versions validated during implementation (`pi-subagents@0.69.0`, `pi-web-access@0.29.0`). That is reversed: neither package is pinned, in the documentation or in the skills. A pin inside a skill's failure message goes stale the moment the package publishes, which makes the remedy the skill prints the part most likely to be wrong. The requirement is the *capability* — the `subagent` tool and the four web tool names — and D10 checks that at runtime; a version number adds nothing.
+
+**Upgrade policy.** Both packages float: `pi update --extensions` / `pi update --all` advance them.
 
 | Installed as | Effect |
 |---|---|
-| `npm:pi-subagents@0.69.0` (the documented command) | **Version-pinned.** Pi skips it during `pi update --extensions` / `pi update --all`. It moves only when the user acts: `pi install npm:pi-subagents@<new>` or `pi update npm:pi-subagents`. |
-| `npm:pi-subagents` (no version) | **Floating.** Bulk updates advance it automatically. |
+| `npm:pi-subagents` (the documented command) | **Floating.** Bulk updates advance it automatically. |
+| `npm:pi-subagents@<version>` | **Version-pinned** by Pi: skipped by bulk updates; moves only on an explicit `pi install npm:pi-subagents@<new>` or `pi update npm:pi-subagents`. |
 | `git:...@v1.0.0` | Ref-pinned, same as a versioned npm spec: bulk updates reconcile to the ref but do not move it. |
 
-So "pinned" here means *validated-at-this-version and skipped by bulk updates*, never hard-locked. The contract this package depends on is a specific surface:
+The contract this package depends on is a specific surface:
 
 - `pi-subagents`: the `subagent` tool, background dispatch and result retrieval, run-identity persistence, and the `subagentOnlyExtensions` path semantics (D14).
 - `pi-web-access`: the four tool names `web_search`, `fetch_content`, `get_search_content`, `source_check`.
 
-Drift in that surface must surface as a failure, never as silent misbehavior: the D10 preflight verifies the tools are registered before a dependent skill runs, and the M6 smoke test exercises the pinned versions (required) plus latest (informational). The README states that only the pinned versions are validated. If an upgrade breaks the preflight, the remedy is to reinstall the pinned version — not to weaken the check.
+Drift in that surface must surface as a failure, never as silent misbehavior: the D10 preflight verifies the tools are registered before a dependent skill runs, and the M6 smoke test installs the floating pair and exercises it. There is no validated version to fall back on, so the remedy for a broken preflight is to install a known-good version explicitly — never to weaken the check.
 
 ### D14 — Child extension loading: resolve the `pi-web-access` path at setup time, don't hardcode it
 
@@ -425,7 +427,7 @@ Rejected alternatives: hardcoding `~/.pi/agent/npm/pi-web-access/index.ts` (brea
 
 ### D16 — Reuse `pi-subagents`' orchestration; keep custom agents only for Matt-specific contracts
 
-The pinned `pi-subagents` package already ships what M2 was about to reinvent:
+The `pi-subagents` package already ships what M2 was about to reinvent:
 
 - **Built-in agents:** `researcher` (declares exactly `read, write, web_search, fetch_content, get_search_content, source_check`), `evidence-auditor`, `reviewer`, `scout`, `worker`, `oracle`, `delegate`.
 - **Bundled prompts:** `parallel-review.md`, `parallel-research.md`, `review-loop.md`, `council.md`, `gather-context-and-clarify.md`, `parallel-cleanup.md`.
@@ -450,6 +452,62 @@ Orchestration is not a contract. Fresh vs. forked context, distinct angles, "do 
 4. Where a ported skill and a bundled prompt disagree about *orchestration*, the bundled prompt wins. Where they disagree about the *contract*, D16 wins — that is the whole reason these agents exist.
 5. `mp-evidence-auditor` is retained deliberately even though built-in `evidence-auditor` exists, because the guide's verification step requires checking a specific claim against specific sources rather than a general second opinion. If M4 shows the two are functionally identical in practice, collapse to the built-in and record the change here.
 
+### D17 — Installation route and scope: `pi install` only; `.agents/skills` for bare skills
+
+**Decision.** This package is installed with `pi install` and nothing else. Scope is chosen on the command line, never by a prompt: `pi install <source>` is user scope, `pi install -l <source>` is project scope. A skill set that ships nothing but skills uses the `.agents/skills` convention instead. **The two routes are never mixed for the same skill set.**
+
+**Why `pi install` is not interchangeable.** The package declares three resource types in its `pi` manifest: skills (`pi.skills`), the four `mp-*` subagent definitions (`pi.subagents.agents`), and the `git-guardrails` extension (`pi.extensions`). Only an installed Pi package delivers all three. A skills-directory install delivers the first and silently drops the other two — and that is not a cosmetic loss: `research`, `code-review`, and `implement` dispatch `mp-researcher` / `mp-evidence-auditor` / `mp-review-*` **by name**, so they fail at delegation time rather than at preflight. That is precisely the failure mode D10 exists to prevent.
+
+**Scope.**
+
+| Command | Settings entry | Package tree |
+|---|---|---|
+| `pi install <source>` | `~/.pi/agent/settings.json` (user) | `~/.pi/agent/npm/node_modules/<pkg>/` |
+| `pi install -l <source>` | `<repo>/.pi/settings.json` (project) | `<repo>/.pi/npm/node_modules/<pkg>/` |
+
+There is no prompt and no auto-detection: the flag *is* the choice. If the same package identity is installed in both scopes, project wins and the user entry is dropped (`dedupePackages`: "project scope wins over global for same package identity"), so the pair is safe, just redundant.
+
+**Where the skills live, and why it is not `.agents/skills`.**
+
+Pi reads package skills **from the package tree**, through the manifest. They are not copied, synced, or symlinked into a skills directory, so this package's skills do not appear under `.agents/skills` or `.pi/skills`. That is a deliberate consequence of the route above, not an oversight.
+
+The Agent Skills specification does not mandate a location — it "only defines what goes inside" a skill. The integration guide *recommends* scanning, at each scope, both a client-specific directory and the `.agents/skills` convention, and calls the latter "a widely-adopted convention". So `.agents/skills` is a convention, not a standard, and this package trades it for the ability to ship all three resource types.
+
+Shipping skills inside an npm package is itself an established pattern — a package-based distribution with a sync step into a skills directory (`skills-npm`'s proposal, and `skills experimental_sync`, which exists precisely to bridge that step for harnesses that do not read manifests). The only novelty here is that Pi consumes the manifest directly and skips the sync.
+
+**Skill precedence, and why mixing routes is not free.**
+
+Pi sorts every resolved skill by precedence before applying "first wins" (`resourcePrecedenceRank`):
+
+| Rank | Resource |
+|---|---|
+| 0 | project + settings entry |
+| 1 | project + auto-discovered — includes `<repo>/.agents/skills` |
+| 2 | user + settings entry |
+| 3 | user + auto-discovered — includes `~/.agents/skills` |
+| 4 | package resource — **`pi install`, any scope** |
+
+Package resources rank **last**. So installing this package *and* placing the same skills under `.agents/skills` does not produce two usable copies; it produces:
+
+- the `.agents/skills` copy **shadowing** the package's copy for every duplicated name;
+- one `collision` diagnostic per name with `winnerPath` / `loserPath` — 26 of them for this package (`dist/core/skills.js`);
+- a split install: skills from `.agents/skills`, while the `mp-*` agents and the extension still come from the package;
+- two independent update streams (`npx skills update` vs `pi update`) for one contract, so the skill text can drift from the agents and extension it names.
+
+**Therefore: one route per skill set.** Choose by what the set ships — if it ships anything beyond `SKILL.md` folders, it is a package, and packages are installed with `pi install`.
+
+**Bare skills still use the convention.**
+
+A skill that ships nothing but itself has nothing to lose, and `.agents/skills` is the correct home: `~/.agents/skills/` (user) or `<repo>/.agents/skills/` (project). Pi scans both natively, so no settings entry is needed.
+
+Getting one there today is the wrinkle. The `skills` CLI's `pi` target maps to `.pi/skills` / `~/.pi/agent/skills`, so `-a pi` alone does **not** use the convention. It lands in `.agents/skills` in symlink mode — multiple agents targeted, e.g. `--all` or `-a pi -a universal` — or after the upstream change below. Targeting `universal` globally is a trap: that entry's user directory is `~/.config/agents/skills`, which Pi does not read.
+
+**Follow-up that does not affect this package.**
+
+`vercel-labs/skills` maps its `pi` target to `.pi/skills` (project) and `~/.pi/agent/skills` (user). Changing `skillsDir` to `.agents/skills` in its `src/agents.ts` would make `npx skills add` land in the conventional directory for every Pi user. It is a one-line change; note that because `isUniversalAgent()` keys off `skillsDir`, it also reroutes global installs to `~/.agents/skills` (which Pi reads) and retires `~/.pi/agent/skills`. Worth filing upstream; it changes nothing in this package. Drafted text: [`docs/upstream/vercel-labs-skills-pi-agents-dir.md`](./upstream/vercel-labs-skills-pi-agents-dir.md).
+
+**Consequences.** The README must document both scopes (`pi install` vs `pi install -l`), state that `.agents/skills` is not where this package's skills live and why, and carry the "one route per skill set" warning. The setup skill's D11 collision preflight already scans all four skill roots, so it detects the mixed case. The route does not change the dependency policy: this package and both prerequisites are installed unpinned (D13 as amended).
+
 ---
 
 ## 6. Work plan
@@ -459,7 +517,7 @@ Each milestone is a vertical slice: it leaves the package loadable and the alrea
 ### M0 — Package scaffolding (blocking: none)
 
 - [ ] `package.json`: name, version `0.1.0`, `license: MIT`, `keywords: ["pi-package"]`, `pi.skills`, no runtime deps.
-- [ ] `README.md`: git-URL install route first, then npm (D12); document the prerequisites **per capability** (§1 table: `pi-subagents` for any delegating skill, `pi-web-access` only for research) with the exact install commands, and state the pinned-vs-floating update behavior from D13 so "pinned" is not read as "locked" (D13); document the invocation model — user-invoked skills are started **only** by typing `/skill:<name>`, model-invoked skills load on demand (D3, including the `enableSkillCommands` requirement) — plus the skill index table with an invocation column; include a troubleshooting entry for a shadowed skill name ("the wrong `/skill:<name>` runs") with the remove/rename/reorder fix (D11).
+- [ ] `README.md`: git-URL install route first, then npm (D12); document the prerequisites **per capability** (§1 table: `pi-subagents` for any delegating skill, `pi-web-access` only for research) with the exact install commands, and state the update behavior from D13 (D13); document the invocation model — user-invoked skills are started **only** by typing `/skill:<name>`, model-invoked skills load on demand (D3, including the `enableSkillCommands` requirement) — plus the skill index table with an invocation column; include a troubleshooting entry for a shadowed skill name ("the wrong `/skill:<name>` runs") with the remove/rename/reorder fix (D11).
 - [ ] `LICENSE`, `NOTICE` (pinned commit), `CHANGELOG.md`.
 - [ ] `.pi/settings.json` dev config pointing skills at `./skills`.
 - [ ] Minimal placeholder skill to prove discovery, then remove.
@@ -482,7 +540,7 @@ Each milestone is a vertical slice: it leaves the package loadable and the alrea
 - [ ] Define the exact `pi-subagents` calls the ported skills use — agent name, foreground/background, context (fresh vs fork), and how run identity, result retrieval, cancellation, and failure are handled. Scope this to *our* dispatch sites only; per D16 the generic delegation mechanics stay owned by the bundled `pi-subagents` skill and must not be restated in the ported skills.
 - [ ] Add package-discovered `mp-researcher` and `mp-evidence-auditor` agent definitions. `mp-researcher` runs as a background child and therefore needs no explicit extension path (D14); confirm that at launch instead of configuring one. Record the resolved `pi-web-access` extension path only for agents that run foreground (see the `mp-review-*` bullet). Per D16, encode Matt's required outputs, not the bundled prompts' prose.
 - [ ] Add package-discovered `mp-review-standards` and `mp-review-spec` definitions with separate prompts and read-only capability ceilings, encoding the two fixed named axes Matt's `code-review` requires (D16). Do not copy `parallel-review.md`.
-- [ ] `setup-matt-pocock-skills/SKILL.md` rewritten for Pi per D6, including the ordered preflight for `subagent`, `web_search`, `fetch_content`, `get_search_content`, and `source_check` with pinned install commands for missing packages, plus the D11 skill-name collision check.
+- [ ] `setup-matt-pocock-skills/SKILL.md` rewritten for Pi per D6, including the ordered preflight for `subagent`, `web_search`, `fetch_content`, `get_search_content`, and `source_check` with install commands for missing packages, plus the D11 skill-name collision check.
 - [ ] `ask-matt/SKILL.md` + `PHASE-BOUNDARIES.md` adapted to Pi commands (`/new`, `/compact`) and Pi skill labels.
 
 **Acceptance:** setup runs against a scratch repo and produces that repo's `AGENTS.md` + `docs/agents/*` (output, not templates); ask-matt routes correctly in a scripted manual test.
@@ -520,16 +578,16 @@ Port: `grill-me`, `to-questionnaire`, `wait-what`, `writing-for-agents`, `teach`
 
 ### M6 — Validation, docs, release (blocked by M3, M4, M5)
 
-- [ ] `scripts/smoke-test.sh`: install pinned `pi-subagents`, pinned `pi-web-access`, and this package into a fixture repo; assert parent and research-child tool availability; assert every package skill name resolves to this package's `skills/` path (collision check, D11); assert every cross-skill `SKILL.md` reference resolves from the **installed** package copy, not just the working repo (D4); assert `enableSkillCommands` is on and that each user-invoked skill resolves as `/skill:<name>` while each model-invoked skill appears in the system prompt (D3); run a scripted local-Markdown workflow.
+- [ ] `scripts/smoke-test.sh`: install `pi-subagents`, `pi-web-access`, and this package into a fixture repo; assert parent and research-child tool availability; assert every package skill name resolves to this package's `skills/` path (collision check, D11); assert every cross-skill `SKILL.md` reference resolves from the **installed** package copy, not just the working repo (D4); assert `enableSkillCommands` is on and that each user-invoked skill resolves as `/skill:<name>` while each model-invoked skill appears in the system prompt (D3); run a scripted local-Markdown workflow.
 - [ ] Invocation-model test (D3): for a sample of user-invoked skills, assert a natural-language request does **not** start the skill and assert `/skill:<name>` does; for a sample of model-invoked skills, assert the reverse. This is the check most likely to regress silently.
 - [ ] Collision test: install a decoy skill with a colliding name into the fixture repo before this package and assert setup reports the colliding name and its source (D11); where provenance is unavailable, assert it reports the name as unattributed rather than silently claiming resolution.
 - [ ] Parallelism tests: overlapping research children actually run concurrently; both review axes complete; child failure/abort/timeout leaves affected tickets unresolved and visible.
 - [ ] Child-extension integration test (D14): launch a real foreground child and assert `web_search`, `fetch_content`, `get_search_content`, and `source_check` are registered from the resolved `pi-web-access` path; assert a missing provider fails the run with the unavailable names.
-- [ ] Upgrade-policy validation (D13): run the smoke test against the pinned versions (must pass) and against the latest versions (informational; record any drift in the README compatibility note).
+- [ ] Upgrade-policy validation (D13): the smoke test installs the floating pair; record any drift in the README compatibility note.
 - [ ] `scripts/fetch-upstream.mjs`: fetch pinned commit, diff against ported files, report drift.
 - [ ] Full-repo validator run in a `npm test` script; zero errors.
 - [ ] Human review against the guide's checklists (before `/to-spec`, `/to-tickets`, `/implement`, closing a ticket, phase boundary).
-- [ ] README skill index finalized with invocation column, the git-URL install route first (D12), and a compatibility note stating only the pinned `pi-subagents`/`pi-web-access` versions are validated (D13); `CHANGELOG` 0.1.0.
+- [ ] README skill index finalized with invocation column, the git-URL install route first (D12), and a compatibility note stating that no `pi-subagents`/`pi-web-access` version is pinned or guaranteed (D13); `CHANGELOG` 0.1.0.
 - [ ] Tag `v0.1.0` and publish to npm (D12).
 - [ ] Stretch: GitHub Action running the validator on PRs.
 
@@ -580,7 +638,7 @@ Invocation-visibility test is the one most likely to regress, so it needs two di
 
 1. ~~Distribution~~ — **resolved (D12):** git URL is the primary documented route for v1; publish to npm at the `v0.1.0` tag for discoverability and version pinning.
 2. ~~Skill naming~~ — **resolved:** keep exact upstream names verbatim; mitigate collision risk with a setup-time and CI collision check rather than prefixing (D11).
-3. ~~Dependency packaging~~ — **resolved (D13):** keep `pi-subagents` and `pi-web-access` as separate pinned `pi install` prerequisites; do not bundle them as ordinary npm dependencies. Upgrade policy recorded in D13.
+3. ~~Dependency packaging~~ — **resolved (D13):** keep `pi-subagents` and `pi-web-access` as separate floating `pi install` prerequisites; do not bundle them as ordinary npm dependencies. Upgrade policy recorded in D13; version pinning removed by the 2026-09-19 amendment.
 4. ~~Child extension identifier~~ — **resolved (D14):** `subagentOnlyExtensions` takes a filesystem path, not a package ID; resolve the installed `pi-web-access` entry path at setup time and lock it with an M6 integration test. This is a foreground-only concern — background children already load ambient extensions.
 5. ~~Handoff durability~~ — **resolved:** git-ignored by default; rationale recorded in D5.
 6. ~~`teach` and `setup-pre-commit`~~ — **resolved (D15):** ship `teach` in v1; defer `setup-pre-commit` to post-v1 (§10 Next steps).
@@ -611,7 +669,7 @@ Everything deliberately pushed past v0.1.0, plus the follow-ups that are schedul
 |---|---|
 | Confirm whether any foreground child needs web tools; if none does, close D14 as documentation only and drop the path-resolution work | M2 |
 | Confirm the exact `pi-subagents` API surface relied on (`subagent`, background dispatch/wait, run identity, failure handling) against the pinned version | M2 |
-| Validate the upgrade policy in D13: run the smoke test against the pinned versions (required) and against latest (informational) | M6 |
+| Validate the upgrade policy in D13: run the smoke test against the floating pair | M6 |
 | Re-run the collision check (D11) from a fresh install, including the decoy-collision test | M6 |
 | Verify the invocation model end to end (D3): user-invoked skills start only via `/skill:<name>`, model-invoked skills load on demand, and `enableSkillCommands` is confirmed on | M2 (probe definition) → M6 (test) |
 | Verify the local-Markdown, `gh`, and `glab` tracker templates all work | M6 |
@@ -623,7 +681,7 @@ Everything deliberately pushed past v0.1.0, plus the follow-ups that are schedul
 |---|---|
 | Publish to npm (`pi-adapted-mp-skills`) | D12 makes this part of the `v0.1.0` release; listed here only as the remaining release step if it slips. |
 | `fetch-upstream.mjs` drift automation in CI | Scheduled as a stretch task in M6; a GitHub Action running it plus the validator is the natural next step. |
-| Bundled dependency packaging (D13 option B) | Revisit only if separate pinned installs prove too error-prone for users to follow. |
+| Bundled dependency packaging (D13 option B) | Revisit only if separate floating installs prove too error-prone for users to follow. |
 | Graceful degradation for subagents/web (D10 option B/C) | Revisit only if the hard gate proves to be a real adoption blocker. |
 
 ---
