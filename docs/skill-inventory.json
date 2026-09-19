@@ -1,0 +1,2179 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-18",
+  "generatedBy": "M1",
+  "schema": {
+    "purpose": "Machine-readable inventory of every upstream mattpocock/skills SKILL.md at the pinned commit, plus the frozen Claude-Code/Codex -> Pi token map. Consumed by M2-M5 (porting) and M6 (scripts/validate-skills.mjs, scripts/fetch-upstream.mjs).",
+    "upstreamPath": "Repo-relative path of the skill directory at the pinned commit (forward slashes, no drive letters).",
+    "upstreamName": "Value of the upstream frontmatter `name` field. May differ from the parent directory name.",
+    "bucket": "engineering | productivity | misc | in-progress. Mirrors the upstream directory bucket.",
+    "invocation": "user | model. Derived from the presence of `disable-model-invocation: true`, read from each file (not copied from ADAPTATION_PLAN.md section 2).",
+    "disableModelInvocation": "Boolean mirror of the upstream frontmatter field.",
+    "frontmatterFields": "Every upstream frontmatter key, in file order.",
+    "droppedFrontmatter": "Upstream frontmatter keys Pi does not read (D2) and that must be dropped in the port.",
+    "sidecars": "Every file in the skill directory, including SKILL.md and agents/openai.yaml, relative to the skill directory.",
+    "externalLinks": "http(s) URLs appearing in SKILL.md. Sidecar URLs are in sidecarExternalLinks.",
+    "sidecarExternalLinks": "Map of sidecar path -> http(s) URLs in that sidecar.",
+    "crossSkillLoads": "Operative cross-skill loads only. kind=model-load (upstream `Skill tool` or a bare /<name> operative reference) gets the D4 relative path in d4Path; kind=slash-load is a bare /<name> operative reference; kind=user-handoff is a user-invoked target, where D4 forbids a load instruction and d4Path is null.",
+    "d4Path": "Exact path written into the ported body, computed from the REFERENCING skill directory: same bucket `../<name>/SKILL.md`, cross-bucket `../../<bucket>/<name>/SKILL.md`. Null for kind=user-handoff and for non-ported skills.",
+    "slashCommandReferences": "Bare /<skill-name> references in SKILL.md (Claude slash-command syntax). Excludes /clear and /compact, which are harnessTokens. Resolves to D5-16.",
+    "harnessTokens": "Canonical token labels found in SKILL.md. Every label resolves to a row in tokenMap via tokenMap.tokenIndex.",
+    "sidecarHarnessTokens": "Map of sidecar path -> canonical token labels found in that sidecar.",
+    "hasOpenaiYaml": "True when the skill ships an agents/openai.yaml sidecar (all 38 at the pin).",
+    "disposition": "port | adapt | rename | drop | defer, consistent with ADAPTATION_PLAN.md section 2.",
+    "ownerMilestone": "M2 | M3 | M4 | M5 | post-v1 | none.",
+    "piPath": "Path in THIS package once shipped, or null when not shipped. Renamed skills use the renamed directory.",
+    "confidence": "verified | inferred. verified means read directly from the pinned file; inferred means derived from plan policy rather than the file.",
+    "notes": "Free text. Empty string means nothing beyond the structured fields."
+  },
+  "upstream": {
+    "repo": "https://github.com/mattpocock/skills",
+    "commit": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+    "equalsMainAsOf": "2026-09-18",
+    "cachePathUsed": "../mp-upstream-c55ee46",
+    "cacheNote": "Disposable clone outside this repo. Not vendored. Re-fetch with: git clone https://github.com/mattpocock/skills.git ../mp-upstream-c55ee46 && git -C ../mp-upstream-c55ee46 checkout c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+  },
+  "counts": {
+    "total": 38,
+    "engineering": 18,
+    "productivity": 7,
+    "misc": 4,
+    "inProgress": 9,
+    "deprecated": 0,
+    "shippedInV1": 26,
+    "deferredPostV1": 10,
+    "dropped": 2,
+    "byInvocation": {
+      "user": 22,
+      "model": 16
+    },
+    "canonicalByInvocation": {
+      "user": 14,
+      "model": 15
+    },
+    "shippedByInvocation": {
+      "user": 14,
+      "model": 12
+    },
+    "byDisposition": {
+      "port": 20,
+      "adapt": 5,
+      "rename": 1,
+      "drop": 2,
+      "defer": 10
+    },
+    "byOwnerMilestone": {
+      "M2": 2,
+      "M3": 10,
+      "M4": 8,
+      "M5": 6,
+      "post-v1": 10,
+      "none": 2
+    }
+  },
+  "buckets": [
+    {
+      "id": "engineering",
+      "upstreamPath": "skills/engineering",
+      "skillCount": 18,
+      "piPath": "skills/engineering"
+    },
+    {
+      "id": "productivity",
+      "upstreamPath": "skills/productivity",
+      "skillCount": 7,
+      "piPath": "skills/productivity"
+    },
+    {
+      "id": "misc",
+      "upstreamPath": "skills/misc",
+      "skillCount": 4,
+      "piPath": "skills/misc"
+    },
+    {
+      "id": "in-progress",
+      "upstreamPath": "skills/in-progress",
+      "skillCount": 9,
+      "piPath": null,
+      "note": "Deferred to post-v1. No in-progress bucket in this package (section 4)."
+    },
+    {
+      "id": "deprecated",
+      "upstreamPath": "skills/deprecated",
+      "skillCount": 0,
+      "piPath": null,
+      "note": "The bucket directory exists at the pin but contains only README.md, which states the bucket is empty. The plan's deprecated row is therefore empty at the pin, as the task instructed to record."
+    }
+  ],
+  "repoLevel": [
+    {
+      "upstreamPath": ".claude-plugin/",
+      "files": [
+        ".claude-plugin/plugin.json",
+        ".claude-plugin/marketplace.json"
+      ],
+      "disposition": "drop",
+      "decision": "D1",
+      "note": "Claude Code plugin manifest. This package ships one installation route only (a Pi package)."
+    },
+    {
+      "upstreamPath": ".agents/",
+      "files": [
+        ".agents/invocation.md",
+        ".agents/adr/",
+        ".agents/writing-docs.md",
+        ".agents/install-block.md"
+      ],
+      "disposition": "drop",
+      "decision": "D2",
+      "note": "Upstream authoring/agent instructions, not package content. Its invocation classification is preserved per skill as metadata.invocation. NOT the same path as this package's agents/ directory (D1)."
+    },
+    {
+      "upstreamPath": ".out-of-scope/",
+      "files": [
+        ".out-of-scope/mainstream-issue-trackers-only.md",
+        ".out-of-scope/question-limits.md",
+        ".out-of-scope/setup-skill-verify-mode.md"
+      ],
+      "disposition": "drop",
+      "decision": "D7",
+      "note": "Upstream project's own decision KB about its skills. Not shipped. The triage skill writes a target repo's own .out-of-scope/ at run time."
+    },
+    {
+      "upstreamPath": "scripts/",
+      "files": [
+        "scripts/link-skills.sh",
+        "scripts/list-skills.sh",
+        "scripts/sync-plugin-version.mjs"
+      ],
+      "disposition": "drop",
+      "decision": "section 4",
+      "note": "Upstream repo tooling. This package's scripts/ (validate-skills.mjs, fetch-upstream.mjs, smoke-test.sh) is M2/M6 work."
+    },
+    {
+      "upstreamPath": ".github/",
+      "files": [
+        ".github/workflows/"
+      ],
+      "disposition": "drop",
+      "decision": "section 10",
+      "note": "Upstream CI. An equivalent validator Action is an M6 stretch task."
+    },
+    {
+      "upstreamPath": ".changeset/",
+      "files": [
+        ".changeset/"
+      ],
+      "disposition": "drop",
+      "decision": "section 4",
+      "note": "Upstream release tooling (changesets); this package uses CHANGELOG.md directly."
+    },
+    {
+      "upstreamPath": "AGENTS.md, CLAUDE.md, CONTEXT.md, README.md, package.json, package-lock.json, .gitignore",
+      "files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CONTEXT.md",
+        "README.md",
+        "package.json",
+        "package-lock.json",
+        ".gitignore"
+      ],
+      "disposition": "drop",
+      "decision": "D1",
+      "note": "Upstream repo's own files. This package has its own README/LICENSE/NOTICE/package.json."
+    },
+    {
+      "upstreamPath": "skills/*/README.md",
+      "files": [
+        "skills/engineering/README.md",
+        "skills/productivity/README.md",
+        "skills/misc/README.md",
+        "skills/in-progress/README.md",
+        "skills/deprecated/README.md"
+      ],
+      "disposition": "drop",
+      "decision": "D1",
+      "note": "Bucket READMEs. Not skills (no frontmatter). They carry the upstream invocation split and reference agents/openai.yaml; the package README's skill index supersedes them."
+    }
+  ],
+  "tokenMap": {
+    "version": 2,
+    "frozenBy": "M1",
+    "frozenAt": "2026-09-18",
+    "sourceSection": "docs/ADAPTATION_PLAN.md section 5 / D5",
+    "hashAlgo": "sha256",
+    "hashScope": "JSON.stringify of rows.map(r => [r.rowId, r.upstream, r.pi]), keys in that order, no whitespace",
+    "hash": "9e86593bef1167039b66b4eb7d8dc69b5cda1cb647cde6e9fb086ad1e4bcda10",
+    "history": [
+      {
+        "version": 1,
+        "note": "D5 as written at plan freeze: rows D5-01..D5-15."
+      },
+      {
+        "version": 2,
+        "note": "M1 additions only: rows D5-16..D5-21 appended to the D5 table. No existing row changed."
+      }
+    ],
+    "bans": [
+      {
+        "token": "/clear",
+        "reason": "Substitution is total (D5). Ported bodies say /new. No allowlist."
+      },
+      {
+        "token": "CLAUDE.md",
+        "reason": "Ported bodies say AGENTS.md (D5, D6). No allowlist."
+      },
+      {
+        "token": "agents/openai.yaml",
+        "reason": "Codex picker metadata is dropped (D2). No ported body refers to it. No allowlist."
+      },
+      {
+        "token": "Skill tool",
+        "reason": "Pi has no Skill tool; D4 relative SKILL.md loads replace it. No allowlist."
+      },
+      {
+        "token": "Task tool",
+        "reason": "Pi has no Task tool; the subagent tool from pi-subagents replaces it. No allowlist. Note: upstream has zero occurrences of the literal string at the pin; `Task` as a Wayfinder ticket type is NOT this token."
+      }
+    ],
+    "tokenIndex": {
+      "/clear": [
+        "D5-01"
+      ],
+      "/compact": [
+        "D5-02"
+      ],
+      "Skill tool": [
+        "D5-03"
+      ],
+      "subagent": [
+        "D5-04"
+      ],
+      "background agent": [
+        "D5-05"
+      ],
+      "review-axes": [
+        "D5-08"
+      ],
+      "bare slash-command skill reference": [
+        "D5-16"
+      ],
+      "agents/openai.yaml": [
+        "D5-17"
+      ],
+      "argument-hint": [
+        "D5-18"
+      ],
+      "allowed-tools": [
+        "D5-19"
+      ],
+      "~/.claude": [
+        "D5-20"
+      ],
+      "$CLAUDE_PROJECT_DIR": [
+        "D5-20"
+      ],
+      "Claude Code PreToolUse hook": [
+        "D5-20"
+      ],
+      "claude --bg": [
+        "D5-21"
+      ],
+      "CLAUDE.md": [
+        "D5-15"
+      ],
+      "handoff -> OS temp": [
+        "D5-13"
+      ],
+      "architecture report -> OS temp": [
+        "D5-14"
+      ],
+      "WebSearch": [
+        "D5-09"
+      ],
+      "WebFetch": [
+        "D5-09"
+      ],
+      "Glob": [
+        "D5-10"
+      ],
+      "TodoWrite": [
+        "D5-11"
+      ],
+      "AskUserQuestion": [
+        "D5-12"
+      ]
+    },
+    "rows": [
+      {
+        "rowId": "D5-01",
+        "addedBy": "plan",
+        "upstream": "/clear",
+        "pi": "/new starts a new session",
+        "skills": [
+          "engineering/ask-matt"
+        ]
+      },
+      {
+        "rowId": "D5-02",
+        "addedBy": "plan",
+        "upstream": "/compact",
+        "pi": "/compact [instructions] (unchanged)",
+        "skills": [
+          "engineering/ask-matt"
+        ]
+      },
+      {
+        "rowId": "D5-03",
+        "addedBy": "plan",
+        "upstream": "Call the Skill tool with \"X\"",
+        "pi": "Relative SKILL.md load instruction (D4): `../<name>/SKILL.md` same bucket, `../../<bucket>/<name>/SKILL.md` cross-bucket",
+        "skills": [
+          "engineering/grill-with-docs",
+          "engineering/improve-codebase-architecture",
+          "engineering/tdd",
+          "engineering/triage",
+          "engineering/wayfinder",
+          "productivity/grill-me",
+          "productivity/handoff",
+          "in-progress/claude-handoff",
+          "in-progress/retro",
+          "in-progress/setup-ts-deep-modules"
+        ]
+      },
+      {
+        "rowId": "D5-04",
+        "addedBy": "plan",
+        "upstream": "Subagent / Task",
+        "pi": "Required `subagent` tool from pi-subagents",
+        "skills": [
+          "engineering/code-review",
+          "engineering/codebase-design",
+          "engineering/improve-codebase-architecture",
+          "engineering/wayfinder",
+          "productivity/grilling",
+          "productivity/writing-for-agents",
+          "in-progress/implement-spec"
+        ]
+      },
+      {
+        "rowId": "D5-05",
+        "addedBy": "plan",
+        "upstream": "Background research agent",
+        "pi": "Detached mp-researcher subagent; save its run identity and collect its result before resolving the ticket",
+        "skills": [
+          "engineering/research",
+          "engineering/wayfinder"
+        ]
+      },
+      {
+        "rowId": "D5-06",
+        "addedBy": "plan",
+        "upstream": "Parallel research frontier",
+        "pi": "One bounded mp-researcher child per independent research ticket, dispatched concurrently; no shared mutable artifact paths",
+        "skills": [
+          "engineering/wayfinder"
+        ]
+      },
+      {
+        "rowId": "D5-07",
+        "addedBy": "plan",
+        "upstream": "Consequential research verification",
+        "pi": "Fresh mp-evidence-auditor child checks claim/source support independently",
+        "skills": []
+      },
+      {
+        "rowId": "D5-08",
+        "addedBy": "plan",
+        "upstream": "Two parallel review axes",
+        "pi": "mp-review-standards and mp-review-spec children dispatched concurrently; parent synthesizes only after both finish",
+        "skills": [
+          "engineering/code-review"
+        ]
+      },
+      {
+        "rowId": "D5-09",
+        "addedBy": "plan",
+        "upstream": "WebSearch / WebFetch",
+        "pi": "web_search / fetch_content from the required pi-web-access package (D10); no curl fallback",
+        "skills": []
+      },
+      {
+        "rowId": "D5-10",
+        "addedBy": "plan",
+        "upstream": "Glob",
+        "pi": "find / ls",
+        "skills": []
+      },
+      {
+        "rowId": "D5-11",
+        "addedBy": "plan",
+        "upstream": "TodoWrite",
+        "pi": "Pi todo extension (optional); otherwise the tracker ticket is the checklist",
+        "skills": []
+      },
+      {
+        "rowId": "D5-12",
+        "addedBy": "plan",
+        "upstream": "AskUserQuestion",
+        "pi": "Ask in plain conversation; use the question/questionnaire extension examples only if installed",
+        "skills": []
+      },
+      {
+        "rowId": "D5-13",
+        "addedBy": "plan",
+        "upstream": "handoff -> OS temp",
+        "pi": ".scratch/handoffs/<ISO>-<slug>.md, git-ignored by default",
+        "skills": [
+          "productivity/handoff"
+        ]
+      },
+      {
+        "rowId": "D5-14",
+        "addedBy": "plan",
+        "upstream": "improve-codebase-architecture report -> OS temp",
+        "pi": ".scratch/reports/<ISO>-architecture.html, git-ignored by default",
+        "skills": [
+          "engineering/improve-codebase-architecture"
+        ]
+      },
+      {
+        "rowId": "D5-15",
+        "addedBy": "plan",
+        "upstream": "CLAUDE.md",
+        "pi": "AGENTS.md",
+        "skills": [
+          "engineering/setup-matt-pocock-skills",
+          "productivity/writing-for-agents",
+          "in-progress/retro",
+          "in-progress/setup-ts-deep-modules"
+        ]
+      },
+      {
+        "rowId": "D5-16",
+        "addedBy": "M1",
+        "upstream": "Bare /<skill-name> slash-command reference (e.g. /to-spec, /tdd, /code-review, /grilling). NOTE: section 3 anticipated this but D5's map had no row.",
+        "pi": "Human-facing label: `/skill:<name>` (works for user- and model-invoked skills). Operative instruction (the agent must run it now): the D4 relative SKILL.md load; if the target is user-invoked, 'tell the user to run /skill:<name>' instead",
+        "skills": [
+          "engineering/ask-matt",
+          "engineering/code-review",
+          "engineering/implement",
+          "engineering/improve-codebase-architecture",
+          "engineering/to-spec",
+          "engineering/to-tickets",
+          "engineering/triage",
+          "engineering/wayfinder",
+          "in-progress/implement-spec",
+          "in-progress/loop-me",
+          "in-progress/retro",
+          "in-progress/claude-handoff",
+          "in-progress/pr",
+          "productivity/grill-me",
+          "productivity/handoff"
+        ]
+      },
+      {
+        "rowId": "D5-17",
+        "addedBy": "M1",
+        "upstream": "agents/openai.yaml (Codex picker metadata: interface.display_name, interface.short_description, policy.allow_implicit_invocation)",
+        "pi": "Dropped (D2). The invocation classification it encodes is preserved as metadata.invocation in the ported frontmatter",
+        "skills": [
+          "all 38 (sidecar); referenced by skills/engineering/README.md and skills/productivity/README.md (repo-level, dropped)"
+        ]
+      },
+      {
+        "rowId": "D5-18",
+        "addedBy": "M1",
+        "upstream": "argument-hint (frontmatter)",
+        "pi": "Dropped (D2). Pi appends passed arguments to the skill content as `User: <args>`, so no hint field is needed",
+        "skills": [
+          "productivity/handoff",
+          "productivity/teach",
+          "in-progress/claude-handoff",
+          "in-progress/loop-me"
+        ]
+      },
+      {
+        "rowId": "D5-19",
+        "addedBy": "M1",
+        "upstream": "allowed-tools (frontmatter, Claude tool names)",
+        "pi": "Keep only where a skill genuinely needs pre-approval, using Pi tool names (read, bash, edit, write, grep, find, ls); otherwise omit (D2). Zero upstream occurrences at the pin, so this row is prospective",
+        "skills": []
+      },
+      {
+        "rowId": "D5-20",
+        "addedBy": "M1",
+        "upstream": "Claude Code hook mechanism: PreToolUse matcher on Bash, .claude/settings.json, ~/.claude/settings.json, .claude/hooks/, ~/.claude/hooks/, $CLAUDE_PROJECT_DIR",
+        "pi": "Pi extension hook `pi.on(\"tool_call\", ...)` returning `{ block: true, reason }` (see Pi docs/extensions.md; bundled examples permission-gate.ts and protected-paths.ts). Packaging of the guardrail extension is M5 work; see notes on git-guardrails",
+        "skills": [
+          "misc/git-guardrails-claude-code (to be renamed misc/git-guardrails)"
+        ]
+      },
+      {
+        "rowId": "D5-21",
+        "addedBy": "M1",
+        "upstream": "claude --bg / claude agents (Claude Code CLI background-agent launch)",
+        "pi": "pi-subagents background child (the same mechanism as D5-05); skill is deferred post-v1, so this row is prospective",
+        "skills": [
+          "in-progress/claude-handoff"
+        ]
+      }
+    ]
+  },
+  "newTokensDiscovered": [
+    {
+      "upstream": "Bare /<skill-name> slash-command reference",
+      "pi": "/skill:<name> (human-facing) or a D4 relative SKILL.md load (operative)",
+      "addedToD5": true,
+      "rowId": "D5-16",
+      "motivatingSkills": [
+        "engineering/ask-matt (24 labels; the single densest source)",
+        "engineering/implement (/tdd, /code-review operative)",
+        "engineering/code-review, engineering/to-spec, engineering/to-tickets, engineering/triage, engineering/wayfinder (/setup-matt-pocock-skills human hand-off)",
+        "engineering/improve-codebase-architecture (/codebase-design)",
+        "in-progress/implement-spec, in-progress/loop-me",
+        "sidecars: ask-matt/PHASE-BOUNDARIES.md, improve-codebase-architecture/HTML-REPORT.md, setup-matt-pocock-skills/{domain,issue-tracker-github,issue-tracker-gitlab,issue-tracker-local}.md, triage/AGENT-BRIEF.md, wizard/template.sh"
+      ]
+    },
+    {
+      "upstream": "agents/openai.yaml",
+      "pi": "drop; metadata.invocation preserves the classification",
+      "addedToD5": true,
+      "rowId": "D5-17",
+      "motivatingSkills": [
+        "all 38 skills ship one as a sidecar"
+      ]
+    },
+    {
+      "upstream": "argument-hint",
+      "pi": "drop",
+      "addedToD5": true,
+      "rowId": "D5-18",
+      "motivatingSkills": [
+        "productivity/handoff",
+        "productivity/teach",
+        "in-progress/claude-handoff",
+        "in-progress/loop-me"
+      ]
+    },
+    {
+      "upstream": "allowed-tools",
+      "pi": "omit unless pre-approval is genuinely needed; then Pi tool names",
+      "addedToD5": true,
+      "rowId": "D5-19",
+      "motivatingSkills": []
+    },
+    {
+      "upstream": "PreToolUse hook / .claude/settings.json / ~/.claude / $CLAUDE_PROJECT_DIR",
+      "pi": "Pi extension tool_call hook returning { block: true, reason }",
+      "addedToD5": true,
+      "rowId": "D5-20",
+      "motivatingSkills": [
+        "misc/git-guardrails-claude-code"
+      ]
+    },
+    {
+      "upstream": "claude --bg / claude agents",
+      "pi": "pi-subagents background child (D5-05)",
+      "addedToD5": true,
+      "rowId": "D5-21",
+      "motivatingSkills": [
+        "in-progress/claude-handoff"
+      ]
+    }
+  ],
+  "d5RowsNotUsedAtPin": [
+    {
+      "rowId": "D5-07",
+      "token": "Consequential research verification",
+      "note": "No upstream file instructs a second verification child. The row stays in the map because section 1/D16 require mp-evidence-auditor for consequential research; the port adds the step."
+    },
+    {
+      "rowId": "D5-09",
+      "token": "WebSearch / WebFetch",
+      "note": "Zero occurrences at the pin. Upstream research delegates to a subagent whose tools are described only as 'primary sources'."
+    },
+    {
+      "rowId": "D5-10",
+      "token": "Glob",
+      "note": "Zero occurrences at the pin."
+    },
+    {
+      "rowId": "D5-11",
+      "token": "TodoWrite",
+      "note": "Zero occurrences at the pin."
+    },
+    {
+      "rowId": "D5-12",
+      "token": "AskUserQuestion",
+      "note": "Zero occurrences at the pin; upstream asks in plain conversation already."
+    },
+    {
+      "rowId": "D5-19",
+      "token": "allowed-tools",
+      "note": "Zero occurrences at the pin."
+    },
+    {
+      "rowId": "D5-20",
+      "token": "Task tool (literal)",
+      "note": "The literal string 'Task tool' has zero occurrences. Wayfinder's `**Task** (HITL or AFK)` is a ticket type, not the Task tool; the M2 validator must ban the literal 'Task tool', never a bare 'Task'."
+    }
+  ],
+  "skills": [
+    {
+      "upstreamPath": "skills/engineering/ask-matt",
+      "upstreamName": "ask-matt",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "PHASE-BOUNDARIES.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [
+        "https://www.aihero.dev/ai-coding-dictionary/smart-zone"
+      ],
+      "sidecarExternalLinks": {
+        "PHASE-BOUNDARIES.md": [
+          "https://www.aihero.dev/ai-coding-dictionary/smart-zone"
+        ]
+      },
+      "crossSkillLoads": [],
+      "slashCommandReferences": [
+        "code-review",
+        "codebase-design",
+        "diagnosing-bugs",
+        "domain-modeling",
+        "grill-me",
+        "grill-with-docs",
+        "grilling",
+        "handoff",
+        "implement",
+        "improve-codebase-architecture",
+        "prototype",
+        "research",
+        "resolving-merge-conflicts",
+        "setup-matt-pocock-skills",
+        "tdd",
+        "teach",
+        "to-questionnaire",
+        "to-spec",
+        "to-tickets",
+        "triage",
+        "wait-what",
+        "wayfinder",
+        "wizard",
+        "writing-for-agents"
+      ],
+      "harnessTokens": [
+        "/clear",
+        "/compact",
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {
+        "PHASE-BOUNDARIES.md": [
+          "/clear",
+          "/compact",
+          "bare slash-command skill reference"
+        ]
+      },
+      "hasOpenaiYaml": true,
+      "disposition": "adapt",
+      "ownerMilestone": "M2",
+      "piPath": "skills/engineering/ask-matt/SKILL.md",
+      "confidence": "verified",
+      "notes": "Router over 24 skills; every bare /<name> label becomes /skill:<name> (D3/N1). /clear -> /new; /compact kept. Adapts per section 2 (target names/commands) and M2 (Pi commands)."
+    },
+    {
+      "upstreamPath": "skills/engineering/code-review",
+      "upstreamName": "code-review",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "tell the user to run `/setup-matt-pocock-skills`",
+          "target": "setup-matt-pocock-skills",
+          "targetBucket": "engineering",
+          "kind": "user-handoff",
+          "d4Path": null
+        }
+      ],
+      "slashCommandReferences": [
+        "setup-matt-pocock-skills"
+      ],
+      "harnessTokens": [
+        "subagent",
+        "review-axes",
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "adapt",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/code-review/SKILL.md",
+      "confidence": "verified",
+      "notes": "Two axis prompts become concurrent mp-review-standards / mp-review-spec children (D16); parent synthesizes only after both finish. Also reads the target repo's docs/agents/issue-tracker.md written by setup."
+    },
+    {
+      "upstreamPath": "skills/engineering/codebase-design",
+      "upstreamName": "codebase-design",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "DEEPENING.md",
+        "DESIGN-IT-TWICE.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "subagent"
+      ],
+      "sidecarHarnessTokens": {
+        "DESIGN-IT-TWICE.md": [
+          "subagent"
+        ]
+      },
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/codebase-design/SKILL.md",
+      "confidence": "verified",
+      "notes": "DESIGN-IT-TWICE.md asks for 3+ parallel sub-agents; D16 keeps the contract but delegates orchestration mechanics to the bundled pi-subagents skill."
+    },
+    {
+      "upstreamPath": "skills/engineering/diagnosing-bugs",
+      "upstreamName": "diagnosing-bugs",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "scripts/hitl-loop.template.sh",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {
+        "scripts/hitl-loop.template.sh": [
+          "http://localhost:3000"
+        ]
+      },
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "confidence": "verified",
+      "notes": "PLAN CORRECTION: section 5/D4 claims diagnosing-bugs hands off to improve-codebase-architecture. The pinned file contains no such reference; it ends at Phase 6 cleanup. The hand-off is described only in ask-matt's router prose. So D4 needs no load instruction here. The localhost URL in the sidecar is a dev-server default, not an external link."
+    },
+    {
+      "upstreamPath": "skills/engineering/domain-modeling",
+      "upstreamName": "domain-modeling",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "ADR-FORMAT.md",
+        "CONTEXT-FORMAT.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/domain-modeling/SKILL.md",
+      "confidence": "verified",
+      "notes": "Writes CONTEXT.md / ADRs in the target repo; format sidecars stay inside the skill directory (D7)."
+    },
+    {
+      "upstreamPath": "skills/engineering/grill-with-docs",
+      "upstreamName": "grill-with-docs",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "Call the Skill tool twice, for \"grilling\" and \"domain-modeling\".",
+          "target": "grilling",
+          "targetBucket": "productivity",
+          "kind": "model-load",
+          "d4Path": "../../productivity/grilling/SKILL.md"
+        },
+        {
+          "asWritten": "Call the Skill tool twice, for \"grilling\" and \"domain-modeling\".",
+          "target": "domain-modeling",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../domain-modeling/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "Skill tool"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/grill-with-docs/SKILL.md",
+      "confidence": "verified",
+      "notes": "Entire body is one Skill-tool instruction; D4 requires two separate load instructions (same-bucket and cross-bucket forms both appear here)."
+    },
+    {
+      "upstreamPath": "skills/engineering/implement",
+      "upstreamName": "implement",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "Use /tdd where possible, at pre-agreed seams.",
+          "target": "tdd",
+          "targetBucket": "engineering",
+          "kind": "slash-load",
+          "d4Path": "../tdd/SKILL.md"
+        },
+        {
+          "asWritten": "Once done, use /code-review to review the work.",
+          "target": "code-review",
+          "targetBucket": "engineering",
+          "kind": "slash-load",
+          "d4Path": "../code-review/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [
+        "code-review",
+        "tdd"
+      ],
+      "harnessTokens": [
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/implement/SKILL.md",
+      "confidence": "verified",
+      "notes": "Uses bare slash refs, not the Skill tool (D5-16). Transitive pi-subagents dependency via code-review (section 1 table)."
+    },
+    {
+      "upstreamPath": "skills/engineering/improve-codebase-architecture",
+      "upstreamName": "improve-codebase-architecture",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "HTML-REPORT.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {
+        "HTML-REPORT.md": [
+          "https://cdn.tailwindcss.com",
+          "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
+        ]
+      },
+      "crossSkillLoads": [
+        {
+          "asWritten": "call the Skill tool with \"codebase-design\"",
+          "target": "codebase-design",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../codebase-design/SKILL.md"
+        },
+        {
+          "asWritten": "call the Skill tool with \"grilling\"",
+          "target": "grilling",
+          "targetBucket": "productivity",
+          "kind": "model-load",
+          "d4Path": "../../productivity/grilling/SKILL.md"
+        },
+        {
+          "asWritten": "call the Skill tool with \"domain-modeling\"",
+          "target": "domain-modeling",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../domain-modeling/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [
+        "codebase-design"
+      ],
+      "harnessTokens": [
+        "Skill tool",
+        "subagent",
+        "architecture report -> OS temp",
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {
+        "HTML-REPORT.md": [
+          "bare slash-command skill reference"
+        ]
+      },
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "confidence": "verified",
+      "notes": "Report relocates from OS temp ($TMPDIR//tmp/%TEMP%) to .scratch/reports/<ISO>-architecture.html, git-ignored (D5-14). The CDN links in HTML-REPORT.md are third-party runtime fetches by the generated HTML, not a harness token."
+    },
+    {
+      "upstreamPath": "skills/engineering/prototype",
+      "upstreamName": "prototype",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "LOGIC.md",
+        "UI.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/prototype/SKILL.md",
+      "confidence": "verified",
+      "notes": "UI.md's `/prototype/<name>` is an application route path, not a skill reference. Prototype code is kept on a prototype/<name> git branch as a primary source."
+    },
+    {
+      "upstreamPath": "skills/engineering/research",
+      "upstreamName": "research",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "background agent"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "adapt",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/research/SKILL.md",
+      "confidence": "verified",
+      "notes": "Dispatches a detached mp-researcher child via pi-subagents; hard gate on pi-web-access (D10)."
+    },
+    {
+      "upstreamPath": "skills/engineering/resolving-merge-conflicts",
+      "upstreamName": "resolving-merge-conflicts",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "confidence": "verified",
+      "notes": "Harness-neutral already; no token substitutions."
+    },
+    {
+      "upstreamPath": "skills/engineering/setup-matt-pocock-skills",
+      "upstreamName": "setup-matt-pocock-skills",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "domain.md",
+        "issue-tracker-github.md",
+        "issue-tracker-gitlab.md",
+        "issue-tracker-local.md",
+        "triage-labels.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [
+        "https://gitlab.com/gitlab-org/cli"
+      ],
+      "sidecarExternalLinks": {
+        "issue-tracker-gitlab.md": [
+          "https://gitlab.com/gitlab-org/cli"
+        ]
+      },
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "CLAUDE.md"
+      ],
+      "sidecarHarnessTokens": {
+        "domain.md": [
+          "bare slash-command skill reference"
+        ],
+        "issue-tracker-github.md": [
+          "bare slash-command skill reference"
+        ],
+        "issue-tracker-gitlab.md": [
+          "bare slash-command skill reference"
+        ],
+        "issue-tracker-local.md": [
+          "bare slash-command skill reference"
+        ]
+      },
+      "hasOpenaiYaml": true,
+      "disposition": "adapt",
+      "ownerMilestone": "M2",
+      "piPath": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+      "confidence": "verified",
+      "notes": "D6 rewrite: AGENTS.md only (drop the CLAUDE.md branch), Pi preflight (D6.6) including the D11 collision check and enableSkillCommands check, .scratch/ git-ignore step. The four template sidecars are shipped package content (D7) and themselves contain bare /skill refs that M2 must rewrite (domain.md references /domain-modeling, /grill-with-docs, /improve-codebase-architecture; the tracker templates reference /triage and /wayfinder)."
+    },
+    {
+      "upstreamPath": "skills/engineering/tdd",
+      "upstreamName": "tdd",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "mocking.md",
+        "tests.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "call the Skill tool with \"codebase-design\" for the vocabulary",
+          "target": "codebase-design",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../codebase-design/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "Skill tool"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/tdd/SKILL.md",
+      "confidence": "verified",
+      "notes": "Same-bucket D4 load. Vocabulary load is explicitly 'a reference to consult, not a session to run'."
+    },
+    {
+      "upstreamPath": "skills/engineering/to-spec",
+      "upstreamName": "to-spec",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "tell the user to run `/setup-matt-pocock-skills`",
+          "target": "setup-matt-pocock-skills",
+          "targetBucket": "engineering",
+          "kind": "user-handoff",
+          "d4Path": null
+        }
+      ],
+      "slashCommandReferences": [
+        "setup-matt-pocock-skills"
+      ],
+      "harnessTokens": [
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/to-spec/SKILL.md",
+      "confidence": "verified",
+      "notes": "Publishes to the tracker setup configured; tracker mechanics live in docs/agents/issue-tracker.md (target-repo output, not package content)."
+    },
+    {
+      "upstreamPath": "skills/engineering/to-tickets",
+      "upstreamName": "to-tickets",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "tell the user to run `/setup-matt-pocock-skills`",
+          "target": "setup-matt-pocock-skills",
+          "targetBucket": "engineering",
+          "kind": "user-handoff",
+          "d4Path": null
+        }
+      ],
+      "slashCommandReferences": [
+        "setup-matt-pocock-skills"
+      ],
+      "harnessTokens": [
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/engineering/to-tickets/SKILL.md",
+      "confidence": "verified",
+      "notes": "Local tracker output path .scratch/<feature-slug>/issues/ is upstream convention and is kept."
+    },
+    {
+      "upstreamPath": "skills/engineering/triage",
+      "upstreamName": "triage",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "AGENT-BRIEF.md",
+        "OUT-OF-SCOPE.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "call the Skill tool twice, for \"grilling\" and \"domain-modeling\"",
+          "target": "grilling",
+          "targetBucket": "productivity",
+          "kind": "model-load",
+          "d4Path": "../../productivity/grilling/SKILL.md"
+        },
+        {
+          "asWritten": "call the Skill tool twice, for \"grilling\" and \"domain-modeling\"",
+          "target": "domain-modeling",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../domain-modeling/SKILL.md"
+        },
+        {
+          "asWritten": "tell the user to run `/setup-matt-pocock-skills`",
+          "target": "setup-matt-pocock-skills",
+          "targetBucket": "engineering",
+          "kind": "user-handoff",
+          "d4Path": null
+        }
+      ],
+      "slashCommandReferences": [
+        "setup-matt-pocock-skills",
+        "triage"
+      ],
+      "harnessTokens": [
+        "Skill tool",
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {
+        "AGENT-BRIEF.md": [
+          "bare slash-command skill reference"
+        ]
+      },
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/triage/SKILL.md",
+      "confidence": "verified",
+      "notes": "Labels map to docs/agents/triage-labels.md. AGENT-BRIEF.md contains /triage inside a sample acceptance criterion; M2 must decide whether to rewrite it as /skill:triage."
+    },
+    {
+      "upstreamPath": "skills/engineering/wayfinder",
+      "upstreamName": "wayfinder",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "Always call the Skill tool twice, for \"grilling\" and \"domain-modeling\".",
+          "target": "grilling",
+          "targetBucket": "productivity",
+          "kind": "model-load",
+          "d4Path": "../../productivity/grilling/SKILL.md"
+        },
+        {
+          "asWritten": "Always call the Skill tool twice, for \"grilling\" and \"domain-modeling\".",
+          "target": "domain-modeling",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../domain-modeling/SKILL.md"
+        },
+        {
+          "asWritten": "spin up a subagent that calls the Skill tool with \"research\"",
+          "target": "research",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../research/SKILL.md"
+        },
+        {
+          "asWritten": "by calling the Skill tool with \"prototype\"",
+          "target": "prototype",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../prototype/SKILL.md"
+        },
+        {
+          "asWritten": "tell the user to run `/setup-matt-pocock-skills`",
+          "target": "setup-matt-pocock-skills",
+          "targetBucket": "engineering",
+          "kind": "user-handoff",
+          "d4Path": null
+        }
+      ],
+      "slashCommandReferences": [
+        "setup-matt-pocock-skills"
+      ],
+      "harnessTokens": [
+        "Skill tool",
+        "subagent",
+        "background agent",
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/wayfinder/SKILL.md",
+      "confidence": "verified",
+      "notes": "Richest cross-bucket case: both `../` and `../../` D4 forms. Research tickets dispatch detached mp-researcher children (D5-05/06, D14). NOTE: `**Task** (HITL or AFK)` is a Wayfinder ticket type, not the Task tool."
+    },
+    {
+      "upstreamPath": "skills/engineering/wizard",
+      "upstreamName": "wizard",
+      "bucket": "engineering",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "template.sh",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {
+        "template.sh": [
+          "https://dashboard.stripe.com/test/apikeys"
+        ]
+      },
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {
+        "template.sh": [
+          "bare slash-command skill reference"
+        ]
+      },
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M4",
+      "piPath": "skills/engineering/wizard/SKILL.md",
+      "confidence": "verified",
+      "notes": "template.sh line 4 comment says 'Generated by the /wizard skill.' -> update to /skill:wizard in M4. Script uses bash, mktemp, and xdg-open/open/start; verify under Pi's bash on Linux/macOS and note Windows limits (M4/M6). Stripe URL is an example, not a dependency."
+    },
+    {
+      "upstreamPath": "skills/productivity/grill-me",
+      "upstreamName": "grill-me",
+      "bucket": "productivity",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "Call the Skill tool with \"grilling\".",
+          "target": "grilling",
+          "targetBucket": "productivity",
+          "kind": "model-load",
+          "d4Path": "../grilling/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "Skill tool"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M5",
+      "piPath": "skills/productivity/grill-me/SKILL.md",
+      "confidence": "verified",
+      "notes": "Same-bucket D4 form. Whole body is one load instruction."
+    },
+    {
+      "upstreamPath": "skills/productivity/grilling",
+      "upstreamName": "grilling",
+      "bucket": "productivity",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "subagent"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M3",
+      "piPath": "skills/productivity/grilling/SKILL.md",
+      "confidence": "verified",
+      "notes": "Fact-finding sub-agent dispatch; generic orchestration stays owned by the bundled pi-subagents skill (D16)."
+    },
+    {
+      "upstreamPath": "skills/productivity/handoff",
+      "upstreamName": "handoff",
+      "bucket": "productivity",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "argument-hint",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [
+        "argument-hint"
+      ],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "argument-hint",
+        "Skill tool",
+        "handoff -> OS temp"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "adapt",
+      "ownerMilestone": "M3",
+      "piPath": "skills/productivity/handoff/SKILL.md",
+      "confidence": "verified",
+      "notes": "Output relocates from the OS temp directory to .scratch/handoffs/<ISO>-<slug>.md, git-ignored by default (D5-13). Drop argument-hint (D2). The 'suggested skills' section becomes /skill:<name> labels, not Skill tool calls."
+    },
+    {
+      "upstreamPath": "skills/productivity/teach",
+      "upstreamName": "teach",
+      "bucket": "productivity",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation",
+        "argument-hint"
+      ],
+      "droppedFrontmatter": [
+        "argument-hint"
+      ],
+      "sidecars": [
+        "SKILL.md",
+        "GLOSSARY-FORMAT.md",
+        "LEARNING-RECORD-FORMAT.md",
+        "MISSION-FORMAT.md",
+        "RESOURCES-FORMAT.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {
+        "RESOURCES-FORMAT.md": [
+          "https://example.com",
+          "https://reddit.com/r/weightroom"
+        ]
+      },
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "argument-hint"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M5",
+      "piPath": "skills/productivity/teach/SKILL.md",
+      "confidence": "verified",
+      "notes": "Ships in v1 as experimental (D15). The four *-FORMAT.md sidecars stay in the skill directory (D7). Sidecar URLs are illustrative examples."
+    },
+    {
+      "upstreamPath": "skills/productivity/to-questionnaire",
+      "upstreamName": "to-questionnaire",
+      "bucket": "productivity",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M5",
+      "piPath": "skills/productivity/to-questionnaire/SKILL.md",
+      "confidence": "verified",
+      "notes": "Writes to-questionnaire-<slug>.md in the current directory; no harness coupling."
+    },
+    {
+      "upstreamPath": "skills/productivity/wait-what",
+      "upstreamName": "wait-what",
+      "bucket": "productivity",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M5",
+      "piPath": "skills/productivity/wait-what/SKILL.md",
+      "confidence": "verified",
+      "notes": "References CONTEXT.md / CONTEXT-MAP.md, which are target-repo conventions, not harness tokens."
+    },
+    {
+      "upstreamPath": "skills/productivity/writing-for-agents",
+      "upstreamName": "writing-for-agents",
+      "bucket": "productivity",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "SKILL-MECHANICS.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "CLAUDE.md",
+        "subagent"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "port",
+      "ownerMilestone": "M5",
+      "piPath": "skills/productivity/writing-for-agents/SKILL.md",
+      "confidence": "verified",
+      "notes": "CLAUDE.md appears in the description and body; rewrite to AGENTS.md (D5-15). Its invocation guidance in SKILL-MECHANICS.md is Claude/Codex-flavoured but describes the same two-way split Pi implements; M5 should reconcile the field names with Pi's frontmatter."
+    },
+    {
+      "upstreamPath": "skills/misc/git-guardrails-claude-code",
+      "upstreamName": "git-guardrails-claude-code",
+      "bucket": "misc",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "scripts/block-dangerous-git.sh",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "~/.claude",
+        "$CLAUDE_PROJECT_DIR",
+        "Claude Code PreToolUse hook"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "rename",
+      "renameTarget": "git-guardrails",
+      "ownerMilestone": "M5",
+      "piPath": "skills/misc/git-guardrails/SKILL.md",
+      "confidence": "verified",
+      "notes": "PLAN SILENCE: the plan says 'guardrails are harness-agnostic' but the pinned mechanism is entirely Claude Code (PreToolUse hook + .claude/settings.json + $CLAUDE_PROJECT_DIR). Pi's equivalent is an extension hook: pi.on(\"tool_call\") returning { block: true, reason } (Pi docs/extensions.md; bundled permission-gate.ts). D5-20 records the substitution. OPEN: this package's pi manifest (D1) declares no pi.extensions, so M5 must decide whether to ship a small guardrail extension or rewrite the skill to install one. Recorded as an open item; the rename itself is frozen by D3 and is not deferred."
+    },
+    {
+      "upstreamPath": "skills/misc/migrate-to-shoehorn",
+      "upstreamName": "migrate-to-shoehorn",
+      "bucket": "misc",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "drop",
+      "ownerMilestone": "none",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Dropped: language/framework-specific (@total-typescript/shoehorn), out of scope for a general workflow port (section 2, section 10). No harness tokens."
+    },
+    {
+      "upstreamPath": "skills/misc/scaffold-exercises",
+      "upstreamName": "scaffold-exercises",
+      "bucket": "misc",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "drop",
+      "ownerMilestone": "none",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Dropped: course-authoring (pnpm ai-hero-cli internal lint), unrelated to the engineering workflow (section 2, section 10). No harness tokens."
+    },
+    {
+      "upstreamPath": "skills/misc/setup-pre-commit",
+      "upstreamName": "setup-pre-commit",
+      "bucket": "misc",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": "skills/misc/setup-pre-commit/SKILL.md",
+      "confidence": "verified",
+      "notes": "Deferred to post-v1 by D15: it adds a second repo-configuration surface with its own tooling assumptions next to setup-matt-pocock-skills. piPath is the planned eventual location (section 10), not a v1 commitment."
+    },
+    {
+      "upstreamPath": "skills/in-progress/claude-handoff",
+      "upstreamName": "claude-handoff",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "argument-hint",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [
+        "argument-hint"
+      ],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "argument-hint",
+        "claude --bg",
+        "Skill tool"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred with the whole in-progress bucket (section 1, section 10). Its Claude CLI background launch (claude --bg / claude agents) is a missed D5 token, recorded as D5-21 prospectively. When ported, it is the background-dispatch path already covered by pi-subagents (D5-05)."
+    },
+    {
+      "upstreamPath": "skills/in-progress/implement-spec",
+      "upstreamName": "implement-spec",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "run /code-review on the PR branch",
+          "target": "code-review",
+          "targetBucket": "engineering",
+          "kind": "slash-load",
+          "d4Path": "../../engineering/code-review/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [
+        "code-review"
+      ],
+      "harnessTokens": [
+        "subagent",
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred (section 10, priority after pr). D4 path computed from its in-progress location; the eventual bucket is undecided, so piPath is null."
+    },
+    {
+      "upstreamPath": "skills/in-progress/loop-me",
+      "upstreamName": "loop-me",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation",
+        "argument-hint"
+      ],
+      "droppedFrontmatter": [
+        "argument-hint"
+      ],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "Run a stateful `/grilling` session",
+          "target": "grilling",
+          "targetBucket": "productivity",
+          "kind": "slash-load",
+          "d4Path": "../../productivity/grilling/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [
+        "grilling"
+      ],
+      "harnessTokens": [
+        "argument-hint",
+        "bare slash-command skill reference"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred with the in-progress bucket. Bare /grilling is an operative load (D5-16) that becomes the D4 path on port."
+    },
+    {
+      "upstreamPath": "skills/in-progress/pr",
+      "upstreamName": "pr",
+      "bucket": "in-progress",
+      "invocation": "model",
+      "disableModelInvocation": false,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "metadata"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "CREDITS.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [
+        "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
+      ],
+      "sidecarExternalLinks": {
+        "CREDITS.md": [
+          "https://github.com/dexhorthy",
+          "https://github.com/humanlayer/humanlayer"
+        ]
+      },
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "agents/openai.yaml"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred (section 10, priority after implementation). The only in-progress skill that is model-invoked. Its metadata.credits block is a real Pi field and should be preserved on port (third-party attribution to Dex Horthy / Humanlayer)."
+    },
+    {
+      "upstreamPath": "skills/in-progress/retro",
+      "upstreamName": "retro",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "Call the Skill tool with `writing-for-agents` for the writing style guide.",
+          "target": "writing-for-agents",
+          "targetBucket": "productivity",
+          "kind": "model-load",
+          "d4Path": "../../productivity/writing-for-agents/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "Skill tool",
+        "CLAUDE.md"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred with the in-progress bucket. Upstream README calls it a STUB, not functional yet; that is an additional reason to keep it deferred."
+    },
+    {
+      "upstreamPath": "skills/in-progress/setup-ts-deep-modules",
+      "upstreamName": "setup-ts-deep-modules",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "dependency-cruiser.config.cjs",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [
+        "https://github.com/sverweij/dependency-cruiser"
+      ],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [
+        {
+          "asWritten": "call the Skill tool with \"codebase-design\"",
+          "target": "codebase-design",
+          "targetBucket": "engineering",
+          "kind": "model-load",
+          "d4Path": "../../engineering/codebase-design/SKILL.md"
+        }
+      ],
+      "slashCommandReferences": [],
+      "harnessTokens": [
+        "Skill tool",
+        "CLAUDE.md"
+      ],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred on two grounds: in-progress maturity, and language-specific (TypeScript/dependency-cruiser) per section 10. Section 1 explicitly notes it is NOT dropped on the language ground but deferred with the in-progress bucket."
+    },
+    {
+      "upstreamPath": "skills/in-progress/writing-beats",
+      "upstreamName": "writing-beats",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred with the in-progress bucket. On port it belongs in productivity/ next to writing-for-agents (section 10). No harness tokens."
+    },
+    {
+      "upstreamPath": "skills/in-progress/writing-fragments",
+      "upstreamName": "writing-fragments",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred with the in-progress bucket. No harness tokens."
+    },
+    {
+      "upstreamPath": "skills/in-progress/writing-shape",
+      "upstreamName": "writing-shape",
+      "bucket": "in-progress",
+      "invocation": "user",
+      "disableModelInvocation": true,
+      "frontmatterFields": [
+        "name",
+        "description",
+        "disable-model-invocation"
+      ],
+      "droppedFrontmatter": [],
+      "sidecars": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "externalLinks": [],
+      "sidecarExternalLinks": {},
+      "crossSkillLoads": [],
+      "slashCommandReferences": [],
+      "harnessTokens": [],
+      "sidecarHarnessTokens": {},
+      "hasOpenaiYaml": true,
+      "disposition": "defer",
+      "ownerMilestone": "post-v1",
+      "piPath": null,
+      "confidence": "verified",
+      "notes": "Deferred with the in-progress bucket. No harness tokens."
+    }
+  ],
+  "invocationSummary": {
+    "userInvokedCanonical": [
+      "ask-matt",
+      "grill-with-docs",
+      "implement",
+      "improve-codebase-architecture",
+      "setup-matt-pocock-skills",
+      "to-spec",
+      "to-tickets",
+      "triage",
+      "wayfinder",
+      "grill-me",
+      "handoff",
+      "teach",
+      "to-questionnaire",
+      "wait-what"
+    ],
+    "modelInvokedCanonical": [
+      "code-review",
+      "codebase-design",
+      "diagnosing-bugs",
+      "domain-modeling",
+      "prototype",
+      "research",
+      "resolving-merge-conflicts",
+      "tdd",
+      "wizard",
+      "grilling",
+      "writing-for-agents",
+      "git-guardrails-claude-code",
+      "migrate-to-shoehorn",
+      "scaffold-exercises",
+      "setup-pre-commit"
+    ],
+    "note": "Read from each file's disable-model-invocation. Matches section 2's table for all 29 canonical rows; no correction needed. Matches M0's README figure of 14 user-invoked shipped in v1."
+  },
+  "openItems": [
+    {
+      "item": "git-guardrails packaging",
+      "detail": "D3/D5-20 require a Pi extension (pi.on(\"tool_call\")) to replace the Claude Code PreToolUse hook, but D1's pi manifest ships no pi.extensions and section 4's tree has no extensions/ directory. M5 must decide: ship a small guardrail extension in this package, or rewrite git-guardrails to install one that already exists. Not resolved in M1 because resolving it would change section 4's frozen tree or D1's frozen manifest."
+    },
+    {
+      "item": "GitHub owner netname",
+      "detail": "Still unconfirmed from M0 (docs/NOTES.md section 5 item 1). Does not affect the inventory; README/NOTICE/CHANGELOG only."
+    },
+    {
+      "item": "Upstream cache path",
+      "detail": "M1 used ../mp-upstream-c55ee46 as a disposable clone (not vendored). If M2-M5 want a different stable path, only this JSON's upstream.cachePathUsed and the NOTES record need updating."
+    },
+    {
+      "item": "in-progress eventual buckets",
+      "detail": "piPath is null for all nine in-progress skills because section 4 defines no in-progress bucket and section 10 only sketches eventual homes (writing-* -> productivity). Decide per skill when un-deferring."
+    }
+  ]
+}

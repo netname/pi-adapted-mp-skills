@@ -1,0 +1,19 @@
+{
+  "name": "pi-adapted-mp-skills",
+  "version": "0.1.0",
+  "description": "Matt Pocock's engineering-workflow skills, adapted for the Pi coding agent.",
+  "license": "MIT",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ],
+    "subagents": {
+      "agents": [
+        "./agents"
+      ]
+    }
+  }
+}

@@ -298,6 +298,12 @@ Cross-skill loads this convention must cover, in the v1 set (all are model-invok
 | `handoff` → OS temp | `.scratch/handoffs/<ISO>-<slug>.md`, **git-ignored by default**; a repo may opt in to committing it, not the reverse |
 | `improve-codebase-architecture` report → OS temp | `.scratch/reports/<ISO>-architecture.html`, **git-ignored by default** — same treatment as the handoff |
 | `CLAUDE.md` | `AGENTS.md` |
+| **M1** Bare `/<skill-name>` slash-command reference (`/to-spec`, `/tdd`, `/code-review`, `/grilling`, …) | Human-facing label: `/skill:<name>` (valid for user- and model-invoked skills). Operative instruction the agent must run now: the D4 relative `SKILL.md` load; when the target is **user-invoked**, write *"tell the user to run `/skill:<name>`"* instead. §3 anticipated this substitution but D5 had no row. |
+| **M1** `agents/openai.yaml` (Codex `interface.*`, `policy.allow_implicit_invocation`) | Dropped (D2). The invocation classification it encodes is preserved as `metadata.invocation`. |
+| **M1** `argument-hint` (frontmatter) | Dropped (D2). Pi appends passed arguments to the skill content as `User: <args>`, so no hint field is needed. |
+| **M1** `allowed-tools` (frontmatter, Claude tool names) | Omit unless pre-approval is genuinely needed; then use Pi tool names (`read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`) (D2). Zero upstream occurrences at the pin, so this row is prospective. |
+| **M1** Claude Code hook mechanism: `PreToolUse` matcher on `Bash`, `.claude/settings.json`, `~/.claude/settings.json`, `.claude/hooks/`, `~/.claude/hooks/`, `$CLAUDE_PROJECT_DIR` | Pi extension hook `pi.on("tool_call", …)` returning `{ block: true, reason }` (Pi `docs/extensions.md`; bundled `permission-gate.ts` / `protected-paths.ts`). Applies to `git-guardrails`; packaging the extension is M5 work. |
+| **M1** `claude --bg` / `claude agents` (Claude Code CLI background-agent launch) | `pi-subagents` background child — the same mechanism as the **Background research agent** row above. Applies only to the deferred `claude-handoff`. |
 
 Three rows above are settled policy, not open questions:
 

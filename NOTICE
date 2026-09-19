@@ -1,0 +1,31 @@
+NOTICE
+======
+
+This package (pi-adapted-mp-skills) is an adaptation of Matt Pocock's skills
+collection for the Pi coding agent.
+
+Upstream
+--------
+Repository:     https://github.com/mattpocock/skills
+Pinned commit:  c55ee46073ed923f86ce59a5eb3b6d895095d1b7
+                (verified equal to upstream `main` on 2026-09-18)
+Upstream path:  skills/{engineering,productivity,misc}/<skill-name>/
+License:        MIT, Copyright (c) 2026 Matt Pocock
+                The upstream license text is preserved verbatim in LICENSE.
+
+Adapted text in this package remains under the upstream MIT license. Files
+copied from upstream are modified only in the ways recorded in
+docs/ADAPTATION_PLAN.md (D2 frontmatter policy, D4 cross-skill invocation,
+D5 harness token map, D7 sidecar placement). See CHANGELOG.md for the
+adaptation record of each release.
+
+This package
+------------
+Repository:     https://github.com/netname/pi-adapted-mp-skills
+License:        MIT (see LICENSE)
+
+Third-party runtime prerequisites are separate Pi packages and are NOT
+bundled or redistributed here (see docs/ADAPTATION_PLAN.md, D13):
+
+  pi-subagents    https://github.com/nicobailon/pi-subagents
+  pi-web-access   https://github.com/nicobailon/pi-web-access
