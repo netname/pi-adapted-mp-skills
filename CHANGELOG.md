@@ -7,16 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
+Nothing yet. `v0.1.0` is the first release; its scope is the M0–M6 milestones recorded below.
 
-- M1: upstream inventory and frozen adaptation contract (`docs/skill-inventory.json`).
-- M2: convention layer — **landed 2026-09-18**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M2.
-- M3: main flow — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M3.
-- M4: on-ramps and health — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M4.
-- M5: productivity and misc — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M5.
-- M6: validator, smoke tests, README finalization, `v0.1.0` tag, npm publish.
-
-## [0.1.0] - 2026-09-18
+## [0.1.0] - 2026-09-19
 
 ### Added
 
@@ -157,6 +150,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with no `renameTarget` all still fail (NOTES §M5.4.5). No D5 row and no inventory field changed.
 - Per-file diff notes (D9), the rename resolution, the extension design, the live `git push` block
   evidence, and the acceptance results are in `docs/NOTES.md` §M5.
+
+#### M6 validation, docs, and release (landed 2026-09-19)
+
+Milestone M6 ports no skill: the 26-skill set is final for v0.1.0.
+
+- `scripts/fetch-upstream.mjs` — dependency-free drift reporter (D9). It fetches the pinned commit
+  into the disposable cache recorded in the inventory (`../mp-upstream-c55ee46`, never vendored,
+  re-fetch command printed on every run) and reports, for every shipped row, whether the upstream
+  file differs from the ported file and where. It never edits a ported file, exits 0 on drift by
+  default (`--strict` opts into a failing exit), and separates EXPECTED regions (the D2 frontmatter
+  block and the frozen D5 substitutions) from REVIEW regions. Against the pin: 26 shipped rows, 51
+  file pairs, 15 verbatim, 36 patched, 0 missing, and 19 files with a REVIEW region that maps onto
+  the per-file adaptations M2–M5 already record.
+- `scripts/smoke-test.sh` — the installed-package test. It installs the pinned `pi-subagents@0.69.0`,
+  the pinned `pi-web-access@0.29.0`, and a **copy** of this package by relative path into a fixture
+  outside the repository, then asserts from the installed copy: discovery and provenance for all 26
+  skills (D11), the D3 invocation split read from the rendered `<available_skills>` block, every
+  cross-skill `SKILL.md` reference from the installed tree (D4), concurrency and failure handling for
+  the dispatch contracts, the D14 child-extension mechanism from a real foreground child, and a
+  scripted local-Markdown `/skill:implement` flow. It also reproduces and repairs the Windows
+  backslash package entry and, in a separate stage, packs the tree with `npm pack`, installs the
+  **published artifact** as a package, and re-runs the discovery assertions against it. Result: 46
+  passed, 0 failed, 3 recorded skips.
+- `scripts/probes/inspect.ts` and `scripts/probes/check.mjs` — the Pi-side snapshot probe and the
+  offline assertion helper the smoke test uses. They are test scaffolding, not shipped resources.
+- `package.json` — a dependency-free `scripts` block: `npm test` runs the validator, `npm run drift`
+  runs the drift reporter, and `npm run smoke` runs the installed-package test. `npm test` needs no
+  `npm install` and no network.
+- `docs/skill-inventory.json` — one new top-level `validation` block recording the
+  invocation-visibility results §7 asks for, plus the collision, parallelism, child-extension,
+  tracker, upgrade-policy, and evidence-auditor re-test outcomes. No skills row and no `tokenMap`
+  entry changed, so the D5 hash still matches. This is the milestone's only write to that file.
+- `README.md` — finalized: the skill index is no longer marked provisional; a compatibility note
+  states that only the pinned versions are validated, that pinned means skipped-by-bulk-updates and
+  never hard-locked, and that a broken preflight is fixed by reinstalling the pin rather than by
+  weakening the check (D13); the Windows backslash-path install defect gets a symptom/cause/remedy
+  entry; and the `git-guardrails` extension is documented in full (what it blocks, the opt-in files,
+  `patterns`, `enabled: false`, `PI_GIT_GUARDRAILS=off`, and that installing the package alone
+  changes nothing), along with the `pi.extensions` / `pi.subagents.agents` manifest surface.
+- `mp-evidence-auditor` re-test (M4.8): both the custom agent and the built-in `evidence-auditor`
+  were run on a discriminating seam — a contradicted claim and a cited-source-cannot-support claim.
+  Verdicts matched on both, but the output contracts still differ and the collapse's mandated
+  recording site (§D16, plus the §4 tree and the D5-07 row) is frozen, so the custom agent is
+  retained; the decision and the post-v1 follow-up are recorded in `docs/NOTES.md` §M6 and in the
+  inventory's `validation.evidenceAuditorRetest`.
+- `docs/NOTES.md` — the `## M6` section: what ran live versus structurally, the smoke-test results,
+  the invocation/collision/parallelism/child-extension/tracker findings, the upgrade-policy drift,
+  the evidence-auditor outcome, the live acceptance run against the guide's own examples, and the
+  release record.
+- Release: `package.json` is `0.1.0` and this changelog is dated `2026-09-19`. Tagging `v0.1.0`
+  and publishing to npm are deliberately left as the release hand-off (question 1, option A): both are
+  irreversible and need the owner's confirmation and registry credentials. See `docs/NOTES.md` §M6
+  for the exact commands.
 
 [Unreleased]: https://github.com/netname/pi-adapted-mp-skills/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/netname/pi-adapted-mp-skills/releases/tag/v0.1.0

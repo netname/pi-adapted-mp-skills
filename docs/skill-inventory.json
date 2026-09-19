@@ -2175,5 +2175,258 @@
       "item": "in-progress eventual buckets",
       "detail": "piPath is null for all nine in-progress skills because section 4 defines no in-progress bucket and section 10 only sketches eventual homes (writing-* -> productivity). Decide per skill when un-deferring."
     }
-  ]
+  ],
+  "validation": {
+    "recordedBy": "M6 (final milestone)",
+    "recordedAt": "2026-09-18",
+    "planReference": "docs/ADAPTATION_PLAN.md section 7 (invocation-visibility results are recorded here) and section 6/M6",
+    "note": "The only M6 write to this file. No skills row and no tokenMap entry was touched, so tokenMap.hash and the D5 freeze are unaffected. Every result below was produced by the installed-package smoke test (scripts/smoke-test.sh), which asserts against the installed copy and never against the working tree.",
+    "commands": {
+      "validator": "npm test",
+      "driftReport": "npm run drift",
+      "smokeTest": "npm run smoke",
+      "smokeTestLatestLeg": "SMOKE_STAGES=latest bash scripts/smoke-test.sh"
+    },
+    "validator": {
+      "filesScanned": 51,
+      "skillFiles": 26,
+      "exitCode": 0,
+      "d5HashMatches": true
+    },
+    "installedPackageSmokeTest": {
+      "fixture": "a sibling directory outside this repository (default ../mp-smoke-fixture)",
+      "installedCopy": "a separate copy of the tree installed by relative path, so every assertion resolves from the installed package and not from the working repo",
+      "pinned": {
+        "pi-subagents": "0.69.0",
+        "pi-web-access": "0.29.0"
+      },
+      "passed": 46,
+      "failed": 0,
+      "stages": [
+        "setup (fixture, pinned installs, installed copy, Windows backslash entry reproduced and repaired)",
+        "static (validator, drift reporter, inventory piPaths, extension and agents, all inside the installed copy)",
+        "probe (discovery, invocation visibility, tool availability)",
+        "packaging (npm pack, the published artifact installed as a package and re-asserted)",
+        "invocation (D3, both directions)",
+        "collision (D11, real decoy plus a synthetic unattributed input)",
+        "parallel (concurrency, both axes, refused child, timed-out child)",
+        "childext (D14, foreground child with and without the resolved path)",
+        "tracker (read-only gh; glab absence recorded)",
+        "workflow (scripted local-Markdown /skill:implement flow)"
+      ],
+      "packaging": {
+        "command": "npm pack",
+        "artifact": "pi-adapted-mp-skills-0.1.0.tgz",
+        "asserted": "the extracted tree passes its own validator, carries the pi manifest plus the extension and the mp-* agents, and passes the whole discovery check when installed as a package",
+        "finding": "the tarball also ships the dev-only .pi/settings.json; harmless because Pi reads only the project settings file, and a files allowlist would drop it"
+      },
+      "skipped": [
+        "gh write commands (create/comment/label/close/dependency POST) were not executed: they would mutate a real GitHub repository",
+        "glab is absent on this machine, so the GitLab tracker path is unverified",
+        "the dev-only .pi/settings.json ships in the npm tarball (recorded, not failed)"
+      ]
+    },
+    "invocationVisibility": {
+      "method": "For each skill, a natural-language request and a /skill:<name> request run against the installed copy with a probe extension; the probe records the prompt Pi built for the turn and the rendered <available_skills> block. Model visibility is read from the rendered block, never from systemPromptOptions.skills, which also lists user-invoked skills (the M3 finding).",
+      "userInvoked": {
+        "count": 14,
+        "renderedInAvailableSkills": false,
+        "naturalLanguageStartsSkill": false,
+        "slashCommandStartsSkill": true,
+        "samples": [
+          {
+            "name": "setup-matt-pocock-skills",
+            "milestone": "M2",
+            "marker": "Scaffold the per-repo configuration"
+          },
+          {
+            "name": "to-spec",
+            "milestone": "M3",
+            "marker": "Do NOT interview the user"
+          },
+          {
+            "name": "wayfinder",
+            "milestone": "M4",
+            "marker": "not charging at the destination"
+          },
+          {
+            "name": "wait-what",
+            "milestone": "M5",
+            "marker": "ASD-STE100 Simplified Technical English"
+          },
+          {
+            "name": "handoff",
+            "milestone": "M5",
+            "marker": "one-session briefing, not shared documentation"
+          }
+        ]
+      },
+      "modelInvoked": {
+        "count": 12,
+        "renderedInAvailableSkills": true,
+        "naturalLanguageLoadsSkill": true,
+        "samples": [
+          {
+            "name": "diagnosing-bugs",
+            "milestone": "M3",
+            "naturalLanguagePrompt": "diagnose this: the cart total is wrong when per-item discounts apply, and it sometimes throws",
+            "loadedPath": "engineering/diagnosing-bugs/SKILL.md"
+          },
+          {
+            "name": "git-guardrails",
+            "milestone": "M5",
+            "naturalLanguagePrompt": "Set up guardrails so I cannot run destructive git commands like push or reset in this repo",
+            "loadedPath": "misc/git-guardrails/SKILL.md"
+          },
+          {
+            "name": "writing-for-agents",
+            "milestone": "M5",
+            "naturalLanguagePrompt": "Help me write an AGENTS.md that a later agent can consume accurately",
+            "loadedPath": "productivity/writing-for-agents/SKILL.md"
+          }
+        ]
+      },
+      "enableSkillCommandsRequired": true
+    },
+    "collision": {
+      "method": "A decoy skill named research is installed into the fixture project skill directory before the package. pi.getCommands() exposes only the winner, so the check pairs it with an on-disk scan of the project/user skill directories and every package root the settings files resolve to.",
+      "detected": true,
+      "collidingName": "research",
+      "definitionsFound": 2,
+      "winner": "the decoy (.pi/skills/research/SKILL.md)",
+      "shadowed": [
+        "the package copy (skills/engineering/research/SKILL.md)"
+      ],
+      "attribution": "attributed",
+      "unattributedBranch": "proven with a fabricated input whose winner path matches no scanned definition: the name is reported unattributed with every on-disk copy listed, never assumed to have resolved to this package"
+    },
+    "parallelism": {
+      "concurrentResearchChildren": {
+        "call": "one runs.all fan-out with two mp-researcher children, context fresh, unique output paths",
+        "startedBeforeFirstCompletion": 2,
+        "childDurationsMs": [
+          49318,
+          67112
+        ],
+        "note": "pi-subagents' own call trace shows both children started before either completed, and the sum of the child durations exceeds the batch wall clock"
+      },
+      "bothReviewAxes": {
+        "call": "one runs.all fan-out with mp-review-standards and mp-review-spec",
+        "completed": 2,
+        "childDurationsMs": [
+          17801,
+          23923
+        ]
+      },
+      "failedChild": {
+        "mechanism": "a read-only agent given an implementation task is refused before spawning",
+        "verbatim": "Agent 'mp-review-standards' was given an implementation task, but its tool allowlist has no mutation-capable tools.",
+        "resolved": false,
+        "artifactsLeft": 0
+      },
+      "timedOutChild": {
+        "mechanism": "one child in a concurrent batch given timeoutMs 25000",
+        "verbatim": "Subagent timed out after 25000ms.",
+        "resolved": false,
+        "siblingResolved": true
+      }
+    },
+    "childExtension": {
+      "design": "D14 is documentation-only for the shipped agents: the two web-using agents default to detached launches, which load ambient extensions.",
+      "foregroundWithoutExtension": {
+        "outcome": "failed before the model turn",
+        "verbatim": "ran as a foreground child, which never loads the parent's ambient extensions, and these child tools were unavailable: web_search, fetch_content, get_search_content, source_check"
+      },
+      "foregroundWithResolvedExtension": {
+        "how": "subagents.defaultExtensions set to the resolved pi-web-access entry path inside the fixture install root",
+        "outcome": "the same foreground child completed and called web_search",
+        "resolvedPathShape": "<fixture>/.pi/npm/node_modules/pi-web-access/index.ts"
+      },
+      "shippedAgentExercisingTheForegroundPath": false,
+      "note": "No shipped agent uses the foreground web path, so the mechanism was tested directly with a shipped agent forced foreground rather than by inventing an agent. Both legs are in the smoke test."
+    },
+    "trackers": {
+      "localMarkdown": {
+        "status": "verified live from the installed package",
+        "evidence": "the smoke test's scripted /skill:implement flow published to a local Markdown tracker, and the live acceptance ran to-spec, to-tickets, and wayfinder against .scratch/"
+      },
+      "github": {
+        "status": "read-only commands verified; writes not executed",
+        "verified": [
+          "gh repo view --json nameWithOwner -> netname/pi-adapted-mp-skills",
+          "gh issue list --state open --json number,title,body,labels,comments --jq [...] -> exit 0",
+          "gh label list -> real labels",
+          "gh issue view <n> --comments -> well-formed (exit 1 because issue 1 does not exist)"
+        ],
+        "notExecuted": [
+          "gh issue create",
+          "gh issue comment",
+          "gh issue edit --add-label / --remove-label",
+          "gh issue close",
+          "gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by"
+        ],
+        "notExecutedReason": "would mutate a real GitHub repository; the owner did not authorise GitHub side effects",
+        "note": "The --jq flag in the GitHub template is a gh CLI argument, not the banned hook tool."
+      },
+      "gitlab": {
+        "status": "unverified",
+        "verbatim": "glab: command not found",
+        "commandsRecorded": [
+          "glab issue list -F json",
+          "glab issue view <n> --comments",
+          "glab issue note <n> --message ...",
+          "glab issue update <n> --label ...",
+          "glab issue close <n>"
+        ]
+      }
+    },
+    "upgradePolicy": {
+      "pinned": {
+        "pi-subagents": "0.69.0",
+        "pi-web-access": "0.29.0"
+      },
+      "latestPublished": {
+        "pi-subagents": "0.69.0",
+        "pi-web-access": "0.29.0"
+      },
+      "drift": "none observable today: the pin is the newest published version of both packages, so the informational latest leg cannot differ from the pinned leg",
+      "contract": "pinned means validated-at-this-version and skipped by bulk updates, never hard-locked; only the pinned versions are validated, and an upgrade that breaks a preflight is fixed by reinstalling the pinned version rather than by weakening the check",
+      "reRunRule": "bump the pin only with a re-run of the smoke test against both legs"
+    },
+    "evidenceAuditorRetest": {
+      "question": "D16 item 5 / NOTES section M4.8: is mp-evidence-auditor functionally identical to the built-in evidence-auditor in practice?",
+      "seam": "discriminating: a contradicted claim (v24 LTS dated 2025-11-01 against schedule.json, which says 2025-10-28) and a cited-source-cannot-support claim (the true v24 date cited to https://example.com/)",
+      "results": [
+        {
+          "seam": "contradicted",
+          "agent": "mp-evidence-auditor",
+          "verdict": "contradicted"
+        },
+        {
+          "seam": "contradicted",
+          "agent": "evidence-auditor",
+          "verdict": "contradicted"
+        },
+        {
+          "seam": "cited-source-cannot-support",
+          "agent": "mp-evidence-auditor",
+          "verdict": "missing-evidence"
+        },
+        {
+          "seam": "cited-source-cannot-support",
+          "agent": "evidence-auditor",
+          "verdict": "missing-evidence"
+        }
+      ],
+      "outcome": "retain mp-evidence-auditor; the shipped tree did not change",
+      "whyItStillStands": "Verdict equivalence is now established even on a discriminating seam, so the remaining justification is narrower than the M4 note: the two outputs still differ observably in contract (the custom agent emits the claim-centric section template D16 item 2 exists to preserve, while the built-in emits its own seven-section report and adds an extra corroboration claim), and collapsing would change the shipped tree while its mandated recording site (D16 itself, plus the section 4 tree and the D5-07 row) is frozen for this milestone.",
+      "followUp": "post-v1 candidate: collapse only in a milestone allowed to edit D16 and the section 4 tree"
+    },
+    "windowsLimits": [
+      "pi install <path> -l writes a backslash-relative package entry; the smoke test reproduces it and repairs it to forward slashes, and the README documents the remedy",
+      "the smoke fixture is a native sibling directory, never a mktemp -d POSIX /tmp path, because pi install and the detached child runner handle POSIX temp paths inconsistently on Windows",
+      "glab is absent on this machine, so the GitLab tracker path is recorded unverified",
+      "gh is present and authenticated; only read-only commands were run"
+    ]
+  }
 }

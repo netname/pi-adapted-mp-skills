@@ -1557,3 +1557,505 @@ sanctioned rename.
   `node scripts/validate-skills.mjs` still runs on a bare Node install.
 - The fixture `C:/x/on/projs/m5-fixture` (and its bare remote `C:/x/on/projs/m5-fixture-remote.git`)
   is left in place as raw evidence; it is outside this repository and is not part of the package.
+
+---
+
+## M6 — Validation, docs, release (2026-09-19)
+
+Scope: the M6 slice only — `scripts/fetch-upstream.mjs`, `scripts/smoke-test.sh` plus its two test
+probes (`scripts/probes/inspect.ts`, `scripts/probes/check.mjs`), the `npm test` wiring, the invoked
+test matrix (invocation model, collision, parallelism, child extension, trackers), the D13
+upgrade-policy run, the `mp-evidence-auditor` discriminating re-test, README finalization, the
+`CHANGELOG` 0.1.0 entry, the `v0.1.0` tag, and this record. **M6 ports no skill**: the 26-skill set is
+final for v0.1.0, and no deferred skill was added.
+
+**Baseline note.** The task said HEAD was `6fd87e0`; the actual HEAD at the start of M6 was
+`376dfce` ("Add M6 hand-off prompt", which only adds `docs/M6-PROMPT.md`). `git diff --quiet fca16af
+-- docs/ADAPTATION_PLAN.md` exits 0, so the plan is byte-identical to `fca16af`; and
+`docs/skill-inventory.json`'s `skills` rows and `tokenMap` are deep-equal to `fca16af`, the file
+differing only by the sanctioned `validation` block (§5 below). That is the baseline this section
+compares against.
+
+### 1. Decisions taken before implementation (the six questions asked)
+
+The task asked six questions. This session is non-interactive, so the option taken is recorded here as
+the milestone's decision. Five answered the recommended option; the stretch task answered B.
+
+| # | Question | Answer taken |
+|---|---|---|
+| 1 | Release scope | **A** — prepare everything, commit, and leave the tag/publish as a documented one-command hand-off. (`npm whoami` returns `ENEEDAUTH` here, so publishing was impossible in-session anyway; `gh auth status` shows the account `netname`, which corroborates the inferred owner but is not an explicit confirmation.) |
+| 2 | Where the invocation-visibility results live | **A** — a new top-level `validation` block in `docs/skill-inventory.json`, rows and `tokenMap` untouched (§5). |
+| 3 | Live acceptance scope | **A** — run the guide's `Small Feature Example` and the first three `Amazon Refund Import` sessions end to end in a fixture repo (§12). |
+| 4 | Upgrade-policy validation | **A** — pinned (must pass) plus latest (informational); recorded that the pin is currently the newest published version of both packages (§11). |
+| 5 | Stretch GitHub Action | **B** — deferred to post-v1, as §10 lists it. No `.github/` workflow was added. |
+| 6 | `gh` / `glab` handling | **A** — recorded commands with read-only `gh` verification; no GitHub account side effects were authorised, so no issue/comment/label/close was executed. `glab` is absent, so the GitLab path is recorded unverified (§10). |
+
+### 2. What M6 produced
+
+| File | Purpose |
+|---|---|
+| `scripts/fetch-upstream.mjs` | Dependency-free pinned-commit drift reporter (D9), report-only, never rewrites. |
+| `scripts/smoke-test.sh` | The installed-package test: fixture, pinned installs, installed copy, and every §6/M6 behavioural assertion. |
+| `scripts/probes/inspect.ts` | Pi-context snapshot probe loaded with `pi -e`; reports facts only. |
+| `scripts/probes/check.mjs` | Offline assertion helper over the snapshot and over a `pi --mode json` event stream. |
+| `package.json` | Added a dependency-free `scripts` block (`test`/`validate`/`drift`/`drift:strict`/`smoke`). |
+| `docs/skill-inventory.json` | Added one top-level `validation` block; no row and no `tokenMap` entry changed. |
+| `README.md` | Finalized index, compatibility note, Windows path entry, `git-guardrails` and manifest docs. |
+| `CHANGELOG.md` | `[Unreleased]` closed, `[0.1.0] - 2026-09-19` with the M6 subsection. |
+| `docs/NOTES.md` | This section. |
+
+### 3. `scripts/fetch-upstream.mjs` (D9)
+
+Fetches the pinned commit `c55ee46073ed923f86ce59a5eb3b6d895095d1b7` into the disposable cache the M1
+inventory records (`../mp-upstream-c55ee46`, outside this repo, never vendored) and compares every
+shipped row's upstream file with the ported file. It is a review aid: it never edits a ported file,
+exits 0 on drift by default, and `--strict` opts into exit 1. Because "shipped" means
+`disposition ∈ {port, adapt, rename}`, the 27 inventory rows that carry a `piPath` reduce to the 26
+that actually ship — `setup-pre-commit` keeps a `piPath` as its planned post-v1 location with
+`disposition: "defer"`, which is a real trap for a naive `piPath`-only filter.
+
+Each file pair is classified by a line-level LCS diff. **EXPECTED** regions are the D2
+frontmatter/metadata block and changes fully explained by the frozen D5 substitutions; **REVIEW**
+regions are everything else, and are what a human reads. Findings against the pin:
+
+```
+pinned commit : c55ee46073ed923f86ce59a5eb3b6d895095d1b7
+cache         : ../mp-upstream-c55ee46 (already at the pinned commit)
+shipped rows  : 26  file pairs: 51
+verbatim      : 15   patched: 36   missing port: 0   missing upstream: 0
+files with a REVIEW region: 19
+REVIEW regions: 45   EXPECTED regions: 53
+no upstream counterpart (not drift-checkable): agents/mp-evidence-auditor.md, agents/mp-researcher.md,
+  agents/mp-review-spec.md, agents/mp-review-standards.md, extensions/git-guardrails.ts
+```
+
+The 45 REVIEW regions are the deliberate adaptations M2–M5 already record in their per-file diff
+tables (the `research` body rewrite, `code-review`'s dispatch contract, `implement`'s D10 gate,
+`handoff`'s relocation, `setup-matt-pocock-skills`'s preflight, `teach`'s added `GLOSSARY.md` bullet,
+the `git-guardrails` rewrite, and so on). No undeclared upstream change was found. The re-fetch
+command is printed on every run and recorded in `upstream.cacheNote`; an installed copy needs
+`--cache <path>` because the recorded path is relative to the *source* checkout.
+
+One classifier detail worth recording: the bare `/skill-name` → `/skill:<name>` rewrite is applied
+idempotently (a `/skill:` prefix is never re-prefixed), otherwise every D5-16 region would have
+reported as REVIEW. Before that fix the run reported 51 REVIEW regions across 25 files; after it, 45
+across 19.
+
+### 4. `scripts/smoke-test.sh` and `npm test`
+
+`npm test` runs `node scripts/validate-skills.mjs` only: no `npm install`, no network, bare Node, and
+it exits 0. The smoke test is deliberately *not* part of `npm test` because it installs packages and
+makes model calls; it is `npm run smoke` (or `bash scripts/smoke-test.sh`).
+
+The smoke test installs the pinned `pi-subagents@0.69.0`, the pinned `pi-web-access@0.29.0`, and this
+package into a fixture outside the repository. **The package is installed from a separate copy of the
+tree, by relative path**, and every assertion resolves from that installed copy — Trap D's whole
+point. This is not a theoretical guard: the **first version of the smoke test passed while resolving
+from the working repository**. Its `pi` subprocesses inherited the package repo as their cwd, so Pi
+loaded the dev `.pi/settings.json` (`"skills": ["../skills"]`), and `pi.getCommands()` returned
+`origin: "top-level"` with paths inside the *working* repo. Running the probe inside the fixture
+turned that into `origin: "package"` with paths inside the installed copy
+(`C:/x/on/projs/mp-smoke-fixture/pkg/pi-adapted-mp-skills/...`), which is the assertion the risk table
+actually asks for. Also asserted from the installed copy:
+`node <installed>/scripts/validate-skills.mjs` exits 0 (`51 file(s) scanned, 26 SKILL.md`), so every
+D4 cross-skill reference resolves after install, not merely in the source tree.
+
+**Result of the final full run: 46 passed, 0 failed, 3 skipped.**
+
+```
+=== setup ===
+  PASS installed copy made at .../pkg/pi-adapted-mp-skills from 376dfce (working tree, dirty)
+  PASS reproduced the Windows backslash package entry from `pi install <path> -l`
+  PASS package entries repaired to forward slashes
+  PASS pi-subagents@0.69.0 is installed into the fixture
+  PASS pi-web-access@0.29.0 extension entry exists at .pi/npm/node_modules/pi-web-access/index.ts
+=== static (installed copy) ===
+  PASS validator passes inside the installed copy: skills/** clean (51 file(s) scanned, 26 SKILL.md).
+  PASS drift reporter runs from the installed copy against the shared upstream cache
+  PASS installed copy ships all 26 inventory piPaths (shipped=26 skills=26 missing=0)
+  PASS installed copy carries the extension and the four mp-* agents
+=== probe (discovery / D3 visibility / D11 provenance) ===   [10 assertions]
+=== packaging (the published artifact) ===                   [5 PASS, 1 SKIP]
+=== invocation model (D3) ===                                [13 assertions]
+=== collision (D11) ===                                      [8 assertions]
+=== parallelism ===                                          [16 assertions]
+=== child extension (D14) ===                                [2 assertions]
+=== trackers ===                                             [4 PASS, 2 SKIP]
+=== scripted local-Markdown workflow ===                     [5 PASS]
+  passed : 46   failed : 0
+```
+
+The setup stage asserts the Windows defect for real: `pi install "../pkg/pi-adapted-mp-skills" -l -a`
+writes `"..\\pkg\\pi-adapted-mp-skills"`, the test records it, repairs it to forward slashes, and then
+the `mp-*` agents and every package skill resolve.
+
+Two stages are not simple greps and are worth calling out. The **workflow** stage runs
+`/skill:implement` on a real ticket in the fixture against a local-Markdown tracker: it asserts the
+fixture test suite passes afterwards, that `src/cart.js` changed, and that the change was committed —
+and the stream shows the parent load `../tdd/SKILL.md` and `../code-review/SKILL.md` from the
+*installed* copy, so the D4 hand-offs are exercised from the shipped tree. The **tracker** stage runs
+the documented `gh` read-only commands and records the exact write commands it refuses to run.
+
+Windows limits, recorded rather than hidden:
+
+- The fixture is a native sibling directory (`../mp-smoke-fixture`), never `mktemp -d`'s POSIX
+  `/tmp/...` path, because `pi install` and the detached child runner handle POSIX temp paths
+  inconsistently on Windows. `mktemp`, `tar`, `cmp`, and `timeout` are all present in Git-Bash here.
+- `glab` is absent, so the GitLab tracker path is unverified.
+- `gh` writes are not executed (see §10).
+- The installed copy is a copy of the *working tree*, not of `HEAD`; the run prints the short commit
+  and whether the tree was dirty, so the artifact says what it tested.
+
+The **packaging** stage closes a gap the path install cannot: it runs `npm pack`, extracts the tarball,
+asserts the extracted tree passes its own validator and carries the `pi` manifest, the extension, and
+the `mp-*` agents, then installs the extracted tree as a package into its own fixture and re-runs the
+whole discovery check against it. So the assertions are made against the artifact npm would publish,
+not only against a directory copy. One finding: the tarball also ships `.pi/settings.json`, the
+dev-only config that points skills at `../skills`. It is harmless — Pi reads the *project's*
+`.pi/settings.json`, never an installed package's — but it is dead weight in a published package, and
+a `files` allowlist would drop it. M6 leaves packaging as §4 specifies and records the observation
+(see §15).
+
+### 5. The one sanctioned inventory write (§7 / Trap A)
+
+Question 2 was answered **A**, so `docs/skill-inventory.json` gains exactly one top-level key,
+`validation`, placed last. Verified after the write:
+
+- `skills` rows deep-equal to `fca16af`: **true**
+- `tokenMap` deep-equal to `fca16af`: **true** (so the D5 hash
+  `9e86593bef1167039b66b4eb7d8dc69b5cda1cb647cde6e9fb086ad1e4bcda10` still matches)
+- new top-level keys: `validation` only
+- diff: `1 file changed, 254 insertions(+), 1 deletion(-)` — the single deletion is the `]` that gained
+  a comma.
+
+The block records the invocation-visibility results §7 asks for, plus the collision, parallelism,
+child-extension, tracker, upgrade-policy, evidence-auditor, and Windows-limit results.
+`tokenMap.hash` itself is a *recomputed* value in the validator (check 0), so this block is not part
+of the freeze input.
+
+### 6. Invocation model (D3) — "the check most likely to regress"
+
+Method: for each sampled skill, a **natural-language** request and a `/skill:<name>` request are run
+against the installed copy with the probe extension, which records the prompt Pi actually built
+(`event.prompt`) and the **rendered** `<available_skills>` block. Model visibility is read from the
+rendered block, never from `systemPromptOptions.skills`, which lists user-invoked skills too — the M3
+finding, reconfirmed here (the probe saw all 26 in `skillOptions` but only the 12 model-invoked ones
+in the rendered block).
+
+**User-invoked (all 14 hidden):** five samples spanning M2–M5 — `setup-matt-pocock-skills` (M2),
+`to-spec` (M3), `wayfinder` (M4), `wait-what` and `handoff` (M5). For each, a natural-language request
+left the skill body out of the prompt (e.g. `promptLen 94` for the `to-spec` request versus `3072` for
+`/skill:to-spec`), and `/skill:<name>` expanded it. `setup-matt-pocock-skills` is therefore covered
+despite being interactive by design: the probe fires at `before_agent_start`, before the model runs,
+so the expansion assertion holds even though the skill does not terminate under `pi -p` (the M2
+finding).
+
+**Model-invoked:** both M5 model-invoked skills (`git-guardrails`, `writing-for-agents`) plus
+`diagnosing-bugs` (M3). For each, the natural-language request made the model load the skill's
+`SKILL.md` from the installed copy, asserted from the `--mode json` stream:
+
+```
+diagnose this: the cart total is wrong …  -> read .../skills/engineering/diagnosing-bugs/SKILL.md
+Set up guardrails so I cannot run …       -> read .../skills/misc/git-guardrails/SKILL.md
+Help me write an AGENTS.md that …         -> read .../skills/productivity/writing-for-agents/SKILL.md
+```
+
+13 assertions, all passing. This is the two-sided test §7 asks for: the same class of prompt that
+cannot start a user-invoked skill does start a model-invoked one.
+
+### 7. Collision (D11)
+
+A decoy `research` skill is installed into the fixture's project skill directory before the package.
+`pi.getCommands()` again exposed **only the winner** (the M2 shadowing finding, reconfirmed), so the
+check pairs it with an on-disk scan of `.pi/skills`, `.agents/skills`, the user skill directories, and
+every package root the settings files resolve to. Result:
+
+```
+research: 2 definitions
+  winner    : .pi/skills/research/SKILL.md            (attributed)
+  shadowed  : .../pkg/pi-adapted-mp-skills/skills/engineering/research/SKILL.md
+```
+
+Because provenance for a shadowed copy cannot come from `pi.getCommands()`, the scan reports the
+winner's path, every on-disk definition, and an explicit attribution field. The **unattributed**
+branch is proven with a fabricated input whose winner path matches no scanned definition (a
+managed-install path): the name is reported `unattributed` with both on-disk copies listed, and the
+scan never falls back to "it must have been ours". Five assertions on the real decoy plus three on the
+synthetic input.
+
+### 8. Parallelism
+
+Four dispatch tests, all live against the installed package and all asserted from the
+`pi --mode json` stream:
+
+| Test | Contract asserted | Evidence |
+|---|---|---|
+| Two research children | `runs.all`, `context: "fresh"`, 2 distinct keys, unique `output:` | 6 assertions; both children started before the first completion; child durations `49318ms + 67112ms` against a ~77s batch wall clock |
+| Both review axes | `runs.all`, fresh context, 2 distinct keys, unique outputs | 5 assertions; `standards` and `spec` both completed, `17801ms + 23923ms` |
+| Deliberately failing child | a failed child leaves its unit of work unresolved and visible | `mp-review-standards` given an implementation task was refused **before spawning**: *"Agent 'mp-review-standards' was given an implementation task, but its tool allowlist has no mutation-capable tools."* Nothing was written (`src/pricing.js` absent afterwards) |
+| Timeout | a timed-out child is unresolved while its sibling resolves | `timeoutMs: 25000` on one child: *"Subagent timed out after 25000ms."*, `slow-research` unresolved, `quick-review` completed, both visible in the call trace |
+
+Concurrency is not inferred from wall-clock alone: `pi-subagents`' own call trace lists both `started`
+lines before the first `completed` line, which `scripts/probes/check.mjs` parses and asserts.
+
+One development finding: the workflow dispatch must be run with `async: false` for the call trace to
+be present in the `subagent` result. When the model omitted it, the run went background and the
+parent's tool result carried no call trace, so the overlap assertion had nothing to read. The test
+prompts now ask for `async: false`; the shipped *contract* still uses detached children for research
+(`async: true`) and that path is covered by the M4 evidence.
+
+### 9. Child extension (D14)
+
+D14 remains documentation-only for the shipped agents: the two web-using agents default to detached
+launches, which load ambient extensions. **No shipped agent exercises the foreground web path**, so
+the mechanism was tested directly with a shipped agent forced foreground rather than by inventing an
+agent:
+
+- **Without the path:** `subagent({ agent: "mp-researcher", async: false, task: "…web_search…" })`
+  fails before the model turn with *"ran as a foreground child, which never loads the parent's ambient
+  extensions, and these child tools were unavailable: web_search, fetch_content, get_search_content,
+  source_check."*
+- **With the path:** the same call succeeds when `subagents.defaultExtensions` is set to the resolved
+  `pi-web-access` entry inside the fixture's install root
+  (`<fixture>/.pi/npm/node_modules/pi-web-access/index.ts`), and the child actually called
+  `web_search`.
+
+So the resolved-path mechanism is real and the missing-provider failure names the unavailable tools,
+which is what D14 item 2 asked to lock. The smoke test leaves the fixture settings unmodified
+afterwards.
+
+### 10. Trackers
+
+- **Local Markdown — verified live from the installed package.** The smoke test's `/skill:implement`
+  flow published to a local-Markdown tracker, and the live acceptance (§12) ran `to-spec`,
+  `to-tickets`, and `wayfinder` against `.scratch/`.
+- **GitHub — read-only verified, writes not executed.** In this repository:
+  `gh repo view --json nameWithOwner` → `netname/pi-adapted-mp-skills`; the documented
+  `gh issue list --state open --json number,title,body,labels,comments --jq '[…]'` → `[]`, exit 0;
+  `gh label list` → real labels; `gh issue view 1 --comments` → a well-formed GraphQL "could not
+  resolve to an issue" error (exit 1 because issue 1 does not exist). The `--jq` flag is a `gh` CLI
+  argument, not the banned hook tool, and is left in the template.
+- **Not executed, deliberately:** `gh issue create`, `gh issue comment`,
+  `gh issue edit --add-label`/`--remove-label`, `gh issue close`, and
+  `gh api --method POST …/dependencies/blocked_by`. Question 6 was answered A, so no GitHub account
+  side effect was authorised; these are recorded as the exact commands rather than faked.
+- **GitLab — unverified.** `glab` is not installed: `glab issue list -F json` →
+  `glab: command not found`. The template's commands (`glab issue view/note/update/close`) are
+  recorded as unverified, not as tested.
+
+No path is marked tested that was not.
+
+### 11. Upgrade policy (D13)
+
+| Leg | `pi-subagents` | `pi-web-access` | Result |
+|---|---|---|---|
+| Pinned | `0.69.0` | `0.29.0` | the full smoke run above; must pass |
+| Latest | `0.69.0` | `0.29.0` | informational: the pin *is* the newest published version |
+
+So there is **no observable drift today**, because `npm view` reports the pinned versions as the latest
+published for both packages. This is recorded rather than presented as a passed upgrade test: the
+latest leg is degenerate. The README's compatibility note states that only the pinned versions are
+validated, that "pinned" means *validated at this version and skipped by bulk updates* and never
+hard-locked (Trap E — the pinned installs were not turned into npm `dependencies` and no lockfile was
+added), and that the remedy for a broken preflight is to reinstall the pin, not to weaken the check.
+The re-run rule when the pin moves: run both legs and record the drift.
+
+### 12. Live acceptance: the guide's own examples
+
+Run in a fresh fixture (`C:/x/on/projs/m6-accept`) with the pinned packages and this package installed
+project-locally, and the same forward-slash repair. Each leg was a separate `pi -p` process with the
+`--mode json` stream kept under `.scratch/live/`.
+
+**`Small Feature Example`** (requirement: *"Show a validation message when an uploaded Amazon CSV
+contains no refund rows"*), the durable-spec route from the guide:
+
+| Leg | Result |
+|---|---|
+| `/skill:grill-with-docs …` | live; loaded `grilling` + `domain-modeling` via the D4 relative load from the installed package, did its own fact-finding (`src/upload.js`, its test), and presented round 1 with `➡️` recommended answers. Terminated. |
+| `/skill:to-spec …` | live; published `.scratch/no-refund-rows/spec.md` (`Status: ready-for-agent`) to the local-Markdown tracker. |
+| `/skill:to-tickets …` | live; published three blocker-ordered vertical-slice tickets (`01` baseline, `02` the change, `03` the invalid-file boundary), all `ready-for-agent`. |
+| `/skill:implement …01` (new session) | live; `test: pin populated refund CSV parsing baseline (ticket 01)`. |
+| `/skill:implement …02` (new session) | live; `feat: report No refund rows found for a valid zero-row refund CSV (ticket 02)`; `npm test` green afterwards. |
+
+**`Amazon Refund Import`, sessions 1–3**, same fixture:
+
+| Session | Result |
+|---|---|
+| 1 `/skill:wayfinder We need to reach an implementation-ready plan for importing Amazon refunds…` | live; wrote `.scratch/amazon-refund-import/map.md` plus 11 decision tickets, and fired **two** `mp-researcher` children in **one** `runs.all` batch. Both cited notes (29 KB and 35 KB) landed at `.scratch/amazon-refund-import/research/`. |
+| 2 `/skill:wayfinder Advance … tickets/03-erp-target-and-interface.md` (decision supplied) | live; appended `## Resolution`, set `status: closed` and `assignee`, added the pointer to the map's **Decisions so far**, and created `CONTEXT.md`. |
+| 3 `/skill:wayfinder Advance … inspect the result of tickets/01-amazon-refund-sources.md` | live; found and verified the existing research note, linked it from the ticket's resolution, gisted it on the map, and spawned ticket 12 for the sub-decision session 2 left open. |
+
+**"Without touching a Claude-only mechanism" is mechanically checked.** Grepping all seven live
+streams for the banned tokens returns **zero** hits for every one of `Skill tool`, `Task tool`,
+`/clear`, `CLAUDE.md`, `agents/openai.yaml`, `.claude/`, and `~/.claude`. Every hand-off used
+`/skill:<name>` or the D4 relative load; every delegation used the `subagent` tool; the handoff and
+report artifacts landed under `.scratch/`.
+
+**Two live deviations, recorded rather than papered over:**
+
+1. **No throwaway `research/<name>` branch in Amazon session 1.** The shipped `wayfinder` chart step
+   says the parent creates and commits a throwaway branch for the research notes (Trap A option A,
+   proven live in M4 with `research/per-item-discounts`). This run persisted both notes to the repo
+   path it chose — `.scratch/amazon-refund-import/research/` — but wrote them straight into the
+   working tree on `main`, and because the fixture's `.gitignore` covers `.scratch/` they are
+   untracked and uncommitted. No branch was created. The behaviour is model-dependent rather than
+   broken: the M4 run did create the branch, and the smoke test's implementation flow commits its
+   work. It is recorded here as a real limitation of a prose-only instruction, not as a passing test.
+2. **The run extended the target repo's tracker config.** Session 1 appended a "Wayfinding operations"
+   section to `docs/agents/issue-tracker.md`, defining the local-Markdown map/ticket/blocking/frontier
+   conventions the map needs. That is a legitimate target-repo write (the fixture's tracker doc was
+   minimal; a real repo gets a richer one from `/skill:setup-matt-pocock-skills`), and it is the
+   behaviour the guide wants — but it means wayfinder can write to `docs/agents/`, which is worth
+   knowing when auditing a wayfinder session. No `docs/adr/` entry was created for the session-2
+   decision; that is the skill's own judgement call about whether an ADR is warranted.
+
+**A transient environment error, recorded.** Mid-session the configured model provider returned `402
+Insufficient Balance`, which silently made two smoke stages fail with empty streams. It passed on
+retry. This is why `stream_check` now detects a terminal provider error in the stream and reports it
+as a provider error — with the verbatim message — instead of as an unexplained assertion failure. No
+test was weakened; the failure mode just got a name.
+
+### 13. `mp-evidence-auditor` re-test (owed by §M4.8)
+
+M4's comparison used a non-disputed, well-sourced claim and therefore did not establish functional
+identity. The re-test uses a **discriminating** seam: two claims, both audited by both agents in one
+concurrent batch with fresh contexts and identical task text.
+
+| Seam | Claim | Cited source | `mp-evidence-auditor` | built-in `evidence-auditor` |
+|---|---|---|---|---|
+| A | "v24 entered Active LTS on **2025-11-01**" | `nodejs/Release/schedule.json` (which says 2025-10-28) | **contradicted** | **contradicted** (plus an extra corroboration claim) |
+| B | "v24 entered Active LTS on 2025-10-28" | `https://example.com/` (says nothing about Node) | **missing-evidence** | **missing-evidence** (plus an "interpretation" note) |
+
+**Outcome: retain `mp-evidence-auditor`; the shipped tree did not change.** The verdicts now match
+even on a discriminating seam, so the justification is narrower than M4's and is stated precisely:
+
+1. The outputs still differ observably in **contract**, which is the thing D16 item 2 exists to keep:
+   the custom agent emits the claim-centric section template and audits exactly the claim given; the
+   built-in emits its own seven-section report and adds a claim of its own (seam A's corroboration).
+2. Collapsing would change the shipped tree, and D16 item 5's mandated recording site — D16 itself,
+   plus §4's tree and the D5-07 row, all three of which name the agent — is frozen for this milestone.
+   M6 is forbidden to edit `docs/ADAPTATION_PLAN.md` or any D5 row, and M6 ports nothing.
+3. Enacting a plan-authorized change whose authorized recording site is frozen would produce an
+   unrecorded tree/plan divergence, which is precisely what the milestone's ground rules forbid.
+
+**Follow-up recorded in the inventory block and here: the collapse is a post-v1 candidate** for a
+milestone allowed to edit D16 and §4's tree. The full comparison artifact is
+`.scratch/stream/audit.jsonl` in the M6 fixture.
+
+### 14. README decisions
+
+- **Index finalized.** "provisional" and the "finalized in M6" sentence are gone. The invocation column
+  stays, `teach` keeps `(experimental)` (D15), and `git-guardrails` stays marked as the upstream
+  rename. Counts verified against the inventory: 18 engineering + 7 productivity + 1 misc = 26
+  shipped, 14 user-invoked, 12 model-invoked, no shipped name missing from the tables.
+- **Install routes unchanged.** Git URL first (D12), npm second, and the existing "both routes install
+  the same tree — there is no divergent build" sentence kept.
+- **Compatibility note added** under Prerequisites (§11): only the pinned versions are validated;
+  pinned means skipped-by-bulk-updates and never hard-locked; the newer-version result is currently
+  degenerate because the pin is the latest; bumping the pin requires re-running both smoke legs; and a
+  broken preflight is fixed by reinstalling the pin, never by weakening the check.
+- **Windows backslash-path entry added** (§M3.5): symptom (skills or `mp-*` agents do not resolve
+  after `pi install <path> -l`), cause (a backslash relative entry that `pi-subagents@0.69.0`'s
+  `resolveSettingsPackageRoot` cannot recognise), and remedy (rewrite the entry to forward slashes and
+  restart/`/reload`). Notes it does not affect git-URL or npm installs.
+- **`git-guardrails` documented in full**: what it blocks and that patterns match anywhere in the
+  command (including the `git clean -fdn` dry-run consequence), both opt-in files, that `patterns`
+  *replaces* the default list, `enabled: false`, `PI_GIT_GUARDRAILS=off`, that a malformed file fails
+  open, and the headline "installing this package alone changes nothing".
+- **Manifest surface documented**: a "What the package ships" table for `pi.skills`,
+  `pi.subagents.agents`, and `pi.extensions`, including that the `pi.extensions` key is load-bearing
+  because a `pi` manifest disables Pi's convention-directory auto-discovery.
+- **Shadowed-name troubleshooting kept** unchanged, still pointing at `pi.getCommands().sourceInfo` as
+  the canonical provenance.
+
+### 15. Where the plan was silent or wrong, and what was done instead
+
+1. **§7 asks for a write to the frozen inventory.** Question 2 was answered A, so the write is a new
+   top-level `validation` block only — no row, no `tokenMap` entry (§5). The D5 hash is unaffected.
+2. **§4's `scripts/` tree lists three scripts; M6 needs two more files to test honestly.** The Pi-side
+   probe and the offline assertion helper live under `scripts/probes/` and are documented as test
+   scaffolding, not shipped resources. Without them the smoke test would have to re-implement the
+   snapshot parsing inline in bash.
+3. **"Every shipped row" is not `piPath !== null`.** 27 rows carry a `piPath`; 26 ship. Both the drift
+   reporter and the smoke test must filter on `disposition ∈ {port, adapt, rename}`, or
+   `setup-pre-commit` is reported as a missing port forever.
+4. **The drift reporter's cache path is relative to the source checkout.** Running it from an installed
+   copy resolved `../mp-upstream-c55ee46` next to the copy and failed. The reporter now falls back to
+   the caller's cwd and accepts `--cache`, and the smoke test passes the real cache explicitly.
+5. **The smoke test's first version was not testing the installed copy** (§4). Fixed by running the Pi
+   subprocess inside the fixture. This is Trap D violated and then caught by the assertion itself,
+   which is the reason the assertion is worth having.
+6. **`async: false` is required for a workflow's call trace to be in the tool result** (§8). The test
+   prompts now ask for it; the shipped detached-research contract is unchanged.
+7. **A provider `402` produced empty streams that looked like assertion failures** (§12).
+   `stream_check` now reports a terminal provider error with its verbatim message.
+8. **`gh` writes could not be executed** and `glab` is absent (§10). Both are recorded as unverified
+   with the exact commands, per question 6's answer A.
+9. **The `latest` upgrade leg cannot drift today** (§11) because the pin is the newest published
+   version. Recorded as degenerate rather than as a passing upgrade test.
+10. **Two live acceptance deviations** (§12): the missing throwaway research branch, and wayfinder
+    writing to the target repo's `docs/agents/issue-tracker.md`.
+11. **M4/M5 items still open and deliberately untouched:** the GitHub owner `netname` remains
+    unconfirmed by the owner (NOTES §M0.5 item 1) even though `gh auth status` now shows that account;
+    and the post-v1 candidates in §10 of the plan are unchanged.
+12. **The stretch GitHub Action was not added** (question 5, answer B). §10 lists it as a post-v1
+    candidate.
+13. **`npm pack` also ships the dev-only `.pi/settings.json`.** §4's tree lists that file as dev-only
+    configuration and nothing excludes it from the published tarball. It is harmless (an installed
+    package's `.pi/settings.json` is never merged into a project) so M6 did not change packaging, but
+    a `files` allowlist or `.npmignore` would drop it, and the smoke test records the observation
+    rather than failing on it.
+
+### 16. Acceptance evidence (commands and results)
+
+- **Validator:** `npm test` → exit 0, `ok: skills/** clean (51 file(s) scanned, 26 SKILL.md)`, D5
+  `tokenMap v2` hash `9e86593bef1167039b66b4eb7d8dc69b5cda1cb647cde6e9fb086ad1e4bcda10` matches. No
+  `npm install`, no network.
+- **Drift reporter:** `npm run drift` → 26 rows, 51 file pairs, 15 verbatim, 36 patched, 0 missing,
+  19 files with a REVIEW region (45 REVIEW / 53 EXPECTED regions). `--strict` exits 1 as designed.
+- **Smoke test:** `npm run smoke` → **46 passed, 0 failed, 3 skipped**; validator, inventory and
+  extension/agent presence asserted **inside the installed copy**, the same assertions re-run against
+  the **published artifact** produced by `npm pack`, and the Windows backslash entry reproduced and
+  repaired.
+- **Invocation model:** 13/13 assertions (§6).
+- **Collision:** 5/5 real decoy assertions plus 3/3 synthetic unattributed assertions (§7).
+- **Parallelism:** 16/16 assertions, including a refused child and a timed-out child (§8).
+- **Child extension:** 2/2 assertions from a real foreground child (§9).
+- **Trackers:** local Markdown live; `gh` read-only verified; 6 write commands and the whole GitLab
+  path recorded unverified (§10).
+- **Upgrade policy:** pinned pass; latest degenerate, no drift observed (§11).
+- **Live acceptance:** the `Small Feature Example` and `Amazon Refund Import` sessions 1–3 all ran
+  live, with zero hits for every banned token across all seven streams (§12).
+- **Evidence auditor:** discriminating re-test run; retained, tree unchanged (§13).
+- **Freeze:** `docs/ADAPTATION_PLAN.md` byte-identical to `fca16af`; inventory `skills`/`tokenMap`
+  deep-equal to `fca16af`; one new `validation` block; no D5 row added, removed, or edited.
+- **No deferred skill ported:** `find skills -iname "*pre-commit*" -o -iname "*in-progress*" -o
+  -iname "*scaffold-exercises*" -o -iname "*shoehorn*"` returns nothing.
+
+### 17. Release record
+
+- `CHANGELOG.md`: `[Unreleased]` closed, `[0.1.0] - 2026-09-19` carries M0–M5 plus a new M6
+  subsection; the `[Unreleased]`/`[0.1.0]` compare links are unchanged.
+- **No tag and no publish were performed.** Question 1 was answered **A**, which hands both
+  irreversible steps off; independently, `npm whoami` returns `ENEEDAUTH` (`npm error need auth`), so
+  there are no registry credentials in this environment. The release state is therefore: the M6
+  commit is on `main`, `package.json` is `0.1.0`, and the changelog is dated. The exact remaining
+  commands:
+
+  ```bash
+  git tag -a v0.1.0 -m "pi-adapted-mp-skills v0.1.0"   # annotated tag on the M6 commit
+  npm login                                           # or set NPM_TOKEN / configure .npmrc
+  npm publish                                         # pi-adapted-mp-skills@0.1.0, public, MIT
+  git push origin main --tags                         # publishes the M6 commit and the tag
+  ```
+
+  `npm publish` needs no change to the package first: `package.json` is already `0.1.0`, the
+  `pi-package` keyword is present, there is no `private` flag, and there are no runtime dependencies
+  to install. `npm pack --dry-run` is the cheap pre-flight.
+- **Owner check before tagging or publishing:** `netname` is still taken from the git remote and is
+  only corroborated by `gh auth status` (account `netname`), not confirmed by the owner. If a
+  different GitHub owner or npm scope is intended, `README.md`, `NOTICE`, and `CHANGELOG.md` carry the
+  URL, and the tag would point at the wrong compare URL; a one-line change to each is needed first.
+- Fixtures left in place as raw evidence, all outside this repository:
+  `C:/x/on/projs/mp-smoke-fixture` (smoke), `C:/x/on/projs/m6-fixture` (dispatch and evidence-auditor
+  probes), `C:/x/on/projs/m6-accept` (live acceptance). None is part of the package.

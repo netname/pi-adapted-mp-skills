@@ -6,6 +6,13 @@
   "keywords": [
     "pi-package"
   ],
+  "scripts": {
+    "test": "node scripts/validate-skills.mjs",
+    "validate": "node scripts/validate-skills.mjs",
+    "drift": "node scripts/fetch-upstream.mjs",
+    "drift:strict": "node scripts/fetch-upstream.mjs --strict",
+    "smoke": "bash scripts/smoke-test.sh"
+  },
   "pi": {
     "extensions": [
       "./extensions"
