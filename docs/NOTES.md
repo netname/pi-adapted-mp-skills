@@ -1156,3 +1156,404 @@ reporter questions. The `gh`/`glab` tracker paths are untested and remain M6 wor
   repository and is not part of the package.
 - `gh`/`glab` triage paths and the `pi install` backslash-path README entry remain M6 work;
   `git-guardrails` packaging remains M5.
+
+
+---
+
+## M5 — Productivity and misc (2026-09-19)
+
+Scope: the M5 slice only — `grill-me`, `to-questionnaire`, `wait-what`, `writing-for-agents`
+(+ `SKILL-MECHANICS.md`), `teach` (+ the four `*-FORMAT.md` sidecars), and `git-guardrails`
+(renamed from `git-guardrails-claude-code`, + `scripts/block-dangerous-git.sh`) — **6 skills, 12 files
+under `skills/**`** — plus the package's first extension, `extensions/git-guardrails.ts`. Nothing from
+M6 was started. `docs/ADAPTATION_PLAN.md` and `docs/skill-inventory.json` were **not edited**.
+
+**Baseline note.** The task said HEAD was `fca16af`; the actual HEAD at the start of M5 was
+`f675639` ("Add M5 hand-off prompt", which only adds `docs/M5-PROMPT.md`). `git diff --stat
+fca16af..f675639` touches no plan or inventory file, and `git diff --quiet fca16af --
+docs/ADAPTATION_PLAN.md docs/skill-inventory.json` exits 0, so the plan and the D5 table are
+byte-identical to `fca16af`; that is the baseline this section compares against.
+
+### 1. Decisions taken before implementation (the three questions asked)
+
+The task asked three questions and marked one option "recommended" in each. This session is
+non-interactive, so it proceeded on the recommended options and records them here as the milestone's
+decisions. All three are option A.
+
+1. **Trap B — `git-guardrails` packaging: option A (ship the extension).**
+   `extensions/git-guardrails.ts` ships in this package and `package.json`'s `pi` manifest gains
+   `"extensions": ["./extensions"]`. This is the only faithful port and it is what §10 and the D5-20
+   row schedule ("packaging the extension is M5 work"). It edits D1's literal manifest and adds
+   `extensions/` to §4's tree, so it is a **recorded deviation** (§7), not a silent one. See §4.3 for
+   the design and §4.4 for the evidence, including a negative control proving the manifest key is
+   load-bearing.
+2. **Trap A — validator rename carve-out: option A (fix check 7).** Check 7 now expects
+   `row.renameTarget` when `disposition === "rename"`, and only then. Negative cases still fail (see
+   §4.5). This is a correctness fix for the one rename D3/D11 explicitly authorize, not a weakening.
+3. **Acceptance scope: option A (live).** All six skills probed; all four user-invoked skills run live
+   (each wrote its artifact or asked its question and exited 0); the guardrail block demonstrated live
+   against a real `git push` and a real `git reset --hard`, with a live safe command alongside.
+
+**Non-blocking confirmation, as requested.** `writing-for-agents`' "a hand-off or a subagent dispatch"
+sentence is left as generic design prose. It names a *context boundary* (the condition under which
+hiding later steps actually clears them), not a call the agent must make, so inserting the D5-04 tool
+name there would misdescribe it. No `subagent` token is added or removed by this milestone, and the
+inventory row is untouched.
+
+### 2. Per-file diff notes (D9)
+
+`PATCHED` = fork-and-patch regions; `VERBATIM` = byte-for-byte from the pin. Every `SKILL.md` gained
+the D2 frontmatter block (`license: MIT` plus `metadata.upstream`, `metadata.upstream-commit`,
+`metadata.upstream-path`, `metadata.invocation`, `metadata.adapted-for`) and dropped its
+`agents/openai.yaml` (D5-17); those two changes are not repeated in every row.
+
+| Ported file | Upstream source | Changed regions |
+|---|---|---|
+| `skills/productivity/grill-me/SKILL.md` | same name | PATCHED. Frontmatter metadata. The whole one-line body (`Call the Skill tool with "grilling".`) became the D4 load: "Load the `grilling` skill before continuing: from this skill's directory, read `../grilling/SKILL.md` and follow it." |
+| `skills/productivity/to-questionnaire/SKILL.md` | same name | PATCHED. Frontmatter metadata only; body VERBATIM (a `diff` of the two body regions is empty). Output stays `to-questionnaire-<slug>.md` in the current directory — no D5 relocation is scheduled and it is target-repo output. |
+| `skills/productivity/wait-what/SKILL.md` | same name | PATCHED. Frontmatter metadata only; body VERBATIM. `CONTEXT.md` / `CONTEXT-MAP.md` are target-repo conventions, not tokens. |
+| `skills/productivity/writing-for-agents/SKILL.md` | same name | PATCHED. Frontmatter metadata. `description` rewritten: `AGENTS.md or CLAUDE.md` → `AGENTS.md`. Body: the "`AGENTS.md` / `CLAUDE.md`" pairing → "`AGENTS.md`". No other body change. |
+| `…/writing-for-agents/SKILL-MECHANICS.md` | same name | VERBATIM. It already uses Pi's field names (`description`, `disable-model-invocation`) and contains no `allow_implicit_invocation`-style phrasing, so reconciliation required no edit; see §5. |
+| `skills/productivity/teach/SKILL.md` | same name | PATCHED. Frontmatter metadata; `argument-hint` dropped (D2/D5-18). One body line **added** (the `GLOSSARY.md` bullet, a deliberate deviation — §6). |
+| `…/teach/MISSION-FORMAT.md` | same name | VERBATIM. |
+| `…/teach/GLOSSARY-FORMAT.md` | same name | VERBATIM. |
+| `…/teach/LEARNING-RECORD-FORMAT.md` | same name | VERBATIM. |
+| `…/teach/RESOURCES-FORMAT.md` | same name | VERBATIM. The `https://example.com` and `reddit.com/r/weightroom` URLs are illustrative examples, not harness tokens, and are untouched. |
+| `skills/misc/git-guardrails/SKILL.md` | `skills/misc/git-guardrails-claude-code/SKILL.md` | PATCHED, effectively rewritten. Frontmatter metadata (`name` renamed; `upstream-path` keeps the upstream name); `description` rewritten without the harness name while keeping trigger phrasing. Body: the whole hook / `.claude/settings.json` / `~/.claude/hooks` / `$CLAUDE_PROJECT_DIR` procedure replaced by the Pi opt-in procedure (write `.pi/git-guardrails.json` or `~/.pi/agent/git-guardrails.json`); the pattern list and the block intent preserved. |
+| `…/git-guardrails/scripts/block-dangerous-git.sh` | same name | PATCHED. The `DANGEROUS_PATTERNS` array is the upstream list, unchanged. The mechanism around it is replaced: no stdin, no `jq`, no exit-2 hook contract — it now takes the command as an argument, prints the same BLOCKED sentence, and exits 1 (see §4.2). This file is also the extension's pattern source. |
+
+`extensions/git-guardrails.ts` is new code, not a port: it is the D5-20 substitution for the upstream
+hook (§4.3). Totals for the ported slice: 12 files, five `SKILL.md`. Five files VERBATIM (the four
+`teach` FORMATs and `SKILL-MECHANICS.md`), the rest PATCHED.
+
+### 3. D4 cross-skill loads — `grill-me` is the only M5 load
+
+`grill-me` is the only M5 skill with a non-null `d4Path`, and the inventory records it as a
+same-bucket `model-load`. Its one instruction resolves from `skills/productivity/grill-me/` to
+`skills/productivity/grilling/SKILL.md`, whose declared `name` is `grilling`. The other five M5 rows
+have `crossSkillLoads: []` / `slashCommandReferences: []`; nothing was invented.
+
+Full enumeration of backticked `../…/SKILL.md` references under `skills/**` — **21 occurrences across
+7 distinct paths** (M4 contributed 20/7; `grill-me` adds one new *occurrence* of the existing
+`grilling` target, so the distinct count does not move):
+
+```
+skills/engineering/grill-with-docs/SKILL.md:14                ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/grill-with-docs/SKILL.md:16                ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/implement/SKILL.md:26                      ../tdd/SKILL.md                         -> skills/engineering/tdd/SKILL.md                name=tdd                  OK
+skills/engineering/implement/SKILL.md:30                      ../code-review/SKILL.md                 -> skills/engineering/code-review/SKILL.md        name=code-review          OK
+skills/engineering/improve-codebase-architecture/SKILL.md:20  ../codebase-design/SKILL.md             -> skills/engineering/codebase-design/SKILL.md    name=codebase-design      OK
+skills/engineering/improve-codebase-architecture/SKILL.md:71  ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/improve-codebase-architecture/SKILL.md:73  ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/improve-codebase-architecture/SKILL.md:78  ../codebase-design/SKILL.md             -> skills/engineering/codebase-design/SKILL.md    name=codebase-design      OK
+skills/engineering/tdd/SKILL.md:33                            ../codebase-design/SKILL.md             -> skills/engineering/codebase-design/SKILL.md    name=codebase-design      OK
+skills/engineering/triage/SKILL.md:83                         ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/triage/SKILL.md:83                         ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/wayfinder/SKILL.md:84                      ../research/SKILL.md                    -> skills/engineering/research/SKILL.md           name=research             OK
+skills/engineering/wayfinder/SKILL.md:85                      ../prototype/SKILL.md                   -> skills/engineering/prototype/SKILL.md          name=prototype            OK
+skills/engineering/wayfinder/SKILL.md:86                      ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/wayfinder/SKILL.md:86                      ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/wayfinder/SKILL.md:118                     ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/wayfinder/SKILL.md:118                     ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/engineering/wayfinder/SKILL.md:122                     ../research/SKILL.md                    -> skills/engineering/research/SKILL.md           name=research             OK
+skills/engineering/wayfinder/SKILL.md:131                     ../../productivity/grilling/SKILL.md    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+skills/engineering/wayfinder/SKILL.md:131                     ../domain-modeling/SKILL.md             -> skills/engineering/domain-modeling/SKILL.md    name=domain-modeling      OK
+skills/productivity/grill-me/SKILL.md:14                      ../grilling/SKILL.md                    -> skills/productivity/grilling/SKILL.md          name=grilling             OK
+total: 21 occurrences / 7 distinct paths
+```
+
+### 4. `git-guardrails`: rename, mechanism, packaging, and the validator change
+
+#### 4.1 The rename, and the check-7 change (Trap A)
+
+`name: git-guardrails` is frozen by D3/D11; the inventory's `upstreamName` stays
+`git-guardrails-claude-code`. Check 7 compared `frontmatterName !== row.upstreamName` verbatim and so
+rejected the rename the plan itself mandates. The fix is in `scripts/validate-skills.mjs`:
+
+```js
+if (row.disposition === "rename" && !row.renameTarget) { /* error: malformed rename row */ }
+const expectedName = row.disposition === "rename" && row.renameTarget ? row.renameTarget : row.upstreamName;
+```
+
+The **D5 table is unchanged** (no row was edited, and the hash still matches); this is not an
+inventory fix, it is a validator fix. §4.5 proves it is not a weakening.
+
+#### 4.2 The mechanism port
+
+The upstream skill is a `PreToolUse` matcher on `Bash` wired through `.claude/settings.json`, with a
+`jq`-reading stdin script that exits 2. What is ported is the **pattern list and the block/allow
+intent**; what is dropped is the whole hook contract. Concretely:
+
+- `scripts/block-dangerous-git.sh` keeps the upstream `DANGEROUS_PATTERNS` array byte-for-byte
+  (nine entries, including the two redundant `push --force` / `reset --hard` catch-alls) but is no
+  longer a hook: it takes the command as an argument, prints the same BLOCKED sentence to stderr, and
+  exits 1 on a match / 0 otherwise. No stdin, no `jq`, no exit 2. Because it is now a plain checker it
+  is also directly runnable as the skill's verification step.
+- `extensions/git-guardrails.ts` is the mechanism: `pi.on("tool_call", …)` on `toolName === "bash"`
+  returning `{ block: true, reason }`, mirroring `permission-gate.ts` / `protected-paths.ts`.
+- **The sidecar stays as the pattern source.** The extension reads the `DANGEROUS_PATTERNS=( … )`
+  array out of the sidecar at load time (with an in-file fallback if the file cannot be read), so the
+  pattern list has one home and cannot drift between the script and the extension. This is the
+  "stays as the pattern source" branch of the choice the task offered.
+- Regex semantics are inherited: patterns match anywhere in the command, exactly as upstream's
+  `grep -qE` did. One visible consequence, kept deliberately: `git clean -fdn` (a dry run) matches
+  `git clean -fd` and is blocked. That is upstream's behaviour, not a port defect, and it was observed
+  live (§4.4).
+
+#### 4.3 The packaging decision (Trap B, option A) and the extension design
+
+The extension is declared with `"extensions": ["./extensions"]` in the `pi` manifest. That key is
+load-bearing, not decorative: a package with a `pi` manifest does **not** auto-discover the
+conventional `extensions/` directory (Pi `docs/packages.md`: convention directories apply "if no `pi`
+manifest is present"). §4.4's negative control demonstrates this.
+
+Because the extension ships with the package, it loads in every session of every user of this
+package, so it must be **inert by default**. The design is therefore opt-in:
+
+| State | Behaviour |
+|---|---|
+| No config file | Inert — no `tool_call` block, ever. Installing this package changes nothing. |
+| `<repo>/.pi/git-guardrails.json` = `{"enabled": true}` | Guardrail on for that repo, default patterns. |
+| `~/.pi/agent/git-guardrails.json` = `{"enabled": true}` | Guardrail on everywhere (project file wins). |
+| `{"enabled": false}` | Inert (off without deleting the file). |
+| `{"enabled": true, "patterns": ["…"]}` | The custom list **replaces** the defaults for that scope. |
+| `PI_GIT_GUARDRAILS=off` | Off for the session even when opted in. |
+| Malformed file | Treated as not opted in (fail open), so a broken edit can never lock a user out of git. |
+
+The config is re-read on each `bash` call, so the skill can opt a repo in mid-session and the very
+next `git push` is blocked without a reload. When a command is blocked the handler returns
+`{ block: true, reason: "<the BLOCKED sentence>" }`, exactly the contract `docs/extensions.md`
+documents for `tool_call`. No `mp-*` ceiling is touched (this is a skill plus an extension, not an
+agent), and the skill stays model-invoked with a model-facing description.
+
+#### 4.4 Live block evidence
+
+Fixture `C:/x/on/projs/m5-fixture` (git repo with a **real local bare remote**
+`C:/x/on/projs/m5-fixture-remote.git`), `pi 0.85.1`, this package installed project-locally. The
+Windows backslash-path defect reproduced (`pi install … -l -a` wrote `"..\\..\\pi-adapted-mp-skills"`)
+and the package entry was repaired to forward slashes before probing. Opt-in file written:
+`.pi/git-guardrails.json` = `{"enabled": true}`.
+
+**Live, end to end, with no `-e` flag — the extension came from the installed package:**
+
+```
+$ git ls-remote origin | wc -l
+0                                    # remote empty, so a real push would really push
+$ git push --dry-run origin main     # plain shell: the push itself is valid
+ * [new branch]      main -> main
+
+$ pi -p -a --no-session "Run exactly this command: git push origin main. Report its raw output verbatim."
+BLOCKED: 'git push origin main' matches dangerous pattern 'git push'. The user has prevented you from running this command.
+  -> model: "The command was blocked by a configured guardrail before it executed."
+$ git ls-remote origin | wc -l
+0                                    # nothing was pushed
+
+$ pi -p -a --no-session "Run exactly this command: git reset --hard HEAD~1  Then run exactly this command: git status --short …"
+BLOCKED: 'git reset --hard HEAD~1' matches dangerous pattern 'git reset --hard'. The user has prevented you from running this command.
+  Command 2 (`git status --short`) "ran normally and exited 0"
+```
+
+A third live run asked for `git reset --hard HEAD~1`, `git clean -fd`, and `git log --oneline -1`;
+both dangerous commands were blocked and the read-only one ran.
+
+**Exact `{ block: true, reason }` payloads for every listed pattern**, and the allow cases, from an
+in-process harness that loads the real extension file, captures its `tool_call` handler, and calls it
+with the same event shape Pi uses:
+
+```
+{"command":"git push origin main","blocked":true,"result":{"block":true,"reason":"BLOCKED: 'git push origin main' matches dangerous pattern 'git push'. The user has prevented you from running this command."}}
+{"command":"git push --force origin main","blocked":true,"result":{"block":true,"reason":"… matches dangerous pattern 'git push'. …"}}
+{"command":"git reset --hard HEAD~1","blocked":true,"result":{"block":true,"reason":"… matches dangerous pattern 'git reset --hard'. …"}}
+{"command":"git clean -fd","blocked":true,"result":{"block":true,"reason":"… matches dangerous pattern 'git clean -fd'. …"}}
+{"command":"git clean -f","blocked":true,"result":{"block":true,"reason":"… matches dangerous pattern 'git clean -f'. …"}}
+{"command":"git branch -D feature","blocked":true,"result":{"block":true,"reason":"… matches dangerous pattern 'git branch -D'. …"}}
+{"command":"git checkout .","blocked":true,"result":{"block":true,"reason":"… matches dangerous pattern 'git checkout \\.'. …"}}
+{"command":"git restore .","blocked":true,"result":{"block":true,"reason":"… matches dangerous pattern 'git restore \\.'. …"}}
+{"command":"git status --short","blocked":false,"result":null}
+{"command":"git log --oneline -3","blocked":false,"result":null}
+{"command":"npm test","blocked":false,"result":null}
+```
+
+Standalone sidecar checks: `git push origin main` → BLOCKED, exit 1; `git status` → exit 0. Opt-in
+gating: no config → allowed; `{"enabled": false}` → allowed; `PI_GIT_GUARDRAILS=off` → the extension
+registers no handler at all; `{"patterns": ["git merge"]}` → `git push` allowed, `git merge` BLOCKED.
+
+**Negative control (the manifest key is load-bearing).** A copy of this package with the
+`pi.extensions` key deleted was installed into a fresh fixture with the same `{"enabled": true}`
+opt-in. The guardrail did **not** load: `git push origin main` reached git and failed with git's own
+`fatal: 'origin' does not appear to be a git repository` (that fixture has no remote). So the
+extension arrives through the manifest entry, not through directory convention.
+
+#### 4.5 Why the validator change is not a weakening
+
+Check 7 still enforces a single expected name per row, and the expected name is still *the* name the
+frozen contract specifies. The change only lets the contract's own `renameTarget` field supply it for
+the rows whose `disposition` is `rename`. Four cases were run against a throwaway copy of the tree:
+
+| Case | Result |
+|---|---|
+| Baseline (shipped tree) | exit 0 |
+| Rename row declaring `git-guardrails-claude-code` (the old name) | **exit 1** — "D3 renames …, so the upstream name is not accepted here" |
+| A non-rename row (`grill-me`) renamed to `grill-me-renamed` | **exit 1** — "D11 keeps names verbatim" |
+| A `rename` row with no `renameTarget` | **exit 1** — "has disposition `rename` but records no `renameTarget`" |
+
+A renamed skill cannot silently keep its upstream name, nor can a non-rename row rename itself, nor
+can a rename row lose its target. The check got stricter for malformed rows and correct for the one
+sanctioned rename.
+
+### 5. `writing-for-agents`: `CLAUDE.md` → `AGENTS.md`, and the invocation reconciliation
+
+- **Description.** `Writing documents for agents. Use when creating or editing skills, or modifying
+  AGENTS.md or CLAUDE.md.` → `…, or modifying AGENTS.md.` The model-facing trigger phrasing ("Use
+  when …") is kept, because the skill is model-invoked (D2/D3).
+- **Body.** `a skill, an \`AGENTS.md\` / \`CLAUDE.md\`, a doc reached by a pointer` → `a skill, an
+  \`AGENTS.md\`, a doc reached by a pointer`. This is the only body change; a `diff` of the body
+  regions shows one line.
+- **`CLAUDE.md` is gone from `skills/**` entirely** (`grep -rn "CLAUDE" skills/` → no match). The
+  remaining occurrences in the repository are the validator's own rule string and the M2 setup note
+  that Pi also understands a Claude-compatible context-file name — neither is a ported body, and
+  neither contains the banned literal.
+- **`SKILL-MECHANICS.md` needed no edit.** It was checked line by line: it already uses Pi's field
+  names (`description`, `disable-model-invocation`), and it contains no
+  `policy.allow_implicit_invocation` phrasing, no `agents/openai.yaml` reference, and no harness name.
+  The Claude/Codex vocabulary the inventory flagged is confined to the *concepts* (model-invoked vs
+  user-invoked), which is exactly the split D3 implements — so the honest reconciliation is "verified
+  equivalent, ported verbatim", not a rewrite. It stays a reference doc reached by the skill-relative
+  link `[SKILL-MECHANICS.md](SKILL-MECHANICS.md)` (D7).
+- The `subagent` token stays as generic prose (§1).
+
+### 6. `teach`: `argument-hint` dropped, four FORMAT sidecars, and one recorded body addition
+
+- **`argument-hint` is gone** (`grep -rn "argument-hint" skills/` → no match). It was dropped, not
+  translated into `metadata`; the hint's intent ("What would you like to learn about?") is already
+  carried by the body, which asks what the user intends to learn and how.
+- **All four FORMAT sidecars are present and referenced** from `SKILL.md` with the upstream
+  skill-relative style: `MISSION-FORMAT.md`, `GLOSSARY-FORMAT.md`, `LEARNING-RECORD-FORMAT.md`,
+  `RESOURCES-FORMAT.md`. All four are byte-identical to the pin (`cmp` reports no difference).
+- **Deviation — the `GLOSSARY.md` bullet was added.** Upstream ships `GLOSSARY-FORMAT.md` but
+  `SKILL.md` no longer links it; upstream documents this itself in `docs/productivity/teach.md` ("the
+  skill ships a `GLOSSARY-FORMAT.md` that `SKILL.md` no longer links to, so you will only get one if
+  you ask ([issue #559](https://github.com/mattpocock/skills/issues/559))"). The acceptance criterion
+  requires all four sidecars to be *referenced*, and D7's whole point is that a sidecar is reached by a
+  skill-relative pointer — an orphaned sidecar is dead weight under progressive disclosure. So one
+  bullet was added to the Teaching Workspace list, mirroring the three existing bullets:
+
+  > ``- `GLOSSARY.md`: The canonical language for the workspace. All explainers, exercises, reference documents, and learning records adhere to its terminology. Use the format in [GLOSSARY-FORMAT.md](./GLOSSARY-FORMAT.md).``
+
+  This is the only body text added in M5 outside the D5 map, it fixes upstream issue #559 rather than
+  inventing new behaviour, and the live run below used the glossary it prompts for. The rest of the
+  `teach` body is verbatim.
+- `RESOURCES-FORMAT.md`'s `https://example.com` and `reddit.com/r/weightroom` URLs were left alone
+  (illustrative examples, not harness tokens).
+- `teach` ships **experimental** (D15). The README index already marks it `(experimental)`; that mark
+  was left in place and the README index was otherwise untouched (M6 finalizes it).
+
+### 7. Where the plan was silent or wrong, and what was done instead
+
+1. **§4's tree has no `extensions/`, and D1's manifest enumerates only `skills` and `subagents`, yet
+   D5-20 and §10 schedule the extension for M5.** Resolved by option A: add
+   `extensions/git-guardrails.ts` and the `pi.extensions` key, recorded here as a plan-scheduled
+   deviation (§4.3). D1's prose is not contradicted — it says what the manifest *gets*, and it does not
+   forbid a fourth resource type that §10 later requires. This is the milestone's one tree/manifest
+   change.
+2. **The inventory says the guardrail should be "harness-agnostic", but nothing in the plan says how
+   an always-loaded blocker stays opt-in.** Shipping an always-on blocker in a package that also ships
+   26 unrelated skills would change every user's git behaviour on install — the opposite of the
+   skill's "the user asks for this" intent. Resolved with the file-based opt-in of §4.3, plus
+   `enabled: false` and `PI_GIT_GUARDRAILS=off` escape hatches. The alternative (watch only after
+   `/skill:git-guardrails` has run this session) was rejected: it would need session state the
+   extension does not have and would fail open in a fresh session.
+3. **Trap A: check 7 was wrong, not merely inconvenient.** Fixed and reported as question 2 (§4.1),
+   with the four negative cases in §4.5.
+4. **`GLOSSARY-FORMAT.md` is an orphan upstream (issue #559).** Fixed with one `SKILL.md` bullet and
+   recorded (§6).
+5. **§6/M5 lists 12 files but the extension adds a 13th outside `skills/**`.** The validator scans
+   `skills/**` only, so its counts are unaffected: **51 files / 26 `SKILL.md`**, exactly the expected
+   figure, with `extensions/git-guardrails.ts` on top. The "52" the budget allowed for is a repo-file
+   count, not a validator count.
+6. **`git-guardrails`' description named the harness.** Upstream's description says "Set up Claude
+   Code hooks … in Claude Code". Rewritten without it while preserving trigger phrasing. The
+   `~/.claude` / `$CLAUDE_PROJECT_DIR` / `PreToolUse` strings do not survive anywhere under `skills/`.
+7. **The sidecar keeps a `DANGEROUS_PATTERNS` bash array that TypeScript parses.** Slightly unusual,
+   but it is the only arrangement that satisfies both "the sidecar stays as the pattern source" and
+   "one source of truth". The extraction is ~8 lines, falls back to an in-file list if the sidecar is
+   missing, and was exercised for all nine patterns (§4.4).
+8. **No M5 file needed a D10 capability gate** — none of the six skills dispatches a child or uses a
+   web tool, so `pi-subagents` / `pi-web-access` were not installed into the M5 fixture and nothing was
+   gated.
+9. **Multi-line shells in one invocation are blocked, not misreported.** In the live run, the
+   guardrail also blocked `git clean -fdn` (the dry run) because `git clean -fd` is a substring. Same
+   regex semantics as upstream, recorded so nobody "fixes" it as a bug.
+10. **M4 items still open, deliberately untouched:** the GitHub owner `netname` (NOTES §M0.5 item 1),
+    the `pi install` backslash-path README entry (NOTES §M3.5 → M6), and the discriminating
+    `mp-evidence-auditor` re-test (NOTES §M4.8 → M6).
+11. **File mode of the ported shell sidecar.** Upstream's `block-dangerous-git.sh` is mode `100755`
+    (it had to be, being a hook command); this repo records `100644` for every shell sidecar
+    (`wizard/template.sh`, `hitl-loop.template.sh`, and the M4 ports match upstream there), and
+    `core.filemode` is `false` on this Windows checkout, so git will record `100644` here too. The
+    file is marked executable in the working tree, and the skill invokes it as
+    `bash <path> "<command>"`, so the mode is not load-bearing. Recorded rather than silently
+    accepted.
+
+### 8. Acceptance evidence (commands and results)
+
+- **Validator:** `node scripts/validate-skills.mjs` → exit 0,
+  `ok: skills/** clean (51 file(s) scanned, 26 SKILL.md)`, D5 `tokenMap v2` hash
+  `9e86593bef1167039b66b4eb7d8dc69b5cda1cb647cde6e9fb086ad1e4bcda10` matches.
+- **D5 freeze:** the hash recomputed from `tokenMap.rows` equals the recorded hash; no D5 row was
+  added, removed, or edited; `docs/skill-inventory.json` is byte-identical to `fca16af`.
+- **D4 enumeration:** 21/21 backticked references resolve to a target whose `name` matches, 7 distinct
+  targets (§3); `grill-me`'s load is present and is the only M5 addition.
+- **Discovery and visibility** (fixture `C:/x/on/projs/m5-fixture`, `before_agent_start` probe, model
+  visibility read from the **rendered** `<available_skills>` block):
+  - Rendered model-visible M5 skills: `git-guardrails`, `writing-for-agents` — the two model-invoked
+    ones. The rendered block's full set is `code-review, codebase-design, diagnosing-bugs,
+    domain-modeling, find-skills, git-guardrails, grilling, prototype, research,
+    resolving-merge-conflicts, tdd, wizard, writing-for-agents`.
+  - Not model-visible (present in `systemPromptOptions.skills` only): `grill-me`,
+    `to-questionnaire`, `wait-what`, `teach` — the exact availability-vs-visibility distinction.
+  - All six resolve as `skill:<name>` with `origin: "package"`, `scope: "project"`, and a path inside
+    this package (`pi.getCommands()`, 32 commands total).
+- **Live runs of the four user-invoked skills** (all in the fixture, all exit 0, each with no `-e`
+  beyond the probe):
+
+  | Skill | Prompt | Result |
+  |---|---|---|
+  | `/skill:wait-what` | the one-line re-pitch | Reasoned in Simplified Technical English, used `CONTEXT.md` vocabulary, reported repo state, exit 0 |
+  | `/skill:grill-me` | "I'm thinking of adding per-item discounts to the cart total." | Expanded prompt contains `` `../grilling/SKILL.md` ``; the model loaded `grilling` from the package and ran a grilling round (Q1–Q6 with `➡️` recommended answers), exit 0 |
+  | `/skill:to-questionnaire` | recipient + needs given inline | Wrote `C:/x/on/projs/m5-fixture/to-questionnaire-per-item-discount-rules.md` (5.2 KB) in the current directory and reported coverage, exit 0 |
+  | `/skill:teach` | "learn the Rust borrow checker …" | Created `MISSION.md`, `GLOSSARY.md`, `RESOURCES.md`, `NOTES.md`, `assets/`, `lessons/`, `reference/`, `learning-records/`; the probe confirms the expanded prompt contains the `GLOSSARY-FORMAT.md` link and no `argument-hint` residue; exit 0 |
+
+  Structural (not live) verification was used for `writing-for-agents` (a reference doc with no action
+  to run; its description/body/absence-of-`CLAUDE.md` checks are structural) and for the expansion
+  facts where a live run added nothing.
+- **`git-guardrails`:** live blocks of `git push` and `git reset --hard` with the reason surfaced
+  verbatim to the model, a live safe `git status --short` alongside, the remote still empty
+  afterwards, exact `{ block: true, reason }` payloads for all eight listed patterns, three allow
+  cases, the sidecar standalone check, the opt-in gating matrix, and the manifest negative control —
+  all in §4.4.
+- **`writing-for-agents`:** `grep -rn "CLAUDE" skills/` → no match; the description names `AGENTS.md`
+  and keeps "Use when" trigger phrasing (§5).
+- **`teach`:** `grep -rn "argument-hint" skills/` → no match; all four `*-FORMAT.md` sidecars exist in
+  `skills/productivity/teach/`, are byte-identical to the pin, and are each referenced from `SKILL.md`
+  (§6).
+- **Negative controls:** the three invalid validator cases of §4.5 each exited 1 while the shipped tree
+  exited 0.
+- **`setup-pre-commit` was not ported** and no `in-progress/*` skill was touched:
+  `find skills -iname "*pre-commit*" -o -iname "*in-progress*"` returns nothing, and the tree contains
+  exactly the 26 v1 skills. `scripts/validate-skills.mjs` gains no check for it.
+
+### 9. Deliverables not produced (and why)
+
+- No `docs/agents/` and no `.claude-plugin/` (D7/D1); the only new directory is `extensions/`, which
+  the guardrail decision authorizes and §7 records.
+- No README change at all: the index already lists all six M5 skills, already marks `teach`
+  `(experimental)` and `git-guardrails` as the rename. The README's still-open items (the
+  backslash-path troubleshooting entry, index finalization, user-facing guardrail documentation) are
+  M6 work.
+- No new committed script and no runtime dependency: the two probes (`probe.ts`, `ext-harness.mjs`)
+  were run ad hoc in the fixture and are recorded here rather than shipped;
+  `extensions/git-guardrails.ts` imports only Node built-ins plus a type-only Pi import.
+  `node scripts/validate-skills.mjs` still runs on a bare Node install.
+- The fixture `C:/x/on/projs/m5-fixture` (and its bare remote `C:/x/on/projs/m5-fixture-remote.git`)
+  is left in place as raw evidence; it is outside this repository and is not part of the package.

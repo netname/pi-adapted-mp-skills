@@ -19,6 +19,9 @@
  *   6. Duplicates    — no two skills under `skills/` declare the same `name` (D11).
  *   7. Inventory     — every ported `SKILL.md` maps to an inventory row with a
  *                      port/adapt/rename disposition and the expected `piPath`.
+ *                      The expected name is `row.upstreamName`, except for the one
+ *                      frozen D3 rename, where a `rename` row's expected name is its
+ *                      recorded `renameTarget` — and only that name.
  *
  * The `ask-matt` carve-out is structural: its `/skill:<name>` router labels are not
  * backticked `.../SKILL.md` references, so check 3 never demands those targets
@@ -372,8 +375,20 @@ function checkInventoryConsistency(inventory, skillFiles) {
       fail(file, 1, `inventory row \`${row.upstreamName}\` has disposition \`${row.disposition}\`; only port/adapt/rename may be shipped.`);
     }
     const name = frontmatterName(file);
-    if (name && row.upstreamName && name !== row.upstreamName) {
-      fail(file, 1, `frontmatter name \`${name}\` differs from the inventory upstreamName \`${row.upstreamName}\`; D11 keeps names verbatim.`);
+    // D11 keeps names verbatim, with the single exception D3 and D11 both authorise:
+    // a `rename` row's expected name is its recorded `renameTarget`, never the
+    // upstream name. Checked before the comparison so a malformed rename row is
+    // reported rather than silently falling back to the verbatim rule.
+    if (row.disposition === "rename" && !row.renameTarget) {
+      fail(file, 1, `inventory row \`${row.upstreamName}\` has disposition \`rename\` but records no \`renameTarget\`.`);
+    }
+    const expectedName = row.disposition === "rename" && row.renameTarget ? row.renameTarget : row.upstreamName;
+    if (name && expectedName && name !== expectedName) {
+      const rule =
+        row.disposition === "rename"
+          ? `D3 renames \`${row.upstreamName}\` to \`${row.renameTarget}\`, so the upstream name is not accepted here`
+          : `D11 keeps names verbatim (inventory upstreamName \`${row.upstreamName}\`)`;
+      fail(file, 1, `frontmatter name \`${name}\` differs from the expected name \`${expectedName}\`: ${rule}.`);
     }
     const bucket = rel.split("/")[1];
     if (row.bucket && bucket !== row.bucket) {

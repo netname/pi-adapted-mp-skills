@@ -13,8 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - M2: convention layer — **landed 2026-09-18**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M2.
 - M3: main flow — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M3.
 - M4: on-ramps and health — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M4.
-- M5: productivity and misc — `grill-me`, `to-questionnaire`, `wait-what`,
-  `writing-for-agents`, `teach`, `git-guardrails`.
+- M5: productivity and misc — **landed 2026-09-19**; see the `[0.1.0]` Added list and `docs/NOTES.md` §M5.
 - M6: validator, smoke tests, README finalization, `v0.1.0` tag, npm publish.
 
 ## [0.1.0] - 2026-09-18
@@ -121,6 +120,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   output paths, result collection, failure handling), the Trap A and Trap B evidence, the
   `mp-evidence-auditor` vs built-in `evidence-auditor` comparison and its keep decision, the report
   relocation, and the Windows notes are in `docs/NOTES.md` §M4.
+
+#### M5 productivity and misc (landed 2026-09-19)
+
+- `skills/productivity/grill-me/SKILL.md` — the upstream one-line Skill-tool body became the D4
+  same-bucket load `../grilling/SKILL.md`, the only M5 cross-skill load.
+- `skills/productivity/to-questionnaire/SKILL.md` and `skills/productivity/wait-what/SKILL.md` —
+  bodies verbatim, D2 metadata added. `to-questionnaire` still writes
+  `to-questionnaire-<slug>.md` in the current directory (target-repo output).
+- `skills/productivity/writing-for-agents/` — `SKILL.md` rewritten from `AGENTS.md` / `CLAUDE.md`
+  to `AGENTS.md` in both the description (keeping model-facing trigger phrasing) and the body; the
+  verbatim `SKILL-MECHANICS.md` reference doc already uses Pi's `description` /
+  `disable-model-invocation` field names, so no harness reconciliation was needed beyond that.
+- `skills/productivity/teach/` — `SKILL.md` with `argument-hint` dropped (D2/D5-18) plus the four
+  verbatim `MISSION-FORMAT.md`, `GLOSSARY-FORMAT.md`, `LEARNING-RECORD-FORMAT.md`, and
+  `RESOURCES-FORMAT.md` sidecars. One `GLOSSARY.md` bullet was added to `SKILL.md` because upstream
+  ships `GLOSSARY-FORMAT.md` unlinked (upstream issue #559); this is the milestone's only body text
+  added outside the D5 map, and it is recorded in `docs/NOTES.md` §M5.6.
+- `skills/misc/git-guardrails/` (new bucket) — `SKILL.md` renamed from
+  `git-guardrails-claude-code` (D3) and rewritten for Pi: the hook / `.claude/settings.json` /
+  `~/.claude` / `$CLAUDE_PROJECT_DIR` procedure is replaced by an opt-in config file that turns on
+  the packaged extension; the dangerous-command pattern list and the block intent are preserved.
+  `scripts/block-dangerous-git.sh` keeps the upstream `DANGEROUS_PATTERNS` array but is no longer a
+  hook (no stdin, no `jq`, no exit-2 contract) — it is now a standalone checker and the extension's
+  single source of truth for the pattern list.
+- `extensions/git-guardrails.ts` — new package extension implementing D5-20: a
+  `pi.on("tool_call", …)` handler that returns `{ block: true, reason }` for a `bash` call matching
+  a dangerous-git pattern, mirroring `permission-gate.ts`. Inert until the user opts in via
+  `.pi/git-guardrails.json` or `~/.pi/agent/git-guardrails.json`; patterns are customizable and
+  `PI_GIT_GUARDRAILS=off` disables it. `package.json`'s `pi` manifest gains
+  `"extensions": ["./extensions"]` — a recorded deviation from D1's literal manifest and §4's
+  tree, both of which §10/D5-20 otherwise leave without a home for this resource (NOTES §M5.4).
+- `scripts/validate-skills.mjs` — check 7 now expects `row.renameTarget` when
+  `disposition === "rename"` and only then, so the one frozen D3 rename validates while a renamed
+  row that still declares its upstream name, a non-rename row that renames itself, and a rename row
+  with no `renameTarget` all still fail (NOTES §M5.4.5). No D5 row and no inventory field changed.
+- Per-file diff notes (D9), the rename resolution, the extension design, the live `git push` block
+  evidence, and the acceptance results are in `docs/NOTES.md` §M5.
 
 [Unreleased]: https://github.com/netname/pi-adapted-mp-skills/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/netname/pi-adapted-mp-skills/releases/tag/v0.1.0
