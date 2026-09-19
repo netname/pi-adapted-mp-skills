@@ -39,10 +39,24 @@ CHECK="$PROBES/check.mjs"
 SCRATCH="$FIXTURE/.scratch"
 RESULTS="$SCRATCH/smoke"
 
-PINNED_SUBAGENTS="$(grep -oE 'pi-subagents@[0-9]+\.[0-9]+\.[0-9]+' "$REPO_ROOT/README.md" | head -1 | cut -d@ -f2)"
-PINNED_WEB="$(grep -oE 'pi-web-access@[0-9]+\.[0-9]+\.[0-9]+' "$REPO_ROOT/README.md" | head -1 | cut -d@ -f2)"
-PINNED_SUBAGENTS="${PINNED_SUBAGENTS:-0.69.0}"
-PINNED_WEB="${PINNED_WEB:-0.29.0}"
+# Pinned dependency versions. The README's `## Prerequisites` section is the single source of
+# truth, but the parse is **anchored to that section** so a version example elsewhere in the
+# README (a compatibility table, an upgrade note, a troubleshooting snippet) can no longer
+# silently change which versions this test installs. A failed parse is fatal instead of
+# falling back to a hard-coded default, because a silent fallback is the same bug in a
+# quieter suit. Override with MP_PINNED_SUBAGENTS / MP_PINNED_WEB.
+read_pin() { # <package> <override>
+	if [ -n "$2" ]; then printf '%s' "$2"; return 0; fi
+	awk '/^## Prerequisites/{in_section=1; next} /^## /{in_section=0} in_section' "$REPO_ROOT/README.md" \
+		| grep -oE "$1@[0-9]+\.[0-9]+\.[0-9]+" | head -1 | cut -d@ -f2
+}
+PINNED_SUBAGENTS="$(read_pin pi-subagents "${MP_PINNED_SUBAGENTS:-}")"
+PINNED_WEB="$(read_pin pi-web-access "${MP_PINNED_WEB:-}")"
+if [ -z "$PINNED_SUBAGENTS" ] || [ -z "$PINNED_WEB" ]; then
+	printf 'error: could not read the pinned versions from the README "## Prerequisites" section.\n' >&2
+	printf '       Restore that section, or set MP_PINNED_SUBAGENTS and MP_PINNED_WEB.\n' >&2
+	exit 2
+fi
 
 STAGES="${SMOKE_STAGES:-setup static probe packaging invocation collision parallel childext tracker workflow}"
 PASS=0
@@ -574,6 +588,7 @@ stage_latest() {
 mkdir -p "$RESULTS" "$SCRATCH"
 log "repo        : $REPO_ROOT"
 log "smoke root  : $SMOKE_ROOT"
+log "pins        : pi-subagents@$PINNED_SUBAGENTS pi-web-access@$PINNED_WEB (README Prerequisites, or MP_PINNED_* if set)"
 log "stages      : $STAGES"
 
 for stage in $STAGES; do

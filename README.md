@@ -10,9 +10,62 @@ the decision record, and
 [`docs/Matt_Pocock_Skills_Project_Workflow_Guide.md`](docs/Matt_Pocock_Skills_Project_Workflow_Guide.md)
 for the methodology itself).
 
+**Not sure which of the 26 skills you need? Run `/skill:ask-matt`** — it routes a described
+situation to the right skill, and the order to run them in. The [Quickstart](#quickstart)
+below is the three-command version of the same advice.
+
 > **Status: 0.1.0.** All 26 v1 skills ship, along with the four `mp-*` subagents and the
 > optional `git-guardrails` extension. The skill index below is final for this release;
 > `teach` is marked experimental and `setup-pre-commit` is deferred to post-v1.
+
+## Quickstart
+
+Three steps to a working setup.
+
+1. **Install** this package, plus the prerequisites you need — see [Install](#install) and
+   [Prerequisites](#prerequisites-per-capability-not-all-or-nothing).
+
+2. **Once per repository**, run setup. It asks where issues live, then writes `AGENTS.md`
+   and `docs/agents/*` and makes sure the scratch output paths (`.scratch/handoffs/`,
+   `.scratch/reports/`) are git-ignored:
+
+   ```
+   /skill:setup-matt-pocock-skills
+   ```
+
+3. **Not sure which skill you need? Ask the router.** Describe your situation in plain
+   language; it names the skill and the order:
+
+   ```
+   /skill:ask-matt I have a vague idea about importing Amazon refunds and no idea where to start
+   ```
+
+`ask-matt` is the intended entry point to the whole collection: everything in the
+[skill index](#skill-index) is what it routes to. The only skills worth knowing by heart are
+`ask-matt` (which way now?), `/skill:setup-matt-pocock-skills` (once per repo), and
+`/skill:implement` (build one ticket).
+
+## Which route fits my change?
+
+The collection is composable, not a waterfall: pick the on-ramp, then join the main flow at
+the earliest safe point. A one-context change does not need a spec and tickets.
+
+| Situation | Route |
+|---|---|
+| The change is clear and fits one session | `/skill:grill-with-docs` → `/skill:implement` |
+| You want an agreed spec and a ticket list first | `/skill:grill-with-docs` → `/skill:to-spec` → `/skill:to-tickets` → `/skill:implement <one ticket>`, one fresh session per ticket |
+| Too big or too foggy for one session | `/skill:wayfinder`, then `/skill:to-spec` once the map is clear |
+| An external issue or bug report arrived | `/skill:triage`, then `/skill:to-spec` |
+| Something is broken and you cannot say why | say *"diagnose this"* or *"debug this"* — the model-invoked `diagnosing-bugs` loads on its own |
+| You want to test an idea before building it | `prototype` — model-invoked, or force it with `/skill:prototype` |
+| No repository at all, just thinking out loud | `/skill:grill-me` |
+| Something structural is slowing the codebase down | `/skill:improve-codebase-architecture` |
+| A merge or rebase is stuck in conflicts | `resolving-merge-conflicts` — model-invoked |
+| You are mid-session and lost the thread | `/skill:wait-what` |
+
+The `user` rows in the [skill index](#skill-index) are the ones you have to type with a
+leading `/skill:`; the `model` rows load when the task matches, and you only need to name
+them if the model does not pick them up. When in doubt, `/skill:ask-matt` decides.
 
 ## Install
 
@@ -221,7 +274,7 @@ above; the agents are not skills and do not appear in this index.
 | `wayfinder` | user — `/skill:wayfinder` |
 | `implement` | user — `/skill:implement` |
 | `triage` | user — `/skill:triage` |
-| `ask-matt` | user — `/skill:ask-matt` |
+| `ask-matt` | user — `/skill:ask-matt` (**the router — start here if unsure**) |
 | `improve-codebase-architecture` | user — `/skill:improve-codebase-architecture` |
 | `domain-modeling` | model |
 | `research` | model |

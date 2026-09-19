@@ -171,8 +171,11 @@ Milestone M6 ports no skill: the 26-skill set is final for v0.1.0.
   the dispatch contracts, the D14 child-extension mechanism from a real foreground child, and a
   scripted local-Markdown `/skill:implement` flow. It also reproduces and repairs the Windows
   backslash package entry and, in a separate stage, packs the tree with `npm pack`, installs the
-  **published artifact** as a package, and re-runs the discovery assertions against it. Result: 46
-  passed, 0 failed, 3 recorded skips.
+  **published artifact** as a package, and re-runs the discovery assertions against it. The pinned
+  dependency versions are read from the README's `## Prerequisites` section with the parse
+  **anchored to that section** (and `MP_PINNED_SUBAGENTS` / `MP_PINNED_WEB` overrides), so a version
+  example elsewhere in the README, or a missing prerequisites section, can no longer silently change
+  what the test installs. Result: 46 passed, 0 failed, 3 recorded skips.
 - `scripts/probes/inspect.ts` and `scripts/probes/check.mjs` — the Pi-side snapshot probe and the
   offline assertion helper the smoke test uses. They are test scaffolding, not shipped resources.
 - `package.json` — a dependency-free `scripts` block: `npm test` runs the validator, `npm run drift`
@@ -188,7 +191,11 @@ Milestone M6 ports no skill: the 26-skill set is final for v0.1.0.
   weakening the check (D13); the Windows backslash-path install defect gets a symptom/cause/remedy
   entry; and the `git-guardrails` extension is documented in full (what it blocks, the opt-in files,
   `patterns`, `enabled: false`, `PI_GIT_GUARDRAILS=off`, and that installing the package alone
-  changes nothing), along with the `pi.extensions` / `pi.subagents.agents` manifest surface.
+  changes nothing), along with the `pi.extensions` / `pi.subagents.agents` manifest surface. It also
+  gained the end-user on-ramp the earlier draft lacked: a three-step **Quickstart** (install →
+  `/skill:setup-matt-pocock-skills` → `/skill:ask-matt`), a **"which route fits my change?"** table
+  mapping situations to skill sequences, and `ask-matt` promoted as the entry point in the intro and
+  the skill index.
 - `mp-evidence-auditor` re-test (M4.8): both the custom agent and the built-in `evidence-auditor`
   were run on a discriminating seam — a contradicted claim and a cited-source-cannot-support claim.
   Verdicts matched on both, but the output contracts still differ and the collapse's mandated

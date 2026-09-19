@@ -2059,3 +2059,36 @@ milestone allowed to edit D16 and §4's tree. The full comparison artifact is
 - Fixtures left in place as raw evidence, all outside this repository:
   `C:/x/on/projs/mp-smoke-fixture` (smoke), `C:/x/on/projs/m6-fixture` (dispatch and evidence-auditor
   probes), `C:/x/on/projs/m6-accept` (live acceptance). None is part of the package.
+
+### 18. Follow-up after the M6 commit (same day)
+
+Two changes made after the M6 commit `59c5366`. Neither touches the frozen plan, the D5 table, the
+inventory's `skills`/`tokenMap`, or the recorded acceptance results; both are in the `v0.1.0` scope
+because the release has not been tagged or published.
+
+1. **The smoke test's pin source is now anchored.** It previously took the **first**
+   `pi-subagents@x.y.z` / `pi-web-access@x.y.z` match **anywhere** in `README.md` and fell back
+   silently to a hard-coded default when the grep came back empty. That is a latent silent
+   wrong-version test: any README restructure that moved a version example above the prerequisites
+   block — a compatibility table, an upgrade note, a troubleshooting snippet — would have changed
+   which packages the suite installs while the suite still reported green. It now parses the
+   `## Prerequisites` section specifically, accepts `MP_PINNED_SUBAGENTS` / `MP_PINNED_WEB`
+   overrides, prints the resolved versions at startup, and **exits 2** rather than falling back when
+   the parse fails. Verified: a decoy `pi-subagents@0.99.0` placed above the section is ignored
+   (resolves to `0.69.0`); an override wins; a README without the section exits 2 with the remedy.
+   The change is behaviour-preserving on the current README, and all four pin consumers (`setup`,
+   `static`, `packaging`, `latest`) were re-run afterwards (`10 passed / 0 failed`, `5 passed /
+   0 failed`, `1 passed`). The recorded full-suite run of 46/0/3 predates this change; the pin
+   resolution is identical, and no other stage reads the README.
+2. **The README gained its end-user on-ramp.** It documented what the package *is* but never what a
+   user *does*: there was no quickstart, no situation→route mapping, and `ask-matt` — the one skill
+   that answers "which skill do I need?" — was a bare row in a table of 26 names. Added a three-step
+   **Quickstart** (install → `/skill:setup-matt-pocock-skills` → `/skill:ask-matt`), a **"which route
+   fits my change?"** table covering the main flow, Wayfinder, triage, diagnosis, prototyping, merge
+   conflicts, architecture work, and `wait-what`, and promoted `ask-matt` in the intro and the skill
+   index. Section order is now Quickstart → route table → Install → Prerequisites → …; every internal
+   anchor was checked, and the Prerequisites block the smoke test parses is unchanged. Still planned
+   but **not** done: the install-scope/dedup section, the "what this writes into your repo" table,
+   the "no `/skill:` commands appear" troubleshooting entry, the removal/disable section, the "where
+   to read more" pointer table, and a descriptive skill index — all listed as Tier 2 in this
+   milestone's hand-off discussion.
