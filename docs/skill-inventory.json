@@ -765,10 +765,10 @@
       },
       "hasOpenaiYaml": true,
       "disposition": "port",
-      "ownerMilestone": "M4",
+      "ownerMilestone": "M3",
       "piPath": "skills/engineering/codebase-design/SKILL.md",
       "confidence": "verified",
-      "notes": "DESIGN-IT-TWICE.md asks for 3+ parallel sub-agents; D16 keeps the contract but delegates orchestration mechanics to the bundled pi-subagents skill."
+      "notes": "DESIGN-IT-TWICE.md asks for 3+ parallel sub-agents; D16 keeps the contract but delegates orchestration mechanics to the bundled pi-subagents skill. ownerMilestone moved M4 -> M3 (M3, Trap A): tdd's D4 load of ../codebase-design/SKILL.md is a real model-load that the M3 acceptance flow exercises, so the target must exist for the validator's strict cross-skill check; all three files ship together so the SKILL.md's DEEPENING.md / DESIGN-IT-TWICE.md links stay real."
     },
     {
       "upstreamPath": "skills/engineering/diagnosing-bugs",

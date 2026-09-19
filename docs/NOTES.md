@@ -539,3 +539,246 @@ This is the smallest change that keeps the roadmap readable without rewriting M1
   M2, and the validator's resolver is clean; the resolver itself was proven by the negative and
   positive fixtures above.
 
+
+---
+
+## M3 — Main flow: port the idea → ship pipeline (2026-09-19)
+
+Scope: the M3 slice only — the ten skills `grill-with-docs`, `grilling`, `domain-modeling`,
+`to-spec`, `to-tickets`, `implement`, `tdd`, `code-review`, `prototype`, `handoff`, plus
+`codebase-design` (moved in under Trap A, below), their sidecars, the code-review dispatch
+contract, the handoff output relocation, the validator run, and the fixture-repo acceptance.
+Nothing from M4 or M5 was ported. `docs/ADAPTATION_PLAN.md` and the D5 table were not edited.
+
+**Baseline note.** The task said HEAD was `abec939`; the actual HEAD at the start of M3 was
+`679c620` ("Add M3 hand-off prompt", which only adds `docs/M3-PROMPT.md`). `git diff abec939..HEAD`
+touches no plan or inventory file, so `docs/ADAPTATION_PLAN.md` and the D5 table are byte-identical
+to `abec939`; that is the baseline this section compares against.
+
+### 1. Decisions taken before implementation (the three questions asked)
+
+1. **Trap A — `tdd` → `codebase-design`: option A, all three files.** The `codebase-design` row in
+   `docs/skill-inventory.json` was moved `ownerMilestone: M4 → M3` and its `notes` extended. This is
+   the only inventory edit in M3 (one hunk, two lines; the `tokenMap` is untouched, so the D5 hash
+   still matches). All three files (`SKILL.md`, `DEEPENING.md`, `DESIGN-IT-TWICE.md`) were ported,
+   not just `SKILL.md`, so the shipped `SKILL.md`'s `DEEPENING.md` / `DESIGN-IT-TWICE.md` links are
+   real. Rejected: making the validator milestone-aware (weakens the existence assertion), or
+   porting `tdd` without the load (weakens both the load and the ported skill).
+2. **Trap B — `grilling`'s sub-agent: option A, parent's own tools.** The fact-finding sentence now
+   says to look facts up with the parent's own `read` / `grep` / `find` / `ls`. `grilling` stays
+   ungated, and §1/D10 plus D6's preflight capability list are untouched. The bundled `pi-subagents`
+   skill still owns any delegation the parent chooses to do. Rejected: gating `grilling` on
+   `pi-subagents`, which would have required editing the frozen §1 list and the M2 setup preflight.
+3. **Acceptance shape: discovery probe + structural verification, live runs as a bonus.** The probe
+   and structural checks are the bar; the live runs below exceeded it and are reported as live.
+
+### 2. Per-file diff notes (D9)
+
+`PATCHED` = fork-and-patch regions; `VERBATIM` = copied byte-for-byte from the pin. Every
+`SKILL.md` gained the D2 frontmatter block (`license: MIT` plus `metadata.upstream`,
+`metadata.upstream-commit`, `metadata.upstream-path`, `metadata.invocation`, `metadata.adapted-for`)
+and dropped its `agents/openai.yaml`; those two changes are not repeated in every row.
+
+| Ported file | Upstream source | Changed regions |
+|---|---|---|
+| `skills/engineering/grill-with-docs/SKILL.md` | same name | PATCHED. Frontmatter metadata. The whole one-line body (`Call the Skill tool twice, for "grilling" and "domain-modeling".`) became the two D4 load instructions, one per skill. |
+| `skills/productivity/grilling/SKILL.md` | same name | PATCHED. Frontmatter metadata. The "dispatch a sub-agent to find it" sentence rewritten to the parent's own tools (Trap B, option A); the "running exploration" clause rewritten to a later-round clause so the no-blocking intent survives without a child. |
+| `skills/engineering/domain-modeling/SKILL.md` | same name | PATCHED. Frontmatter metadata only. |
+| `…/domain-modeling/CONTEXT-FORMAT.md` | same name | VERBATIM. |
+| `…/domain-modeling/ADR-FORMAT.md` | same name | VERBATIM. |
+| `skills/engineering/to-spec/SKILL.md` | same name | PATCHED. Frontmatter metadata. `/setup-matt-pocock-skills` → `/skill:setup-matt-pocock-skills` (D5-16; user hand-off, `d4Path: null`, kept as a label). |
+| `skills/engineering/to-tickets/SKILL.md` | same name | PATCHED. Frontmatter metadata. Both bare `/setup-matt-pocock-skills` references → `/skill:setup-matt-pocock-skills`. |
+| `skills/engineering/implement/SKILL.md` | same name | PATCHED. Frontmatter metadata. `/tdd` and `/code-review` → the two D4 load instructions (`../tdd/SKILL.md`, `../code-review/SKILL.md`), phrased as something the agent must run. Added the D10 capability gate for `subagent` at the top (plan silence — see §4 item 1). |
+| `skills/engineering/tdd/SKILL.md` | same name | PATCHED. Frontmatter metadata. The `Skill tool … "codebase-design"` sentence → the D4 load `../codebase-design/SKILL.md`, keeping the "reference to consult, not a session to run" clause. |
+| `…/tdd/tests.md` | same name | VERBATIM. |
+| `…/tdd/mocking.md` | same name | VERBATIM. |
+| `skills/engineering/code-review/SKILL.md` | same name | PATCHED, and the largest change. Frontmatter metadata. `/setup-matt-pocock-skills` → label. Added the D10 `subagent` gate. Step 1 tightened to resolve + non-empty before dispatch. Step 3 rewritten from "identify the standards sources (and paste the smell baseline)" to "capture the diff and commit list into `.scratch/reviews/`" because the children are read-only and cannot run `git`. Step 4 rewritten from two pasted prompts to the dispatch contract (see §3); the entire Fowler smell baseline was **deleted** here because `mp-review-standards.md` already carries it (D16). Step 5 unchanged in intent, plus an explicit skipped/incomplete-axis sentence. "Why two axes" verbatim. |
+| `skills/engineering/prototype/SKILL.md` | same name | PATCHED. Frontmatter metadata only. |
+| `…/prototype/LOGIC.md` | same name | VERBATIM. |
+| `…/prototype/UI.md` | same name | VERBATIM (its `/prototype/<name>` is an application route, not a skill reference). |
+| `skills/productivity/handoff/SKILL.md` | same name | PATCHED. Frontmatter metadata; `argument-hint` dropped (D2/D5-18). Output path relocated to `.scratch/handoffs/<ISO>-<slug>.md` with an absolute-path instruction and a `.gitignore` instruction; "naming which skills the next agent should call the Skill tool for" → "naming the skills the next agent should run, each as a `/skill:<name>` label". The "if the user passed arguments…" sentence is kept verbatim. |
+| `skills/engineering/codebase-design/SKILL.md` | same name | PATCHED. Frontmatter metadata. The "spin up parallel sub-agents" bullet now names the `subagent` tool (D5's Subagent row) without restating mechanics. |
+| `…/codebase-design/DEEPENING.md` | same name | VERBATIM. |
+| `…/codebase-design/DESIGN-IT-TWICE.md` | same name | PATCHED. §2 heading "Spawn sub-agents" → "Dispatch the design sub-agents"; names the `subagent` tool and defers dispatch mechanics to the bundled `pi-subagents` skill (D16 item 3). The "3+ radically different" contract is unchanged. |
+
+Totals: 11 skills, 19 files. Seven files VERBATIM (`CONTEXT-FORMAT.md`, `ADR-FORMAT.md`,
+`tests.md`, `mocking.md`, `LOGIC.md`, `UI.md`, `DEEPENING.md`), twelve PATCHED.
+
+### 3. The code-review dispatch contract, as run
+
+The contract encoded in `code-review/SKILL.md` (not the orchestration mechanics, which stay with
+the bundled `pi-subagents` skill, per D16):
+
+- **Two fixed named axes:** `mp-review-standards` (Standards) and `mp-review-spec` (Spec). Nothing
+  else; the child briefs are not paraphrased into the task prompt.
+- **Fresh, isolated contexts:** each axis in its own context, dispatched concurrently.
+- **Required inputs:** both children get the captured diff path and commit-list path; the Spec child
+  also gets the spec/ticket source. If no spec exists, the Spec child is **not launched** and the
+  final report says the axis was skipped.
+- **No synthesis before both return:** the parent aggregates only after both have returned, keeps
+  the reports under separate `## Standards` / `## Spec` headings, never merges or reranks them, and
+  never picks a cross-axis winner.
+- **Failure handling:** an axis that fails, aborts, or times out is reported as *not completed*
+  with the reason; a missing axis is never silently dropped.
+
+**The exact call observed live** (session `.scratch/review-bothaxes.jsonl` in the fixture), after
+`subagent { action: "list", capabilities: true }` confirmed both agents:
+
+```js
+subagent({
+  async: true,
+  context: "fresh",
+  cwd: "C:/x/on/projs/m3-fixture",
+  workflowScript: `
+    const target = [...diff path, commit list...].join("\\n");
+    const standardsTask = target + "\\n\\nReview that diff on the Standards axis only. ...";
+    const specTask = target + "\\n\\nOriginating spec: <path>\\nOriginating ticket: <path>\\n\\nReview that diff on the Spec axis only, against those two spec sources.";
+    const results = await runs.all([
+      { key: "standards", agent: "mp-review-standards", task: standardsTask,
+        output: ".../.scratch/reviews/02-per-item-discount-pricing-standards.md" },
+      { key: "spec", agent: "mp-review-spec", task: specTask,
+        output: ".../.scratch/reviews/02-per-item-discount-pricing-spec.md" },
+    ]);
+    return results;
+  `,
+})
+```
+
+`runs.all` is one concurrent fan-out, so both children launch before either result is read; the
+workflow returns only after both complete. Results were collected by `read`ing the two `output`
+paths, then aggregated. Both children are read-only by their own tool ceiling
+(`tools: read, grep, find, ls`), and the parent supplied the diff as
+`.scratch/reviews/<slug>-diff.patch` + `<slug>-commits.txt` because the children cannot run `git`.
+
+**Failed-axis evidence (live).** A run with no spec source produced: *"Spec — skipped. Per your
+instruction, no spec, ticket, or issue was searched for. No `mp-review-spec` child was launched."*
+The same run also recorded a real pre-spawn failure: the first Standards dispatch was refused by
+`pi-subagents`' task classifier (`Agent 'mp-review-standards' was given an implementation task, but
+its tool allowlist has no mutation-capable tools`, run id `c52b039e…`, exit 1, 0 turns), and the
+parent reported it and retried with a tighter read-only brief rather than dropping the axis. Nothing
+was synthesized across a missing axis.
+
+### 4. Where the plan was silent or wrong, and what was done instead
+
+1. **D10/D6 item 6 says "each capability-scoped skill repeats its own check at start and stops with
+   the same message", but §6/M3 lists no gate for `implement` or `code-review`.** Both got the same
+   short preflight paragraph M2's setup uses, ending in `pi install npm:pi-subagents@0.69.0`. It is
+   the only body text added outside the D5 map. The gate was also observed working by accident: a
+   checkout removed the fixture's `.pi/settings.json`, and `code-review` then stopped with the
+   pinned install command and reported *both* axes as not completed instead of reviewing inline.
+2. **Upstream `code-review` pasted the smell baseline into the child prompt and assumed the child
+   could run `git`.** Neither survives: `mp-review-standards.md` already carries the baseline, so
+   the copy here was deleted, and the read-only ceiling means the parent captures the diff to
+   `.scratch/reviews/` and passes paths. Both are recorded in the step-3/step-4 diff notes above.
+3. **`handoff`'s `.gitignore` instruction had no upstream analogue.** The body now tells the agent
+   to check `.gitignore` and add `.scratch/handoffs/` when it is not already covered, and states
+   that committing is opt-in and never accidental. Verified live (below): the agent checked
+   `.gitignore`, found `.scratch/` already covered it, and made no change.
+4. **§6/M3's acceptance presupposes a live interactive flow, but interactive skills do not
+   terminate under `pi -p` (M2 finding).** In practice four of the five flow legs *did* terminate:
+   `grill-with-docs`, `to-spec`, `to-tickets`, and `handoff` end their turn with a question or a
+   report. `implement` terminated too (after loading `tdd` and `code-review`). So the M2 warning
+   holds for `setup-matt-pocock-skills`, not for these; the acceptance was run live and the
+   structural verification is reported alongside it.
+5. **`pi-subagents` is not installed in this repo, but it is installable here.** Pinned
+   `npm:pi-subagents@0.69.0` was installed project-locally into the fixture only (`.pi/npm/`), not
+   into this package; this repository still has no runtime dependency.
+
+### 5. Windows finding: `pi install` writes a backslash-relative package path that `pi-subagents` cannot resolve
+
+This is a real interop defect between Pi and `pi-subagents@0.69.0` on Windows, found by the M3
+implementation run and then reproduced first-hand:
+
+- `pi install "C:/x/on/projs/pi-adapted-mp-skills" -l` writes
+  `"packages": ["..\\..\\pi-adapted-mp-skills", …]` into the fixture's `.pi/settings.json`
+  (backslash-relative).
+- `pi-subagents`' `resolveSettingsPackageRoot` recognises only forward-slash relative sources
+  (`./`, `../`) and returns `undefined` for `..\..\…`, so this package's
+  `pi.subagents.agents` manifest is never read and none of the four `mp-*` agents resolve.
+  Reproduced first-hand with `pi-subagents`' own `discoverAgents()`:
+  - backslash form → `C:\x\on\projs\pi-adapted-mp-skills\agents` not enumerated, **0** `mp-*` agents;
+  - forward-slash form (`"../../pi-adapted-mp-skills"`) → all four `mp-*` agents listed, no
+    diagnostics.
+- The fixture was repaired to the forward-slash form (`.scratch/settings.forward.json` is the
+  working copy; `.scratch/settings.json.bak` is the `pi install` output) before the live dispatch
+  above would run. `node_modules` was not patched.
+- This does not affect any committed file in this package: `.pi/settings.json` here already uses
+  `../skills` (M0 §1.1), and the manifest paths are package-root relative. It does affect a Windows
+  user who installs by path, and it belongs in the README troubleshooting notes at M6, and possibly
+  as an upstream `pi-subagents` fix (accepting a backslash-relative source is a one-line change).
+
+### 6. Acceptance evidence
+
+**Validator.** `node scripts/validate-skills.mjs` → exit 0, `skills/** clean (27 file(s) scanned,
+13 SKILL.md)`, D5 `tokenMap v2` hash
+`9e86593bef1167039b66b4eb7d8dc69b5cda1cb647cde6e9fb086ad1e4bcda10` matches.
+
+**D4 enumeration (the first non-empty set).** Five backticked `../…/SKILL.md` references, each
+resolved from the referencing file's directory and matched against the target's declared `name`:
+
+```
+skills/engineering/grill-with-docs/SKILL.md:14  ../../productivity/grilling/SKILL.md -> skills/productivity/grilling/SKILL.md       name=grilling        OK
+skills/engineering/grill-with-docs/SKILL.md:16  ../domain-modeling/SKILL.md           -> skills/engineering/domain-modeling/SKILL.md  name=domain-modeling OK
+skills/engineering/implement/SKILL.md:26        ../tdd/SKILL.md                       -> skills/engineering/tdd/SKILL.md              name=tdd             OK
+skills/engineering/implement/SKILL.md:30        ../code-review/SKILL.md               -> skills/engineering/code-review/SKILL.md      name=code-review     OK
+skills/engineering/tdd/SKILL.md:33              ../codebase-design/SKILL.md           -> skills/engineering/codebase-design/SKILL.md  name=codebase-design OK
+total: 5
+```
+
+This is exactly the set the inventory records with a non-null `d4Path`: 2 + 2 + 1.
+
+**Discovery and visibility (fixture `/c/x/on/projs/m3-fixture`, `pi 0.85.1`, package installed
+project-locally, pinned `pi-subagents@0.69.0`).** A `before_agent_start` probe logged
+`pi.getCommands()` and the rendered system prompt:
+
+- All 13 package `SKILL.md` files resolve as `skill:<name>` with `origin: "package"`,
+  `scope: "project"`, and a path inside `C:\x\on\projs\pi-adapted-mp-skills\skills\…`.
+- The model-visible `<available_skills>` block contains exactly the M3 **model-invoked** skills —
+  `code-review`, `codebase-design`, `domain-modeling`, `prototype`, `tdd`, `grilling` — and none of
+  the M3 user-invoked ones (`grill-with-docs`, `to-spec`, `to-tickets`, `implement`, `handoff`).
+  Note for M6: `systemPromptOptions.skills` lists *all* registered skills (including user-invoked
+  ones), so it answers "is it available?", not "can the model choose it?"; visibility must be read
+  from the rendered block.
+- `/skill:<name>` expansion was confirmed for all four user-invoked M3 skills by inspecting the
+  expanded `event.prompt`; e.g. `/skill:grill-with-docs` expands to both D4 load paths, and
+  `/skill:implement` to both of its. The `subagent` tool was registered (with
+  `pi-subagents@0.69.0`).
+
+**Live end-to-end flow (all five legs ran, in one session and split across sessions).**
+
+| Leg | What ran | Result |
+|---|---|---|
+| `/skill:grill-with-docs` (live, one `pi -p` session) | Loaded `grilling` + `domain-modeling` via D4, did fact-finding with its own tools, presented round 1 of the design tree and waited | Terminated (exit 0) |
+| `/skill:to-spec` (live) | Published `.scratch/per-item-discount/spec.md`, 208 lines, `Status: ready-for-agent`, to the local-Markdown tracker | Terminated (exit 0) |
+| `/skill:to-tickets` (live) | Drafted the breakdown and asked for sign-off (upstream step 4); re-run with approval, published `.scratch/per-item-discount/issues/{01-discount-vocabulary,02-per-item-discount-pricing,03-discount-composition-adr}.md`, blockers-first | Terminated (exit 0) |
+| `/skill:implement` ticket 01 (live) | Updated `CONTEXT.md`, committed `b96a5d2`, then loaded `code-review` via D4 and dispatched both axes | Terminated (exit 0) |
+| `/skill:implement` ticket 02 (live) | Tests-first against the pre-change module (red), then `447c4ac feat: apply line-item discounts in the cart total`, `npm test` 15/15, then `code-review` → Standards finding → `e193ab4 refactor: …` | Terminated (exit 0) |
+| `/skill:handoff` (live) | Wrote `.scratch/handoffs/2026-09-19T01-01-34Z-m3-handoff-probe.md`, printed its absolute path, and checked `.gitignore` | Terminated (exit 0) |
+
+Split-session evidence: the `to-spec` and `to-tickets` runs were separate `--no-session` processes
+from the `grill-with-docs` run and from each other, and the second `implement` run was a separate
+process from the first; each recovered its inputs from repo artifacts (the spec path, the ticket
+path) rather than from conversation memory.
+
+**handoff path and git-ignore behaviour.** The written file is
+`/c/x/on/projs/m3-fixture/.scratch/handoffs/2026-09-19T01-01-34Z-m3-handoff-probe.md`, i.e. inside
+the repo under `.scratch/handoffs/`, not the OS temp directory; the agent printed the absolute path
+and reported that the fixture's existing `.scratch/` ignore rule already covered it, so no
+`.gitignore` change was needed. `git status` in the fixture never showed the handoff, confirming it
+is untracked by default.
+
+**Code-review dispatch.** See §3: live, both axes, one concurrent `runs.all` fan-out,
+`context: "fresh"`, `async: true`, read-only children, separate reports, and a live skipped-axis and
+failed-child demonstration.
+
+**D5 freeze.** `tokenMap v2` unchanged; the only inventory edit is the `codebase-design`
+`ownerMilestone`/`notes` hunk. `git diff abec939 -- docs/ADAPTATION_PLAN.md` is empty.
+
+### 7. Deliverables not produced (and why)
+
+- No `docs/agents/`, no `.claude-plugin/`, no `extensions/`: none were added, as required.
+- No new committed script: the two one-off probes (resolve every D4 reference, `discoverAgents`)
+  were run ad hoc and are recorded above rather than shipped; §4's `scripts/` tree lists
+  `fetch-upstream.mjs` and `smoke-test.sh` as M6 work.
+- The fixture (`C:/x/on/projs/m3-fixture`) is left in place as the raw evidence for the acceptance
+  run; it is outside this repository and is not part of the package.
