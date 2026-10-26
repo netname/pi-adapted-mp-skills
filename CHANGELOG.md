@@ -1,3 +1,13 @@
+# 0.2.0 (unreleased)
+
+- Selectively port upstream v1.3.1: implement-spec, pr, retro, tdd, to-spec and to-tickets.
+- Replace pi-subagents registration and mandatory tool-name coupling with shared Paseo delegation and portable role briefs.
+- Add verified model-family separation, immutable committed review snapshots and tests for omitted dirty work.
+- Add a resumable worktree coordinator, deterministic frontier validation, serial integration and bounded retries.
+- Separate test categories from Fast / Verify change / Verify candidate profiles; document resource isolation and evidence.
+- Adopt GLOSSARY.md; retire resolving-merge-conflicts. Preserve historical records and individual source pins.
+- Replace the obsolete live pi-subagents smoke entry point with offline smoke checks and an explicit Paseo acceptance checklist.
+
 # Changelog
 
 All notable changes to this project are documented in this file.

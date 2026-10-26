@@ -1,3 +1,5 @@
+> Historical 0.1.0 record. For the current Paseo workflow and superseding decisions, read [WORKFLOW.md](WORKFLOW.md) and [MIGRATION-0.2.md](MIGRATION-0.2.md). Do not use old package prerequisites or frozen decisions as current setup instructions.
+
 # M6 hand-off prompt — Validation, docs, release
 
 Status: **prepared, not started.** Written after M5 (`6fd87e0`). Milestone plan of record:

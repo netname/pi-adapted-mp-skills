@@ -17,7 +17,7 @@ Scaffold the per-repo configuration that the engineering skills assume:
 
 - **Issue tracker**: where issues live (GitHub by default; local markdown is also supported out of the box)
 - **Triage labels**: the strings used for the five canonical triage roles
-- **Domain docs**: where `CONTEXT.md` and ADRs live, and the consumer rules for reading them
+- **Domain docs**: where `GLOSSARY.md` and ADRs live, and the consumer rules for reading them
 
 This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write.
 
@@ -29,31 +29,9 @@ Run these checks in order. **a** and **b** are capability-scoped: record the res
 because setup itself needs neither package. **c** and **d** are blocking: if either fails, stop,
 print its remedy, and write nothing.
 
-**a. `subagent` capability (capability-scoped, D10).**
-Check whether the `subagent` tool is available to you in this session; it is registered by the
-`pi-subagents` extension. You can confirm the package is installed with `pi list --approve` and
-looking for `pi-subagents`.
-If it is missing, mark `research`, `wayfinder`, `code-review`, and `implement` unavailable in the
-capability report and print:
+**a. Delegation capability (nonblocking for setup).** Read `../_shared/DELEGATION.md`. Discover Paseo availability and configured role profiles; report missing capabilities without installing packages. Planning does not require delegation.
 
-```
-pi install npm:pi-subagents
-```
-
-Then continue. Setup does not need this package, so its absence never blocks repository
-configuration.
-
-**b. Web capability (capability-scoped, D10).**
-Check whether `web_search`, `fetch_content`, `get_search_content`, and `source_check` are all
-available to you; they are registered by the `pi-web-access` extension.
-If any is missing, mark `research` and `wayfinder` (research tickets only) unavailable and print:
-
-```
-pi install npm:pi-web-access
-```
-
-Then continue, and say plainly that a user who only wants `grill-with-docs` → `to-spec` →
-`to-tickets` → `implement` does not need this package. Do not over-gate.
+**b. Source capability (nonblocking for setup).** Check whether the selected researcher can retrieve primary sources. Do not require particular Pi tool names. A local-only investigation may use repository sources.
 
 **c. Skill-name collisions (blocking, D11).**
 Pi keeps the first skill it finds for a name and warns; a later copy is silently shadowed. Names
@@ -95,7 +73,7 @@ won. Where neither surface can attribute a name, say it could not be attributed.
 
 **d. `enableSkillCommands` (blocking, D3).**
 Pi registers skills as `/skill:<name>` commands only while `enableSkillCommands` is not `false`
-(the default is `true`). With it off, all 14 user-invoked skills are unreachable and no skill can
+(the default is `true`). With it off, user-invoked skills are unreachable and no skill can
 explain why. Read both settings files with the `read` tool — project settings override global:
 
 - `~/.pi/agent/settings.json` (global)
@@ -118,7 +96,7 @@ Look at the current repo to understand its starting state. Read whatever exists;
 
 - `git remote -v` and `.git/config`: is this a GitHub repo? A GitLab repo? Which one?
 - `AGENTS.md` at the repo root (and `AGENTS.override.md`): does either exist? Is there already an `## Agent skills` section? Pi's other context-file name is irrelevant here — this package standardizes on `AGENTS.md`.
-- `CONTEXT.md` and `CONTEXT-MAP.md` at the repo root
+- `GLOSSARY.md` and `CONTEXT-MAP.md` at the repo root
 - `docs/adr/` and any `src/*/docs/adr/` directories
 - `docs/agents/`: does this skill's prior output already exist?
 - `.scratch/`: a sign that a local-markdown issue tracker convention is already in use
@@ -156,9 +134,9 @@ If it is available, ask exactly one question:
 
 The defaults are the five canonical roles, each label string equal to its name: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. On **yes**, write them as-is. Only if the user says no, usually because their tracker already uses other names (e.g. `bug:triage` for `needs-triage`), collect the overrides so `triage` applies existing labels instead of creating duplicates.
 
-**Section C: Domain docs.** Default to **single-context** (one `CONTEXT.md` + `docs/adr/` at the repo root). This fits almost every repo; write it without asking.
+**Section C: Domain docs.** Default to **single-context** (one `GLOSSARY.md` + `docs/adr/` at the repo root). This fits almost every repo; write it without asking.
 
-Offer **multi-context** (a root `CONTEXT-MAP.md` pointing to per-context `CONTEXT.md` files) only when exploration found monorepo signals. Then confirm which layout they want.
+Offer **multi-context** (a root `CONTEXT-MAP.md` pointing to per-context `GLOSSARY.md` files) only when exploration found monorepo signals. Then confirm which layout they want.
 
 ### 3. Confirm and edit
 
@@ -222,8 +200,8 @@ conventions; it never invents work.
 Add a short pointer-only block — lines that point at the files and facts, never copied skill text:
 
 - The Pi invocation model: user-invoked skills run only as `/skill:<name>`; model-invoked skills load on demand; skill commands require `enableSkillCommands`.
-- The capability report from step 0 (which of `pi-subagents` / `pi-web-access` were found, and what that makes unavailable).
-- The provenance line: this package was adapted from `mattpocock/skills` at commit `c55ee46073ed923f86ce59a5eb3b6d895095d1b7`. Its prerequisites (`pi-subagents` / `pi-web-access`) are installed unpinned, so record the versions actually resolved in this environment — not a pinned pair.
+- The capability report from step 0: delegation and researcher source access.
+- Report package version and per-skill upstream pins; this is a selective upgrade, not a claim that every skill matches the latest upstream.
 
 ### 6. Keep scratch artifacts out of git
 
@@ -235,3 +213,10 @@ themselves.
 ### 7. Done
 
 Tell the user setup is complete and which engineering skills will now read from these files. Mention they can edit `docs/agents/*.md` directly later; re-running this skill is only necessary if they want to switch issue trackers or restart from scratch.
+
+
+## Shared execution configuration
+
+Create or update `docs/agents/delegation.md` from `../_shared/delegation.template.md` and `docs/agents/testing.md` from `../_shared/testing.template.md`. Populate commands from existing CI/scripts and profiles from the actual Paseo host. Preserve existing user choices. Link both documents from the project's agent instructions. Include the same pointers explicitly in Claude Code worker prompts; this Pi package does not install Claude Code skills automatically. Unresolved placeholders block execution of the affected gate, not planning.
+
+For existing projects, inspect legacy domain glossary files before adopting `GLOSSARY.md`; preserve content and update references together, never create competing glossaries. The domain context map remains `CONTEXT-MAP.md`.

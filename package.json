@@ -1,13 +1,13 @@
 {
   "name": "pi-adapted-mp-skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Matt Pocock's engineering-workflow skills, adapted for the Pi coding agent.",
   "license": "MIT",
   "keywords": [
     "pi-package"
   ],
   "scripts": {
-    "test": "node scripts/validate-skills.mjs",
+    "test": "node scripts/validate-skills.mjs && node --test tests/*.test.mjs",
     "validate": "node scripts/validate-skills.mjs",
     "drift": "node scripts/fetch-upstream.mjs",
     "drift:strict": "node scripts/fetch-upstream.mjs --strict",
@@ -19,11 +19,6 @@
     ],
     "skills": [
       "./skills"
-    ],
-    "subagents": {
-      "agents": [
-        "./agents"
-      ]
-    }
+    ]
   }
 }

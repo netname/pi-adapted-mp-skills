@@ -11,22 +11,10 @@ metadata:
   adapted-for: pi
 ---
 
-This skill reviews through a `pi-subagents` child, so first confirm the `subagent` tool is available
-(registered by the `pi-subagents` extension; `pi list --approve` shows it). If it is missing, stop
-and print:
+Implement one ticket in the assigned worktree. Read `../_shared/TESTING.md` and the project's testing contract. Use `../tdd/SKILL.md` at approved seams.
 
-```
-pi install npm:pi-subagents
-```
-
-Then continue.
-
-Implement the work described by the user in the spec or tickets.
-
-Use the `tdd` skill where possible, at pre-agreed seams: from this skill's directory, read `../tdd/SKILL.md` and follow it.
-
-Run typechecking regularly, single test files regularly, and the full test suite once at the end.
-
-Once done, use the `code-review` skill to review the work: from this skill's directory, read `../code-review/SKILL.md` and follow it.
-
-Commit your work to the current branch.
+1. Read the ticket, spec, project instructions and assigned immutable base. Confirm this worktree is clean and based on the coordinator's integration revision. Never reset or discard someone else's work.
+2. Implement the scoped change with focused Fast checks. Do not edit the tracker or merge another worker's branch.
+3. Commit the candidate, run Verify change against that revision, and return base/head SHAs, implementation model family, commands, exits, logs, environment ID and remaining issues. A failed required check means blocked, not done.
+4. In coordinated mode, stop here: the coordinator owns review, integration and closure. Do not dispatch duplicate reviews.
+5. When invoked standalone, act as your own coordinator after committing: read `../code-review/SKILL.md`, arrange independent reviewers through Paseo, fix blocking findings, commit and verify the new candidate, then refresh the affected reviews. Report the final revision and any incomplete axis. Never imply a merge happened unless it did.

@@ -5,9 +5,8 @@ disable-model-invocation: true
 license: MIT
 metadata:
   upstream: mattpocock/skills
-  upstream-commit: c55ee46073ed923f86ce59a5eb3b6d895095d1b7
+  upstream-commit: 24fe0ef7737efae15c87225755e9f6f5965e4888
   upstream-path: skills/engineering/to-tickets
-  invocation: user
   adapted-for: pi
 ---
 
@@ -110,3 +109,7 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 </issue-template>
 
 In either form, avoid specific file paths or code snippets: they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
+
+## Project verification policy
+
+Read `../_shared/TESTING.md` and the project's `docs/agents/testing.md`. Record applicable profiles, commands, environments and acceptance evidence in the spec/tickets. Workers inherit approved decisions; missing required verification blocks completion.

@@ -1,3 +1,5 @@
+> Historical 0.1.0 record. For the current Paseo workflow and superseding decisions, read [WORKFLOW.md](WORKFLOW.md) and [MIGRATION-0.2.md](MIGRATION-0.2.md). Do not use old package prerequisites or frozen decisions as current setup instructions.
+
 # M4 hand-off prompt — On-ramps, discovery, and health
 
 Status: **prepared, not started.** Written after M3 (`7a582db`). Milestone plan of record:

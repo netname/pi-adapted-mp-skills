@@ -1,3 +1,5 @@
+> Historical 0.1.0 record. For the current Paseo workflow and superseding decisions, read [WORKFLOW.md](WORKFLOW.md) and [MIGRATION-0.2.md](MIGRATION-0.2.md). Do not use old package prerequisites or frozen decisions as current setup instructions.
+
 # M3 hand-off prompt — Main flow (port the idea → ship pipeline)
 
 Status: **prepared, not started.** Written after M2 (`abec939`). Milestone plan of record:

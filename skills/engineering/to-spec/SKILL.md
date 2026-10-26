@@ -5,9 +5,8 @@ disable-model-invocation: true
 license: MIT
 metadata:
   upstream: mattpocock/skills
-  upstream-commit: c55ee46073ed923f86ce59a5eb3b6d895095d1b7
+  upstream-commit: 24fe0ef7737efae15c87225755e9f6f5965e4888
   upstream-path: skills/engineering/to-spec
-  invocation: user
   adapted-for: pi
 ---
 
@@ -80,3 +79,7 @@ A description of the things that are out of scope for this spec.
 Any further notes about the feature.
 
 </spec-template>
+
+## Project verification policy
+
+Read `../_shared/TESTING.md` and the project's `docs/agents/testing.md`. Record applicable profiles, commands, environments and acceptance evidence in the spec/tickets. Workers inherit approved decisions; missing required verification blocks completion.
