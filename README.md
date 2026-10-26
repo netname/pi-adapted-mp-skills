@@ -4,6 +4,10 @@ Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh
 
 **0.2.0, unreleased.** This is a selective upgrade to [upstream v1.3.1](https://github.com/mattpocock/skills/tree/v1.3.1), not a wholesale rebase. Source pins remain in each skill. See [migration](docs/MIGRATION-0.2.md), [workflow](docs/WORKFLOW.md) and [changelog](CHANGELOG.md).
 
+## Manual and validation lab
+
+Read the [comprehensive setup and SWE-cycle manual](docs/MANUAL.md). It includes a worked quotation-CLI project, copyable agent prompts, negative/recovery exercises and a [validation report template](docs/VALIDATION-REPORT.md) for PR #1. The [bundled lab](examples/validation-lab/README.md) creates a disposable project with acceptance tests and records verification evidence.
+
 ## Start
 
 Install the complete package from a checked-out version you intend to use:

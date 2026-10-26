@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Add a comprehensive setup/SWE-cycle manual, reproducible quotation lab, evidence runner and live validation report template.
+
 - Selectively port upstream v1.3.1: implement-spec, pr, retro, tdd, to-spec and to-tickets.
 - Replace pi-subagents registration and mandatory tool-name coupling with shared Paseo delegation and portable role briefs.
 - Add verified model-family separation, immutable committed review snapshots and tests for omitted dirty work.

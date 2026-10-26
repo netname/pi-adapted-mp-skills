@@ -1,5 +1,7 @@
 # Current workflow
 
+For setup, a beginner-friendly explanation and a runnable PR-validation exercise, see [MANUAL.md](MANUAL.md).
+
 The tracker is the durable source of tickets, dependency edges, claims and evidence. The coordinator is one active agent session that reads that state and controls the loop. Paseo launches and supervises sessions and workspaces. Git and project scripts/CI provide source isolation and verification. These responsibilities are separate.
 
 ## Planning and execution
