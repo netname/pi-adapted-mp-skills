@@ -10,6 +10,8 @@ metadata:
   adapted-for: pi
 ---
 
+Include design-process evidence: missed requirements, contradictory views, stale approval, unnecessary modeling and boundary changes discovered late. Propose targeted improvements supported by incidents, not mandatory extra ceremony.
+
 The user has asked for a **retrospective**. You are suggesting improvements to the coding agent's **environment** to improve future runs.
 
 ## Steps

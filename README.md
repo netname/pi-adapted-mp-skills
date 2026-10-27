@@ -8,6 +8,8 @@ Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh
 
 Read the [comprehensive setup and SWE-cycle manual](docs/MANUAL.md). It includes a worked quotation-CLI project, copyable agent prompts, negative/recovery exercises and a [validation report template](docs/VALIDATION-REPORT.md) for PR #1. The [bundled lab](examples/validation-lab/README.md) creates a disposable project with acceptance tests and records verification evidence.
 
+Read the [architecture and design guide](docs/ARCHITECTURE-GUIDE.md) before the lab workers start. It adds scoped design proposals, fresh independent reviews, optional LikeC4 views and a fingerprint check for accepted design/plan records. These are local extensions, not upstream features.
+
 ## Start
 
 Install the complete package from a checked-out version you intend to use:
@@ -30,13 +32,15 @@ Run `/skill:setup-matt-pocock-skills` in the target project. It configures the t
 | --- | --- |
 | Resolve a large set of planning decisions | `wayfinder`; loop ready research, pause for human decisions |
 | Clarify a change | `grill-with-docs` |
-| Publish an agreed spec and dependency graph | `to-spec`, then `to-tickets` |
+| Publish requirements | `to-spec` |
+| Explain and independently review the design | `design-solution`, `review-design` |
+| Approve the dependency graph and requirement coverage | `to-tickets`, then final design/plan readiness check |
 | Execute the graph without launching tickets manually | `implement-spec` |
 | Implement one ticket | `implement` |
 | Independently review a committed candidate | `code-review` |
 | Write delivery evidence / improve the workflow | `pr` / `retro` |
 
-The remaining diagnosis, architecture, productivity and guardrail skills remain available under `skills/`. There are 28 skills; the obsolete conflict-resolution skill is retired.
+The remaining diagnosis, architecture, productivity and guardrail skills remain available under `skills/`. There are 30 skills; the obsolete conflict-resolution skill is retired.
 
 ## Roles and prerequisites
 

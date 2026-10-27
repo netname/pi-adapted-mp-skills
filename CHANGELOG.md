@@ -1,5 +1,8 @@
 # 0.2.0 (unreleased)
 
+- Add local design-solution/review-design skills, architecture contracts, independent design-review brief and readiness fingerprint checks.
+- Connect design/plan acceptance to setup, specifications, tickets, dispatch, review and retrospective; extend the quotation lab with LikeC4 views and design failure exercises.
+
 - Add a comprehensive setup/SWE-cycle manual, reproducible quotation lab, evidence runner and live validation report template.
 
 - Selectively port upstream v1.3.1: implement-spec, pr, retro, tdd, to-spec and to-tickets.

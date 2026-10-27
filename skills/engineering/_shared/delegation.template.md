@@ -11,6 +11,8 @@ Maximum repair attempts per failed ticket: 2; then pause and report.
 | Implementation | configure | Pi | configure from host | DeepSeek |
 | Spec review | configure | Claude Code | configure from host | Claude |
 | Standards review | configure | Claude Code | configure from host | Claude |
+| Design comprehension | configure | Pi or another installed harness | configure from host | differs from design authors |
+| Design challenge | configure | Pi or another installed harness | configure from host | differs from design authors |
 | Research | configure | choose source-capable provider | configure from host | configure |
 
 Replace all placeholders with profiles/models actually available on this host.

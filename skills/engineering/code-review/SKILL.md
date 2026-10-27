@@ -10,6 +10,8 @@ metadata:
   adapted-for: pi
 ---
 
+Read `../_shared/ARCHITECTURE.md` and the accepted design/ADRs linked by the ticket. Supply them to both existing review axes: Spec checks requirement coverage, Standards checks accepted boundaries and decisions. Flag material deviations for design review; do not add a redundant third code-review axis.
+
 Review a **committed, clean candidate** on two independent axes: Standards and Spec. Read `../_shared/DELEGATION.md` for transport and model independence. Dirty work-in-progress is not supported by this gate: commit the intended candidate first; do not silently omit staged, unstaged or untracked files.
 
 ## Capture

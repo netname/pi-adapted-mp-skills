@@ -21,6 +21,8 @@ function substitute(dir) {
 substitute(target);
 mkdirSync(state, { recursive: true });
 cpSync(join(here, 'tickets'), join(state, 'issues'), { recursive: true });
+const ticketFiles = readdirSync(join(here, 'tickets')).filter(name => name.endsWith('.md')).sort();
+writeFileSync(join(target, 'docs/designs/quote-plan.md'), '# Supplied ticket scope snapshot\n\nPlanning proposal; live claims/status belong in the tracker.\n\n' + ticketFiles.map(name => readFileSync(join(here, 'tickets', name), 'utf8')).join('\n\n'));
 writeFileSync(join(target, '.gitignore'), '.scratch/\nnode_modules/\n');
 writeFileSync(join(state, 'graph.json'), JSON.stringify({ tickets: [
   { id: 'A', status: 'ready', blockedBy: [] },

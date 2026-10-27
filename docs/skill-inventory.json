@@ -20,7 +20,7 @@
     "harnessTokens": "Canonical token labels found in SKILL.md. Every label resolves to a row in tokenMap via tokenMap.tokenIndex.",
     "sidecarHarnessTokens": "Map of sidecar path -> canonical token labels found in that sidecar.",
     "hasOpenaiYaml": "True when the skill ships an agents/openai.yaml sidecar (all 38 at the pin).",
-    "disposition": "port | adapt | rename | drop | defer, consistent with ADAPTATION_PLAN.md section 2.",
+    "disposition": "port | adapt | rename | drop | defer, consistent with ADAPTATION_PLAN.md section 2. Local extensions use local, name, origin=local and null upstream fields.",
     "ownerMilestone": "M2 | M3 | M4 | M5 | post-v1 | none.",
     "piPath": "Path in THIS package once shipped, or null when not shipped. Renamed skills use the renamed directory.",
     "confidence": "verified | inferred. verified means read directly from the pinned file; inferred means derived from plan policy rather than the file.",
@@ -2135,6 +2135,28 @@
           "d4Path": "../../productivity/writing-for-agents/SKILL.md"
         }
       ]
+    },
+    {
+      "name": "design-solution",
+      "upstreamName": null,
+      "upstreamPath": null,
+      "origin": "local",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disposition": "local",
+      "piPath": "skills/engineering/design-solution/SKILL.md",
+      "notes": "Original design workflow extension; no upstream source or drift comparison."
+    },
+    {
+      "name": "review-design",
+      "upstreamName": null,
+      "upstreamPath": null,
+      "origin": "local",
+      "bucket": "engineering",
+      "invocation": "user",
+      "disposition": "local",
+      "piPath": "skills/engineering/review-design/SKILL.md",
+      "notes": "Original design workflow extension; no upstream source or drift comparison."
     }
   ],
   "invocationSummary": {
@@ -2483,6 +2505,6 @@
     }
   },
   "currentCounts": {
-    "shippedSkills": 28
+    "shippedSkills": 30
   }
 }

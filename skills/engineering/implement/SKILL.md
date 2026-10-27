@@ -11,6 +11,8 @@ metadata:
   adapted-for: pi
 ---
 
+Read `../_shared/ARCHITECTURE.md`. Before editing, confirm the coordinator supplied current accepted design/plan evidence (standalone: check it yourself). Read linked decisions and requirement/component mappings. Stop affected work and report a material design deviation; do not silently amend accepted constraints.
+
 Implement one ticket in the assigned worktree. Read `../_shared/TESTING.md` and the project's testing contract. Use `../tdd/SKILL.md` at approved seams.
 
 1. Read the ticket, spec, project instructions and assigned immutable base. Confirm this worktree is clean and based on the coordinator's integration revision. Never reset or discard someone else's work.

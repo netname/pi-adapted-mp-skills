@@ -24,3 +24,7 @@ Profiles: `unit`, `integration`, `e2e`, `combined-ab`, `all`.
 The candidate must be committed/clean. The runner executes the supplied acceptance suites with Node, records exact SHA, command, exit/status and logs, and checks HEAD/cleanliness afterward. A timeout, failure or mutation returns nonzero. Evidence must be outside tracked source or in an ignored directory. It does not dispatch agents, enforce tracker locks or verify reviewer independence.
 
 Use [VALIDATION-REPORT.md](../../docs/VALIDATION-REPORT.md) for live results. `npm test` in the skills repository tests the generator and evidence runner offline; it does not validate live Paseo/provider orchestration.
+
+## Design validation extension
+
+The generated project now includes a draft architecture, LikeC4 views, proposed ADR, requirement coverage and an unaccepted readiness record. Follow [the architecture guide](../../docs/ARCHITECTURE-GUIDE.md) before worker dispatch. Dependency readiness and green application tests do not establish design acceptance. Record results separately in [ARCHITECTURE-VALIDATION.md](../../docs/ARCHITECTURE-VALIDATION.md).

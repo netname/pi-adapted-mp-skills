@@ -6,7 +6,7 @@ The tracker is the durable source of tickets, dependency edges, claims and evide
 
 ## Planning and execution
 
-Use Wayfinder for unresolved decisions. It can batch and repeat **ready research**; it must stop for a human's grilling/prototype decisions. Once the route is clear, synthesize a spec and approved dependency graph. The `implement-spec` coordinator launches ready implementation tickets in separate worktrees, collects committed results, dispatches independent review and integrates serially. Dependencies unblock only after verified integration.
+Use Wayfinder for unresolved decisions. It can batch and repeat **ready research**; it must stop for a human's grilling/prototype decisions. Once the route is clear, synthesize a spec, explain the proposed architecture with `design-solution`, and independently review it with `review-design`. Resolve human decisions, produce tickets, then check requirement coverage and current design/plan acceptance before dispatch. See [the architecture guide](ARCHITECTURE-GUIDE.md) and [shared policy](../skills/engineering/_shared/ARCHITECTURE.md). The `implement-spec` coordinator launches ready implementation tickets in separate worktrees, collects committed results, dispatches independent review and integrates serially. Dependencies unblock only after verified integration.
 
 Persist run IDs, branches, claims and evidence in the tracker after every transition. On resumption, inspect existing runs before launching replacements. A single coordinator avoids duplicate claims; a multi-coordinator deployment needs an actual lock/lease mechanism. This package supplies no distributed locking service.
 

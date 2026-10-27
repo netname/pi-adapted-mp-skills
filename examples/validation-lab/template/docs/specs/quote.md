@@ -6,10 +6,10 @@ A shop operator needs a quote for a whole number of one product, without a datab
 
 ## Approved seams and acceptance criteria
 
-1. `calculateTotalCents(unitPriceCents, quantity)` is exported from `src/pricing.mjs`. Price is a nonnegative safe integer. Quantity is a positive safe integer. Return their product in integer cents. Reject invalid inputs or unsafe products with RangeError; do not coerce strings. Zero-price items are allowed in this lab only.
-2. `loadCatalog(path)` is exported from `src/catalog.mjs` and returns a Promise of the parsed array. Use the real filesystem. Each entry has nonempty string sku/name and nonnegative safe-integer unitPriceCents. SKUs are unique, case-sensitive. An empty array is valid. Reject malformed JSON, invalid entries and unreadable/missing files. Do not modify input files. Extra properties may be preserved.
-3. `node src/cli.mjs CATALOG SKU QUANTITY` accepts exactly three arguments. QUANTITY must contain only decimal digits and represent a positive safe integer. Find the case-sensitive SKU, call the two public APIs and print exactly one JSON object plus a newline: {sku,name,quantity,totalCents}. Exit 0, empty stderr. On any user/data error, exit 1, empty stdout, a concise message on stderr, no stack trace.
-4. A PEN priced at 1250 cents, quantity 3, produces totalCents 3750. Preserve the product name, including accents.
+1. **R1** — `calculateTotalCents(unitPriceCents, quantity)` is exported from `src/pricing.mjs`. Price is a nonnegative safe integer. Quantity is a positive safe integer. Return their product in integer cents. Reject invalid inputs or unsafe products with RangeError; do not coerce strings. Zero-price items are allowed in this lab only.
+2. **R2** — `loadCatalog(path)` is exported from `src/catalog.mjs` and returns a Promise of the parsed array. Use the real filesystem. Each entry has nonempty string sku/name and nonnegative safe-integer unitPriceCents. SKUs are unique, case-sensitive. An empty array is valid. Reject malformed JSON, invalid entries and unreadable/missing files. Do not modify input files. Extra properties may be preserved.
+3. **R3** — `node src/cli.mjs CATALOG SKU QUANTITY` accepts exactly three arguments. QUANTITY must contain only decimal digits and represent a positive safe integer. Find the case-sensitive SKU, call the two public APIs and print exactly one JSON object plus a newline: {sku,name,quantity,totalCents}. Exit 0, empty stderr. On any user/data error, exit 1, empty stdout, a concise message on stderr, no stack trace.
+4. **R4** — A PEN priced at 1250 cents, quantity 3, produces totalCents 3750. Preserve the product name, including accents.
 
 ## Testing decisions
 

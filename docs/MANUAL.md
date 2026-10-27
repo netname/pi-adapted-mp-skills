@@ -1,10 +1,12 @@
 # Skills + Paseo: setup, daily development and PR validation manual
 
-Version: PR #1 / proposed package 0.2.0. Documentation checked on 2026-10-26.
+Version: PR #1 workflow plus the dependent architecture-design extension / proposed package 0.2.0. Updated 2026-10-27.
 
 This manual explains how to take a software change from an initial need to a verified, reviewed result using Matt Pocock's adapted skills, coding agents and Paseo. It then shows how to set up that workflow and validate it with a disposable project.
 
 The manual describes [PR #1](https://github.com/netname/pi-adapted-mp-skills/pull/1), which proposes this workflow. Its short operational contract is [WORKFLOW.md](WORKFLOW.md); upgrade differences are in [MIGRATION-0.2.md](MIGRATION-0.2.md). Treat differences between promised and observed behavior as validation findings.
+
+**Architecture extension:** Read [Understand and approve the design before building it](ARCHITECTURE-GUIDE.md). It supplies the design stage, visualization, exact setup for the dependent branch and additional worked-example checks. The section 5 checkout below describes the original PR #1 branch; use the architecture guide's checkout to validate the extension.
 
 ## Overview: from a need to a change you can accept
 
@@ -18,14 +20,15 @@ Once the behavior is clear, the problem changes: now you want agents to implemen
 
 ### The process has two connected loops
 
-**The planning loop turns uncertainty into an agreement.** You describe the need. A planning agent explores the existing application, asks questions and researches facts. You supply business decisions. Together you produce a spec: a durable description of required behavior, exclusions and how it will be checked. For larger work, the agent proposes implementation tickets and their dependencies, which you approve.
+**The planning loop turns uncertainty into an agreement.** You describe the need. A planning agent explores the existing application, asks questions and researches facts. You supply business decisions. Together you produce a spec: a durable description of required behavior, exclusions and how it will be checked. Before execution, the planner explains the proposed design and its tradeoffs; fresh reviewers reconstruct and challenge it. You resolve consequential choices. For larger work, the agent then proposes implementation tickets and their dependencies. A final coverage check connects requirements, components, tickets and verification before you authorize the current scope.
 
 **The delivery loop turns the agreement into an accepted revision.** A coordinator selects ready tickets, launches implementation workers and collects committed results. Tests and independent reviews produce evidence. Failed results return for repair; accepted results are combined into the integration branch. Completing one ticket can make another ready, so the coordinator repeats the loop until the agreed scope is implemented or a genuine blocker needs your input.
 
 ```mermaid
 flowchart TD
     N["Need or change request"] --> P["Clarify and agree on behavior"]
-    P --> S["Spec and approved task graph"]
+    P --> D["Explain and review the design"]
+    D --> S["Coverage and approved task graph"]
     S --> W["Coordinator launches ready workers"]
     W --> V["Verify and independently review"]
     V -->|"Repair required"| W
@@ -43,6 +46,7 @@ The diagram summarizes control flow, not automatic permission to launch any task
 | --- | --- | --- | --- |
 | Clarify | What problem should we solve, and what choices remain? | Avoids building an agent's assumptions instead of your intent | Resolved decisions and explicit open questions |
 | Specify | What behavior will count as correct? | Gives implementers, tests and reviewers the same target | An agreed spec with examples, exclusions and test seams |
+| Design and review | How will the components satisfy the requirements, and why this design? | Makes responsibilities, failure paths and tradeoffs inspectable before coding | Reviewed design and explicit decisions |
 | Plan the work | What can be delivered independently, and what must wait? | Enables useful parallelism without premature dependent work | Tickets with acceptance criteria and blocking relationships |
 | Implement | How do we make one agreed behavior work? | Keeps each worker's context and changes bounded | Committed code and focused verification evidence |
 | Verify and review | Does the candidate work, satisfy the spec and follow standards? | Checks observed behavior and applies independent judgment | Test results, separate review findings and their dispositions |
@@ -69,7 +73,7 @@ In the worked example, you agree to quote whole quantities from a JSON product c
 
 The plan has three tickets: **A calculates prices**, **B reads the catalog**, and **C connects them into a command-line tool**. A and B can start together because their interfaces are agreed and neither needs the other's implementation. C waits because it needs both accepted results.
 
-The coordinator launches A and B in separate worktrees. Each worker commits its result. Focused tests check the behavior, and fresh reviewers inspect the spec and standards separately. The coordinator combines accepted work and checks the combined revision, then launches C from that revision without asking you to manually pick the next ticket.
+On the architecture extension, first review the supplied draft model, design and coverage and record actual acceptance as described in [the design lab](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool). The coordinator then launches A and B in separate worktrees. Each worker commits its result. Focused tests check the behavior, and fresh reviewers inspect the spec and standards separately. The coordinator combines accepted work and checks the combined revision, then launches C from that revision without asking you to manually pick the next ticket.
 
 Finally, a complete CLI test demonstrates that three pens at 1250 cents produce a quote of 3750 cents. Final review covers the full change. You inspect the evidence and decide whether to accept the result. In the lab, acceptance remains local; in a real application it can lead to a PR merge and a separate release process.
 
@@ -463,7 +467,7 @@ The variable assignment lasts for the current shell and processes it launches; i
 
 `npm test` is a project-defined command, not a universal suite that npm supplies. For this checkout, [package.json](../package.json) defines it as skill validation followed by Node's test runner. If skill validation fails, the test runner is not started. No dependency installation or model authentication is needed for these offline checks.
 
-At this manual revision the package has 11 offline tests; future PR revisions can change that count. Judge success by the complete result and exit status, not by matching a fixed number. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
+On the architecture-extension branch the package has 15 offline tests (the earlier PR #1 revision has 11); future PR revisions can change that count. Judge success by the complete result and exit status, not by matching a fixed number. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
 
 Passing here means the package's static/helper checks passed on this machine. It does not mean the quotation application has been implemented or the live Paseo workflow has been validated. Those are later exercises. Sources: [npm test reference](https://docs.npmjs.com/cli/v11/commands/npm-test/) and this repository's [test script](../package.json).
 
@@ -620,7 +624,7 @@ This section maps the overview's planning and delivery loops to specific skills.
 
 ### Hand off from planning to execution deliberately
 
-The handoff is an agreed set of artifacts, not just a model switch. The coordinator needs the spec, ticket graph, tracker location, model-role configuration and testing/environment contract. Requirements still marked undecided cannot be resolved by silently choosing convenient implementation behavior.
+The handoff includes the accepted design, independent review reports, requirement coverage and current readiness record described in [the architecture guide](ARCHITECTURE-GUIDE.md). It is an agreed set of artifacts, not just a model switch. The coordinator needs the spec, ticket graph, tracker location, model-role configuration and testing/environment contract. Requirements still marked undecided cannot be resolved by silently choosing convenient implementation behavior.
 
 At that boundary you can say: “This spec and breakdown are approved. Execute this graph under the configured limits; return for new product decisions or genuine blockers.” The coordinator then owns routine dispatch, collection and integration. You retain scope and delivery decisions.
 
@@ -803,6 +807,8 @@ The ready-made spec and tickets make execution repeatable. To exercise the earli
 Success means cited research artifacts, no blocked research launched prematurely, the human decision preserved and a graph equivalent to A+B→C. Prose need not match word-for-word. If the planner invents ERPNext requirements or answers the human decision itself, record a failure.
 
 Use the supplied reference spec/tickets for the execution test after the rehearsal. This separates planning variability from orchestration correctness.
+
+Before following section 12 on the architecture-extension branch, complete the design review and acceptance exercise in [ARCHITECTURE-GUIDE.md](ARCHITECTURE-GUIDE.md). The new scaffold deliberately starts with a draft design; A/B being dependency-ready is insufficient.
 
 ## 12. Execute the graph and observe it
 
