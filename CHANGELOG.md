@@ -1,9 +1,15 @@
 # 0.2.0 (unreleased)
 
+- Connect the asynchronous questionnaire skill to the plain-language policy, with explicit conditional questions and reuse of known answers.
 - Add a shared plain-language policy for planning questions and artifacts; limit interview rounds, reuse decisions and check comprehension within existing design review. Add a language exercise without new skills, dependencies or gates.
 
 - Add local design-solution/review-design skills, architecture contracts, independent design-review brief and readiness fingerprint checks.
 - Connect design/plan acceptance to setup, specifications, tickets, dispatch, review and retrospective; extend the quotation lab with LikeC4 views and design failure exercises.
+
+- Correct malformed PR-skill YAML and use a pinned development-only YAML parser with regression tests; run npm ci before package validation.
+- Test and correct Git guardrail opt-in and common global-option handling; document pattern-check limits.
+- Add shared-worktree tracker conventions, coordinator-owned review reports and production handoffs for diagnosis/prototypes. Correct the Pi command-visibility check.
+- Strengthen quotation acceptance assertions and prove missing-newline/input-mutation failures are detected.
 
 - Add a comprehensive setup/SWE-cycle manual, reproducible quotation lab, evidence runner and live validation report template.
 

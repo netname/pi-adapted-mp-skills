@@ -15,12 +15,12 @@ Apply this policy to human-facing planning questions, specs, designs, ADRs, tick
 
 ## Questions
 
-- Ask one main decision at a time. A short batch of up to three independent questions is acceptable when it reduces effort; do not dump every currently answerable question into one round.
+- In live conversation, ask one main decision at a time. A short batch of up to three independent questions is acceptable when it reduces effort; do not dump every currently answerable question into one round.
 - Explain why the answer matters when that is not obvious. Ask about user-visible behavior before asking the user to select technical mechanisms.
 - Use short, distinct options when helpful. Explain meaningful consequences, label recommendations and give their reason. Do not make the recommended answer sound like the only reasonable choice.
 - Allow “I don't know” or another answer when valid. Research discoverable facts yourself; do not make the user supply facts the agent can inspect.
 - Reuse previous answers and explicit authorization. Ask again only if context changed or the answer is genuinely ambiguous; explain why.
-- Ask dependent questions after their prerequisites are resolved. Record uncertainty instead of inventing a decision.
+- In live conversation, ask dependent questions after their prerequisites are resolved. In an asynchronous questionnaire, include necessary questions together and mark dependent questions with explicit conditions. Record uncertainty instead of inventing a decision.
 
 Example: replace “What consistency semantics should govern quotation persistence?” with “Should the application save quotations so staff can open them later?” If yes, ask “When a product price changes, should a saved quotation keep its original price or use the new price?” Explain the consequences before recommending an option. This is a wording example, not a requirement to add saving to the quotation lab.
 

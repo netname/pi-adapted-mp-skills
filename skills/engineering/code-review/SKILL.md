@@ -34,6 +34,8 @@ Both reviewers must use a model family different from every implementing worker 
 
 ## Collect and refresh
 
+Collect each reviewer's response and persist it, with run ID, effective model settings and target manifest, in the coordinator-owned evidence store outside the candidate worktree. Reviewers do not write report files. A missing response is incomplete.
+
 Report Standards and Spec separately, preserving each finding's evidence/severity without reranking across axes. Optional smell suggestions are nonblocking unless they expose a concrete defect or violate a documented requirement. Missing, failed or timed-out axes remain incomplete; never synthesize a pass over them.
 
 The coordinator checks HEAD and clean status again before accepting the report. Associate findings and disposition with the manifest's base/head. Every code fix or integration merge changes the target and invalidates approval: commit, rerun relevant verification, capture again and refresh review of the new candidate. Close only when required checks and both applicable axes pass. Archive artifacts in the project's evidence store before removing the temporary directory.

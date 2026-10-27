@@ -7,11 +7,11 @@ metadata:
     author: Dex Horthy
     organisation: Humanlayer
     url: "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
-license: MIT
   upstream: mattpocock/skills
   upstream-commit: 24fe0ef7737efae15c87225755e9f6f5965e4888
   upstream-path: skills/engineering/pr
   adapted-for: pi
+license: MIT
 ---
 
 Read `../_shared/PLAIN-LANGUAGE.md` before writing human-facing questions or artifacts. Preserve exact requirements and decisions when simplifying language.

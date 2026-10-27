@@ -103,7 +103,7 @@ If a candidate was repaired or merged with a newer integration tip, add another 
 | --- | --- | --- | --- | --- | --- |
 | | | | | | |
 
-Known static compatibility concern: the current setup skill's `enableSkillCommands` gating differs from current Pi documentation about manual invocation. Record installed Pi version and actual behavior if tested; do not mark this fixed merely because command discovery was enabled for the happy path.
+Static setup correction: `enableSkillCommands: false` no longer blocks setup. Confirm manual invocation and record the installed Pi version during live validation; the instruction change alone does not prove host compatibility.
 
 Not covered by this lab: real database/queue lease recovery; ERPNext Bench/site isolation; migrations; browser E2E; production deployment; universal compatibility across hosts/providers.
 

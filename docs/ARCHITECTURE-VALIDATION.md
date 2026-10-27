@@ -6,7 +6,7 @@ This report separates checks run while preparing the PR from exercises requiring
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| `npm test` | PASS: 15 tests; 30 skills validate | Existing helpers plus readiness acceptance, stale inputs/reports, incomplete review, same-family review, duplicate runs and unsafe paths |
+| `npm test` | PASS: 23 tests; 30 skills validate | YAML validation, guardrail opt-in/options, lab acceptance mutations, existing helpers plus readiness acceptance, stale inputs/reports, incomplete review, same-family review, duplicate runs and unsafe paths |
 | LikeC4 1.60.0 `validate` in fixture model directory | PASS: 1 source file | Parses component/success/failure views; no semantic architecture approval |
 | Fixture creation | PASS in package tests | Draft readiness, ticket scope snapshot, substituted paths, existing-destination protection |
 | Application acceptance tests on scaffold | Expected failure tested | Implementation deliberately absent |
@@ -26,6 +26,7 @@ Application baseline/integration SHAs: ______. Design author families: ______.
 | --- | --- | --- |
 | Human can explain components, ownership and success/failure paths | NOT RUN | |
 | Language exercise: clear questions, reused decisions, preserved error conditions/outputs | NOT RUN | |
+| Asynchronous questionnaire loads the same policy and retains necessary conditional questions | NOT RUN | |
 | Actual independent comprehension model/run inspected | NOT RUN | |
 | Actual independent challenge model/run inspected | NOT RUN | |
 | Missing R4 and contradictory catalog ownership detected | NOT RUN | |

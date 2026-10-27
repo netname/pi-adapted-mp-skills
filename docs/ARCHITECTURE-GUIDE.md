@@ -82,10 +82,11 @@ git clone --branch improve/architecture-design-review --single-branch \
 export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-design"
 cd "$MP_SKILLS"
 git rev-parse HEAD
+npm ci
 npm test
 ```
 
-These Bash commands work on Linux or a configured Windows Bash environment such as WSL. See the main manual for host/harness setup. The Node helpers use portable filesystem APIs; Windows behavior has not been exercised by this PR's Linux checks. `MP_SKILLS` identifies the package checkout; it is not your application directory. There are now 30 skills and 15 offline tests.
+These Bash commands work on Linux or a configured Windows Bash environment such as WSL. See the main manual for host/harness setup. The Node helpers use portable filesystem APIs; Windows behavior has not been exercised by this PR's Linux checks. `MP_SKILLS` identifies the package checkout; it is not your application directory. There are now 30 skills and 23 offline tests. `npm ci` installs the pinned development-only YAML parser; execution helpers and the generated application remain dependency-free.
 
 Install the complete checkout with the manual's Pi installation method. Avoid duplicate old/new skill registrations. Claude Code can read the explicit skill and project files as described in the manual; this does not automatically register Claude slash commands.
 
@@ -232,7 +233,8 @@ Use the [shared plain-language policy](../skills/engineering/_shared/PLAIN-LANGU
 1. Give the planner this deliberately unclear question: “Should the catalog adapter own error serialization at the process boundary?” Ask it to rewrite the question so a shop operator can understand the decision, with distinct options and their consequences. It must explain that the lab's spec already assigns output behavior; it must not ask the human to approve the same decision again or silently change it.
 2. Give it this sentence: “The CLI must emit diagnostics on stderr, suppress stdout, and terminate with status 1 on user/data errors.” Ask for a plain-language rewrite. Check that it retains **all three** outcomes and the condition under which they apply. Keep exact stream names and the exit code, explaining them if necessary.
 3. Ask the existing comprehension reviewer to explain the proposed responsibilities and one failure path without the author's conversation. Have it identify any wording that required guessing and any meaning lost during simplification.
-4. Read the result yourself. Can you explain what will be built, why the main choices were made and what still needs your decision? Record unclear passages as feedback in the existing review report.
+4. For `to-questionnaire`, request an asynchronous questionnaire from the same context. Check that known answers are reused, each question asks one thing and conditional questions are marked. The document can contain more than three questions; the short-round limit applies to live chat.
+5. Read the result yourself. Can you explain what will be built, why the main choices were made and what still needs your decision? Record unclear passages as feedback in the existing review report.
 
 Do this before freezing the final design inputs. Later wording changes still follow the existing fingerprint-refresh rules. A clear-sounding sentence is not proof that it preserves the requirement. Record this exercise as NOT RUN until you actually perform it; offline package tests cannot establish reader comprehension.
 

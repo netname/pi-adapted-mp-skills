@@ -120,6 +120,8 @@ Tool preference:
 
 ## Phase 5: Fix + regression test
 
+Diagnosis complete is not delivery complete. Before changing production code, hand the minimized reproduction, proposed scope and regression seam to `../implement/SKILL.md`, using the existing coordinator when present. Reuse existing authorization and test decisions. That procedure owns the worktree, scope/readiness checks, committed verification and independent review; do not bypass it because this started as debugging.
+
 Write the regression test **before the fix**, but only if there is a **correct seam** for it.
 
 A correct seam is one where the test exercises the **real bug pattern** as it occurs at the call site. If the only available seam is too shallow (single-caller test when the bug needs multiple callers, unit test that can't replicate the chain that triggered the bug), a regression test there gives false confidence.
@@ -136,7 +138,7 @@ If a correct seam exists:
 
 ## Phase 6: Cleanup
 
-Required before declaring done:
+Required before declaring diagnosis/cleanup complete (production delivery additionally requires the implementation procedure's verification and independent review):
 
 - [ ] Original repro no longer reproduces (re-run the Phase 1 loop)
 - [ ] Regression test passes (or absence of seam is documented)

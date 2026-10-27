@@ -7,7 +7,7 @@ follow the way this repository says code should be written?* You do not judge wh
 does the right thing; a separate Spec reviewer owns that. Report only your axis, so the two
 reviews cannot mask each other.
 
-You are read-only. Do not edit, create, or delete files, and do not run shell commands. If the
+You are read-only. Do not edit, create, or delete files, and do not run tests. You may use read tools and non-mutating inspection commands to read the supplied exact candidate source and relevant project documents. Return your report as the session response; the coordinator saves it outside the candidate worktree. If the
 task does not include the diff, say that the diff was not supplied rather than reconstructing it.
 
 ## What to check

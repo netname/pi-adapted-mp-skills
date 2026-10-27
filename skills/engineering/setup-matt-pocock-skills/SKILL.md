@@ -26,8 +26,8 @@ This is a prompt-driven skill, not a deterministic script. Explore, present what
 ### 0. Preflight (run first, before writing anything)
 
 Run these checks in order. **a** and **b** are capability-scoped: record the result and continue,
-because setup itself needs neither package. **c** and **d** are blocking: if either fails, stop,
-print its remedy, and write nothing.
+because setup itself needs neither package. **c** is blocking: if it fails, stop, print its remedy, and write nothing.
+**d** is a nonblocking discoverability check.
 
 **a. Delegation capability (nonblocking for setup).** Read `../_shared/DELEGATION.md`. Discover Paseo availability and configured role profiles; report missing capabilities without installing packages. Planning does not require delegation.
 
@@ -71,24 +71,9 @@ disk but whose `pi.getCommands()` `sourceInfo.path` points somewhere other than 
 also a collision: say the name resolved to another source rather than assuming this package's copy
 won. Where neither surface can attribute a name, say it could not be attributed.
 
-**d. `enableSkillCommands` (blocking, D3).**
-Pi registers skills as `/skill:<name>` commands only while `enableSkillCommands` is not `false`
-(the default is `true`). With it off, user-invoked skills are unreachable and no skill can
-explain why. Read both settings files with the `read` tool — project settings override global:
+**d. Skill command visibility (nonblocking).** Read effective trusted project/global settings when available. `enableSkillCommands: false` hides skills from interactive command discovery; manually typed `/skill:<name>` commands still work. Report this distinction without blocking setup or changing the user's settings. Successfully invoking this skill does not prove command discovery is enabled. If a skill fails to load, inspect startup diagnostics, installation paths and its frontmatter instead.
 
-- `~/.pi/agent/settings.json` (global)
-- `.pi/settings.json` (project)
-
-If the effective value is `false`, stop and print the remedy:
-
-```
-Re-enable skill commands: run /settings and turn "Enable skill commands" back on, or set
-"enableSkillCommands": true in .pi/settings.json (project) or ~/.pi/agent/settings.json (global).
-```
-
-Reaching this skill as `/skill:setup-matt-pocock-skills` already proves skill commands are on for
-this session; this check protects the other user-invoked skills. Project settings load only when
-the project is trusted, so treat an untrusted `.pi/settings.json` as unread and say so.
+Source: https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md
 
 ### 1. Explore
 
@@ -124,7 +109,7 @@ Default posture: these skills were designed for GitHub. If a `git remote` points
 `gh` and `glab` commands run through Pi's `bash` tool; if the CLI is not installed, say so and
 offer local markdown instead of writing a tracker file that cannot work.
 
-Record the choice in `docs/agents/issue-tracker.md`. The GitHub and GitLab templates carry a "PRs as a request surface" flag, defaulted **off**. Leave it off and don't raise it: a user who wants external PRs in the triage queue can flip the flag in the file later.
+Record the choice in `docs/agents/issue-tracker.md`. Include the selected template's implementation-coordination contract as well as its Wayfinding operations. For local markdown, resolve one canonical absolute state root in the original project and record it; all worktrees use that root. Preserve an existing root and lifecycle. The GitHub and GitLab templates carry a "PRs as a request surface" flag, defaulted **off**. Leave it off and don't raise it: a user who wants external PRs in the triage queue can flip the flag in the file later.
 
 **Section B: Triage label vocabulary.** Skip this section entirely if the `triage` skill isn't available (step 1 told you), since an unavailable skill needs no labels.
 
@@ -199,13 +184,13 @@ conventions; it never invents work.
 
 Add a short pointer-only block — lines that point at the files and facts, never copied skill text:
 
-- The Pi invocation model: user-invoked skills run only as `/skill:<name>`; model-invoked skills load on demand; skill commands require `enableSkillCommands`.
+- The Pi invocation model: user-invoked skills run only as `/skill:<name>`; model-invoked skills load on demand; manually typed skill commands work even when `enableSkillCommands` hides discovery.
 - The capability report from step 0: delegation and researcher source access.
 - Report package version and per-skill upstream pins; this is a selective upgrade, not a claim that every skill matches the latest upstream.
 
 ### 6. Keep scratch artifacts out of git
 
-Ensure `.scratch/handoffs/` and `.scratch/reports/` are git-ignored (D5). Add the patterns to the
+For a local tracker inside the repository, ignore its canonical state root (normally `.scratch/`); do not untrack existing files. For other trackers, ensure `.scratch/handoffs/` and `.scratch/reports/` are git-ignored (D5). Add the patterns to the
 repo's `.gitignore` if they are not already covered, and record in `AGENTS.md` that both are
 ignored by default and that a repo may opt in to committing either. Do not create the directories
 themselves.

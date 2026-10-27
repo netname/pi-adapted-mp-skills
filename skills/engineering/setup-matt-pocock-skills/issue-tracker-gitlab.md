@@ -44,3 +44,33 @@ Used by `/skill:wayfinder`. The **map** is a single issue with **child** issues 
 - **Frontier query**: `glab issue list -F json` scoped to the map's children, drop any with an open blocker: a native `blocked_by` link to an open issue (`glab api projects/:id/issues/:iid/links`), or an open issue in the `Blocked by` line, or an assignee; first in map order wins.
 - **Claim**: `glab issue update <n> --assignee @me`, the session's first write.
 - **Resolve**: `glab issue note <n> --message "<answer>"`, then `glab issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
+
+
+## Implementation coordination (separate from Wayfinding)
+
+Wayfinding resolves planning questions. Implementation uses the states below; an issue being closed or a planning question being resolved does not establish verified integration.
+
+Only one coordinator writes execution state for an effort. Record its run ID, host, integration branch and starting SHA, concurrency limit and repair budget in the effort record before dispatch. This is a single-writer ownership record, not an atomic lock. On restart, inspect live sessions and reconcile saved runs before launching replacements; unknown ownership blocks dispatch.
+
+For each implementation ticket, retain these fields in a marked Implementation state section. Keep triage labels/Status separate from Execution status; the graph export maps Execution status to its status field:
+
+| Field | Meaning |
+| --- | --- |
+| Execution status | ready, running, review, blocked, integrated |
+| Blocked by | Stable implementation ticket IDs |
+| Claim | Active Paseo run ID, or empty when unclaimed |
+| Candidate | Host, branch, absolute worktree path, immutable base/head and implementation model families |
+| Verification | Profile, command, environment ID, exit code and durable log/manifest references |
+| Reviews | Separate Spec and Standards outcomes, effective model settings, base/head and persisted reports |
+| Integration | Resulting integrated SHA and combined verification/review evidence |
+| History | Timestamped transitions, failures, cancelled runs and repair attempts; append rather than erase |
+
+A ticket becomes integrated only after the coordinator verifies the resulting revision and its evidence. Only this status unblocks dependents. ready means dependency eligibility, not authorization to skip required scope, design or test gates. Clear a claim only after its run is finished/cancelled and the outcome is recorded.
+
+Export graph.json for scripts/frontier.mjs from these authoritative records. The export is disposable, never a second tracker; include verified=true and integratedSha only after checking actual Git and evidence. Do not infer verified=true from an issue's closed state. Retain evidence and reachable commits before removing worktrees. Preserve records across restarts and back up local state.
+
+### Remote storage and closure
+
+Use a parent effort issue for the coordinator record and a marked Implementation state section in each child issue's description for current fields. Append evidence and transition history as notes. Assignments/labels are UI aids, not locks or substitutes for these fields. Store large logs in a durable CI/artifact store and link them with immutable revision identifiers.
+
+Keep implementation issues open until the delivery MR merges. Native blocker counts based on open issues can therefore remain nonzero after a blocker is integrated. For implementation dispatch, consult recorded dependencies and verified integrated states; the Wayfinding closed-issue query above is not the implementation frontier. On merge, close the delivered tickets according to project policy. Record a different lifecycle explicitly if the project requires one.
