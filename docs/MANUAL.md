@@ -100,6 +100,8 @@ A correct quotation application alone does not prove the workflow was followed: 
 
 The reading sequence is: understand this overview; set up the host and project; run the worked example; inspect the evidence and negative exercises; then decide whether the workflow PR is ready. **Start with the disposable project.** Its results do not establish ERPNext site isolation, migrations or browser-test readiness; those require a later application-specific adapter.
 
+Questions and artifacts follow a [shared plain-language policy](../skills/engineering/_shared/PLAIN-LANGUAGE.md): explain purpose first, define unfamiliar terms, preserve exact requirements and reuse previous answers. The existing comprehension review checks clarity; the [language exercise](ARCHITECTURE-GUIDE.md#language-exercise-understandable-and-still-precise) lets you validate it. This is informed by STE, without adopting its full controlled dictionary.
+
 ## Reading paths
 
 | Your goal | Read / do |

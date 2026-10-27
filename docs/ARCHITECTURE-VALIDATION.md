@@ -25,6 +25,7 @@ Application baseline/integration SHAs: ______. Design author families: ______.
 | Observation | Result (PASS / FAIL / NOT RUN) | Evidence |
 | --- | --- | --- |
 | Human can explain components, ownership and success/failure paths | NOT RUN | |
+| Language exercise: clear questions, reused decisions, preserved error conditions/outputs | NOT RUN | |
 | Actual independent comprehension model/run inspected | NOT RUN | |
 | Actual independent challenge model/run inspected | NOT RUN | |
 | Missing R4 and contradictory catalog ownership detected | NOT RUN | |

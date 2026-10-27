@@ -14,6 +14,8 @@ license: MIT
   adapted-for: pi
 ---
 
+Read `../_shared/PLAIN-LANGUAGE.md` before writing human-facing questions or artifacts. Preserve exact requirements and decisions when simplifying language.
+
 Use this template for writing the PR body:
 
 ```markdown

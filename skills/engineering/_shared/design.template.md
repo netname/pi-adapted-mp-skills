@@ -3,6 +3,10 @@
 Status: draft. Route: lightweight/full. Spec: <reference and requirement IDs>.
 Owner: <human>. Authors: <actual model families>. Inspected source revision: <SHA or greenfield>.
 
+## Plain-language overview
+
+Briefly explain what changes, why it matters and what the reader needs to decide. Keep exact requirements in the linked spec. Explain unfamiliar terms before using them in the detailed sections.
+
 ## Intent and boundaries
 
 Link requirements and exclusions. Explain actors, components, responsibilities, data ownership and external contracts. State which decisions already exist and which require approval.

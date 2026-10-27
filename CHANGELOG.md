@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Add a shared plain-language policy for planning questions and artifacts; limit interview rounds, reuse decisions and check comprehension within existing design review. Add a language exercise without new skills, dependencies or gates.
+
 - Add local design-solution/review-design skills, architecture contracts, independent design-review brief and readiness fingerprint checks.
 - Connect design/plan acceptance to setup, specifications, tickets, dispatch, review and retrospective; extend the quotation lab with LikeC4 views and design failure exercises.
 

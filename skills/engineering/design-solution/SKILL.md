@@ -8,6 +8,8 @@ metadata:
   adapted-for: pi
 ---
 
+Read `../_shared/PLAIN-LANGUAGE.md` before writing human-facing questions or artifacts. Preserve exact requirements and decisions when simplifying language.
+
 Read `../_shared/ARCHITECTURE.md` and the project's architecture, testing and delegation contracts. Work from the authoritative spec; expose unresolved requirements rather than choosing product behavior silently.
 
 1. Inspect the existing code, configuration, tests and ADRs. Record the inspected revision and evidence for current-state claims. Select lightweight/full scope with reasons.
