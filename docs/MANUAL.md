@@ -64,7 +64,7 @@ A successful helper test does not prove the second group. That is why the lab in
 | Spec | Agreed behavior, constraints and exclusions | Exact CLI inputs, outputs and errors |
 | Seam | A public boundary where behavior can be tested | A function, catalog API or CLI process |
 | Vertical slice | A small useful behavior across necessary layers | Quote one product from input to output |
-| Base / head | Start and end revisions of the change being examined | Original integration SHA / candidate SHA |
+| Base / head | Reference revision and proposed revision for a comparison | Agreed integration SHA / worker candidate SHA |
 | Merge base | The common ancestor used to compare diverging branches | Shared starting point of A and B |
 | Candidate | A committed revision awaiting verification/review | Ticket A's submitted commit |
 | Integrated | Accepted into the integration branch after the required checks | A is now available to dependent work |
@@ -72,6 +72,66 @@ A successful helper test does not prove the second group. That is why the lab in
 | AFK | Work that can proceed without live product decisions | Researching an already precise question |
 
 A worker saying “finished” is not the same as a ticket being integrated. A ticket being integrated is not always the same as its GitHub issue being closed: the project's tracker may defer closure until a PR merges.
+
+### Base and head: which two versions are we discussing?
+
+A Git commit identifies a saved revision of the project. Its SHA is the identifier you record as evidence. A branch name is a movable label pointing at a commit: the label stays the same as more commits are added.
+
+For a review, **base** means the reference revision and **head** means the proposed revision. For example, base can be the integration commit a worker started from, and head can be the commit containing its finished ticket. Base does not always mean `main`, and head does not mean every file currently on disk.
+
+Be careful with capitalization: Git's **`HEAD`** identifies the currently checked-out commit, usually through the current branch. Lowercase **head** in this manual means the proposed review endpoint. In the worker's checkout they may identify the same commit; in the coordinator's checkout they may differ. Uncommitted edits are not part of either commit. Source: [Git glossary](https://git-scm.com/docs/gitglossary).
+
+In this package, the helper resolves the requested base/head to exact SHAs and requires the checkout to match the proposed head and be clean. Review evidence then names those saved versions, not a branch name that can move later. Example: “Spec review passed for base S0, head A2” is precise; “the feature branch was reviewed” is not enough after another commit lands.
+
+### Merge base: where did these histories last share an ancestor?
+
+When two branches diverge, their current tips no longer describe their shared starting point. Git finds a **merge base**: a best common ancestor of the two commits. In an ordinary branching history, this is the shared commit before the separate changes. Unusual histories can have multiple best common ancestors. Source: [git merge-base](https://git-scm.com/docs/git-merge-base).
+
+Consider this history; S0, I1, A1 and A2 are teaching labels for commit SHAs:
+
+```mermaid
+flowchart TD
+    S0["S0: shared starting commit"] --> I1["I1: integration received other work"]
+    S0 --> A1["A1: worker's first change"]
+    A1 --> A2["A2: worker's submitted candidate"]
+```
+
+If the requested base is I1 and the proposed head is A2, the merge base is S0. That distinction changes what a diff means:
+
+| Comparison | Question it answers in this example |
+| --- | --- |
+| `git diff I1 A2` | How do the complete saved contents of I1 and A2 differ? |
+| `git diff I1...A2` | What changed from their merge base S0 to A2? |
+
+These labels must be replaced with real refs/SHAs if you run the commands. The three-dot form is directional: it compares the merge base to the second endpoint. It does not merge the branches or certify that their changes work together. Source: [git diff](https://git-scm.com/docs/git-diff).
+
+The review helper records **requested base**, **merge base** and **head** separately. Here, reviewing the worker's changes means inspecting S0→A2. Testing integration compatibility requires constructing and checking a revision containing both I1's work and A2's work. They answer different questions.
+
+### Candidate: a specific revision proposed for acceptance
+
+**Candidate** is a workflow term, not a special Git object. It means “this exact committed version is being offered for verification and review.” It may be a worker's ticket result, a combined integration result, or the final proposed delivery.
+
+In the lab, a worker might submit A1. The tests reveal a defect, so it repairs the code and commits A2. A2 is a new candidate: A1's evidence remains part of the history but does not approve A2. A candidate may pass, fail or be blocked; calling it a candidate says nothing about its quality yet.
+
+For every candidate, keep its SHA, relevant base, test results, review reports and outstanding findings together. If source changes, identify the new candidate and refresh the applicable evidence. A report from yesterday cannot approve code that was added today.
+
+### Integrated: accepted into the shared build of the effort
+
+In this workflow, a ticket is **integrated** only when its accepted work is present on the effort's integration branch with the required verification and review evidence. A worker commit sitting on its own branch is not integrated, even if the worker has finished and its tests pass.
+
+Continue the diagram's example: the coordinator combines I1 and A2 into a candidate M1. It verifies the combined behavior and refreshes review, then advances the integration branch to that accepted revision. The tracker records the integrated SHA and evidence. Only then can dependent tickets rely on A's behavior being available in their starting checkout.
+
+A merge commit is not always needed: when the integration branch has not advanced, a fast-forward can accept the reviewed worker revision directly. What matters to this workflow is the accepted shared revision and its evidence, not whether Git created an extra merge commit.
+
+| Statement | What it establishes |
+| --- | --- |
+| “The worker finished” | A session reported completion |
+| “Candidate A2 passed its checks” | A particular revision satisfied those checks |
+| “Ticket A is integrated at M1” | Its work is accepted into the shared integration revision |
+| “The PR merged into main” | The delivery branch was accepted into the target branch |
+| “The release was deployed” | The delivered software reached a runtime environment |
+
+These milestones can occur at different times. Integrated does not mean deployed, and it does not necessarily close a GitHub issue. Source for the package-specific meanings of candidate and integrated: [coordinator procedure](../skills/engineering/implement-spec/SKILL.md) and [testing policy](../skills/engineering/_shared/TESTING.md).
 
 ## 3. Choose a role arrangement
 
@@ -95,6 +155,41 @@ You do not need to remove Codex to use Claude Code. This lab simply does not req
 Create actual profiles using the models offered by your host. Record exact IDs in the project configuration. Profile names such as “review” are labels, not evidence that a different model ran. This requirement comes from the package's [delegation policy](../skills/engineering/_shared/DELEGATION.md).
 
 ## 4. Prepare the execution host
+
+### Windows and Linux are both execution-host options
+
+**Yes: the execution host can be Windows or Linux.** The execution host is the environment where the Paseo daemon launches the agent processes and where their repositories, worktrees and tests run. It need not be a separate server. Paseo offers Windows and Linux desktop builds; Pi documents both native Windows and WSL operation. Sources: [Paseo downloads](https://paseo.sh/download), [Pi on Windows](https://pi.dev/docs/latest/windows).
+
+| Arrangement | Execution environment | Where to install the agents and keep the lab |
+| --- | --- | --- |
+| Everything on a Windows PC | Native Windows | Windows, using Windows paths |
+| Everything on a Linux PC/server | Linux | Linux, using Linux paths |
+| Windows client connected to Ubuntu | Remote Ubuntu | Ubuntu; Windows is the viewing/control client |
+| Windows PC with a Linux environment in WSL | Linux inside WSL, when that is where the daemon/workers run | Inside the selected WSL environment |
+
+For the first validation run, keep the daemon, providers and lab together in one environment. Merely installing WSL does not turn a native Windows Paseo session into a Linux session. Check which host launched the worker and the worker's actual directory.
+
+The Ubuntu arrangement below is a worked setup choice, not a requirement of the skills. Native Windows support in the underlying tools is also not proof that this PR has passed its Windows acceptance run: record each platform you actually test.
+
+### Shell syntax depends on your chosen host
+
+Most command blocks in this manual use Bash. Run them in a suitable Bash terminal, or translate them deliberately to PowerShell. Native Windows Pi uses Git Bash by default for Bash commands; its optional PowerShell tool is a separate shell choice. Follow [Pi's Windows instructions](https://pi.dev/docs/latest/windows) for setup. WSL runs the Linux form of the tools.
+
+For example, these are complete equivalent variable assignments, using illustrative paths:
+
+```bash
+export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-pr1"
+export MP_LAB="$HOME/dev/paseo-quote-lab-01"
+```
+
+```powershell
+$env:MP_SKILLS = "C:/dev/pi-adapted-mp-skills-pr1"
+$env:MP_LAB = "C:/dev/paseo-quote-lab-01"
+```
+
+In PowerShell, subsequent references are `$env:MP_SKILLS` and `$env:MP_LAB`; Bash uses `$MP_SKILLS` and `$MP_LAB`. Bash `export`, backslash continuations and heredocs are not PowerShell syntax. The Linux Claude installer below also needs the official Windows alternative if you choose native Windows. Use the [Claude Code quickstart](https://code.claude.com/docs/en/quickstart).
+
+The Node helpers use platform path APIs, but the complete Windows/provider workflow still needs its own validation. The `npm run smoke` entry point specifically invokes Bash. Do not infer that every command block is a native PowerShell command because Node itself runs on Windows.
 
 ### Recommended arrangement for a Windows workstation and Ubuntu server
 
@@ -189,6 +284,25 @@ Local-path packages are loaded from that location; `-l` records a project instal
 The updated package does not require removing your existing pi-subagents or pi-web-access installations. Keep them if other workflows use them. Their presence must not cause this workflow to silently use the old delegation path.
 
 ## 6. Configure Paseo and profiles
+
+### What is a profile?
+
+A **Paseo agent profile** is a named preset of launch settings: provider, model, thinking level, mode and supported features, with notes describing when to use it. It saves choosing those options repeatedly. Profiles are saved on a particular host; changing one affects future selections, not sessions already launched. Source: [Paseo agent profiles](https://paseo.sh/docs/agent-profiles).
+
+For this workflow, imagine a preset named `mp-build` that selects Pi and your configured DeepSeek model. The coordinator selects those settings, then gives a fresh worker its actual assignment: “Implement ticket A in this worktree.” `mp-spec-review` selects your Claude review settings, then receives the Spec brief and a particular candidate to review. These example names have no built-in meaning.
+
+Keep four concepts separate:
+
+| Concept | Example | What it supplies |
+| --- | --- | --- |
+| Agent profile | `mp-build` | Saved launch settings |
+| Role brief | `agents/mp-review-spec.md` | How to perform a role |
+| Task prompt | Review ticket A at a specific SHA | The assignment for this run |
+| Session / run | A concrete Paseo agent ID | The actual execution and its history |
+
+The profile is not a running agent, a skill, a worktree or a ticket. Several fresh sessions can use the same profile. The coordinator still needs to place them in the correct workspaces and send the right instructions. In this package, role briefs are supplied explicitly; naming a profile `mp-spec-review` does not automatically load that file.
+
+Also distinguish **agent profiles** from this manual's **test profiles**. Fast / Verify change / Verify candidate are project-defined selections of checks. They do not select an AI model or create a Paseo agent.
 
 In the selected execution host's settings:
 
