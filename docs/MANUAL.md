@@ -2,18 +2,106 @@
 
 Version: PR #1 / proposed package 0.2.0. Documentation checked on 2026-10-26.
 
-This manual teaches the workflow and gives you a repeatable laboratory for testing it. You will use Claude Code for planning/coordinating/review, Pi with DeepSeek for implementation, and Paseo to launch and observe the sessions. You can substitute available models while preserving independent review.
+This manual explains how to take a software change from an initial need to a verified, reviewed result using Matt Pocock's adapted skills, coding agents and Paseo. It then shows how to set up that workflow and validate it with a disposable project.
 
-**Start with a disposable project.** Completing the example produces evidence about this PR's workflow; it does not demonstrate that ERPNext environments, migrations or browser tests are configured correctly.
+The manual describes [PR #1](https://github.com/netname/pi-adapted-mp-skills/pull/1), which proposes this workflow. Its short operational contract is [WORKFLOW.md](WORKFLOW.md); upgrade differences are in [MIGRATION-0.2.md](MIGRATION-0.2.md). Treat differences between promised and observed behavior as validation findings.
 
-The manual describes the actual branch in [PR #1](https://github.com/netname/pi-adapted-mp-skills/pull/1). The short operational contract remains [WORKFLOW.md](WORKFLOW.md); upgrade differences are in [MIGRATION-0.2.md](MIGRATION-0.2.md). When behavior differs from these instructions, record a validation finding instead of improvising a pass.
+## Overview: from a need to a change you can accept
+
+### What are we trying to accomplish?
+
+You want working software that solves an agreed problem, with enough evidence to decide whether to accept it. Writing code is one part of that job. You also need to decide what the software should do, divide the work sensibly, check results, combine changes and preserve the decisions behind them.
+
+For example, “I need a quotation tool” is not yet an implementation assignment. Can quantities be decimal? Are prices tax-inclusive? Where does product data come from? What happens when a product is missing? An agent that starts coding before those questions are settled will make product decisions implicitly. The process makes those decisions visible before they become expensive to change.
+
+Once the behavior is clear, the problem changes: now you want agents to implement it without requiring you to launch every ticket manually, share one writable checkout, or accept an implementer's own assurance that everything is correct. The coordinator, isolated workers and independent reviews address that execution problem.
+
+### The process has two connected loops
+
+**The planning loop turns uncertainty into an agreement.** You describe the need. A planning agent explores the existing application, asks questions and researches facts. You supply business decisions. Together you produce a spec: a durable description of required behavior, exclusions and how it will be checked. For larger work, the agent proposes implementation tickets and their dependencies, which you approve.
+
+**The delivery loop turns the agreement into an accepted revision.** A coordinator selects ready tickets, launches implementation workers and collects committed results. Tests and independent reviews produce evidence. Failed results return for repair; accepted results are combined into the integration branch. Completing one ticket can make another ready, so the coordinator repeats the loop until the agreed scope is implemented or a genuine blocker needs your input.
+
+```mermaid
+flowchart TD
+    N["Need or change request"] --> P["Clarify and agree on behavior"]
+    P --> S["Spec and approved task graph"]
+    S --> W["Coordinator launches ready workers"]
+    W --> V["Verify and independently review"]
+    V -->|"Repair required"| W
+    V -->|"Accepted candidate"| I["Integrate and check combined changes"]
+    I -->|"More tickets become ready"| W
+    I -->|"Scope complete"| F["Final checks and human delivery decision"]
+    P -->|"Unresolved decision"| P
+```
+
+The diagram summarizes control flow, not automatic permission to launch any task or repeat indefinitely. Workers run only when their dependencies and resources permit it; failed work has a bounded repair budget. Changed requirements return to planning rather than becoming undocumented code changes.
+
+### Why each stage exists
+
+| Stage | Question it answers | Why it matters | What you have afterward |
+| --- | --- | --- | --- |
+| Clarify | What problem should we solve, and what choices remain? | Avoids building an agent's assumptions instead of your intent | Resolved decisions and explicit open questions |
+| Specify | What behavior will count as correct? | Gives implementers, tests and reviewers the same target | An agreed spec with examples, exclusions and test seams |
+| Plan the work | What can be delivered independently, and what must wait? | Enables useful parallelism without premature dependent work | Tickets with acceptance criteria and blocking relationships |
+| Implement | How do we make one agreed behavior work? | Keeps each worker's context and changes bounded | Committed code and focused verification evidence |
+| Verify and review | Does the candidate work, satisfy the spec and follow standards? | Checks observed behavior and applies independent judgment | Test results, separate review findings and their dispositions |
+| Integrate | Do the accepted changes work together? | Individually successful branches can still conflict or interact badly | A verified shared revision for subsequent work |
+| Deliver and learn | Is the complete change ready to accept, and what should improve? | Keeps release decisions accountable and the workflow maintainable | Delivery evidence, a human decision and targeted follow-ups |
+
+### How the tools serve that process
+
+**Skills provide the method.** They tell the planning agent how to clarify/specify work, the coordinator how to execute a graph, and reviewers what to inspect. You do not need to memorize all skill names before understanding the process.
+
+**Pi and Claude Code provide agent sessions.** Each session uses a selected model and tools to carry out an assigned role. In this manual's example, Claude Code handles planning/coordinating/review and Pi with DeepSeek handles implementation. This is a role arrangement you configure, not an intrinsic requirement that those products always do those jobs.
+
+**Paseo manages the sessions and their placement.** The coordinator uses it to launch and observe workers in their assigned workspaces. Worktrees separate source edits. Test environments need separate consideration when databases, ports or other resources are shared.
+
+**The tracker preserves the work's state.** It records requirements, dependency edges, ownership, results and evidence pointers. The coordinator can consult it after a restart; the plan should not exist only in a chat window.
+
+**Git, scripts and tests make results inspectable.** A commit identifies the exact source being checked. Helper scripts perform focused checks and record outputs. Reviews interpret the agreed requirements and standards against that source. Section 1 explains which parts are executable checks and which remain agent procedures.
+
+These responsibilities are defined in the package's [coordinator skill](../skills/engineering/implement-spec/SKILL.md), [delegation policy](../skills/engineering/_shared/DELEGATION.md) and [testing policy](../skills/engineering/_shared/TESTING.md).
+
+### Follow one small change all the way through
+
+In the worked example, you agree to quote whole quantities from a JSON product catalog using integer cents. Tax, discounts and inventory are explicitly excluded. That agreement becomes the spec.
+
+The plan has three tickets: **A calculates prices**, **B reads the catalog**, and **C connects them into a command-line tool**. A and B can start together because their interfaces are agreed and neither needs the other's implementation. C waits because it needs both accepted results.
+
+The coordinator launches A and B in separate worktrees. Each worker commits its result. Focused tests check the behavior, and fresh reviewers inspect the spec and standards separately. The coordinator combines accepted work and checks the combined revision, then launches C from that revision without asking you to manually pick the next ticket.
+
+Finally, a complete CLI test demonstrates that three pens at 1250 cents produce a quote of 3750 cents. Final review covers the full change. You inspect the evidence and decide whether to accept the result. In the lab, acceptance remains local; in a real application it can lead to a PR merge and a separate release process.
+
+The artifacts carry the reasoning forward: **decisions inform the spec; the spec informs tickets and tests; tickets identify commits; checks and reviews identify those commits; integration records identify the combined result.** Each handoff carries explicit references so a fresh agent can work without inheriting every previous conversation.
+
+### Where you participate, and what continues without you
+
+You own the goal, scope, business decisions and delivery authorization. During planning, expect questions. During execution of approved work, expect the coordinator to continue through ready tickets, checks, repairs and integration within its configured limits.
+
+It should return to you for an unresolved product decision, a changed scope, an unavailable required capability or an exhausted repair budget. It should not need you to repeatedly say “start the next ready ticket.” A human decision is not replaced by an agent inventing your answer.
+
+For a small clear change, shorten the process: reuse existing requirements and test policy, implement one ticket and review it. For a large uncertain effort, use Wayfinder to resolve decision tickets before producing an implementation graph. Section 8 explains these entry points; sections 9 and 10 explain evidence and integration in more detail.
+
+### What this manual asks you to validate
+
+There are **two separate subjects** in the exercises:
+
+| Subject | What it is | What success demonstrates |
+| --- | --- | --- |
+| Skills package / PR #1 | The procedures, briefs and helpers being improved in this repository | Offline checks and live observations support this proposed workflow on your tested configuration |
+| Quotation application | The disposable software your agents build using that workflow | Its implementation meets the supplied quote specification |
+
+A correct quotation application alone does not prove the workflow was followed: perhaps one agent did everything in one checkout. Conversely, passing the package's helper tests does not prove the application was built correctly. The lab records both application results and orchestration behavior, including deliberate failures and restart recovery.
+
+The reading sequence is: understand this overview; set up the host and project; run the worked example; inspect the evidence and negative exercises; then decide whether the workflow PR is ready. **Start with the disposable project.** Its results do not establish ERPNext site isolation, migrations or browser-test readiness; those require a later application-specific adapter.
 
 ## Reading paths
 
 | Your goal | Read / do |
 | --- | --- |
-| Understand the pieces | Sections 1–3 |
-| Install on Ubuntu with a Windows client | Sections 4–7 |
+| Understand the purpose and overall process | Start with the overview above; then use sections 1–3 as reference |
+| Set up Windows/Linux and your project | Sections 4–7 |
 | Use the skills on everyday work | Sections 8–10 |
 | Validate this PR | Sections 11–16, using the bundled lab |
 | Diagnose a problem | Section 17 |
@@ -23,11 +111,11 @@ Commands in `bash` blocks run in a terminal on the **execution host**. Blocks ma
 
 ### Jump to a section
 
-[Concepts](#1-what-you-are-building) · [Vocabulary](#2-vocabulary-you-will-use) · [Roles](#3-choose-a-role-arrangement) · [Host setup](#4-prepare-the-execution-host) · [PR checkout](#5-check-out-the-exact-pr-not-the-default-branch) · [Paseo profiles](#6-configure-paseo-and-profiles) · [Project setup](#7-configure-each-software-project) · [SWE cycle](#8-use-the-skills-across-the-software-engineering-cycle) · [Testing](#9-understand-tests-without-over-testing-every-edit) · [Integration](#10-what-happens-when-two-tickets-finish) · [Create lab](#11-worked-example-create-the-quotation-lab) · [Execute](#12-execute-the-graph-and-observe-it) · [Inspect](#13-inspect-the-final-result) · [Failure drills](#14-negative-exercises-prove-failures-remain-failures) · [PR decision](#15-decide-whether-pr-1-is-ready) · [Real application](#16-move-from-the-lab-to-a-real-application) · [Troubleshooting](#17-troubleshooting) · [Daily practice](#18-daily-checklist-and-retrospective)
+[Overview](#overview-from-a-need-to-a-change-you-can-accept) · [Concepts](#1-what-you-are-building) · [Vocabulary](#2-vocabulary-you-will-use) · [Roles](#3-choose-a-role-arrangement) · [Host setup](#4-prepare-the-execution-host) · [PR checkout](#5-check-out-the-exact-pr-not-the-default-branch) · [Paseo profiles](#6-configure-paseo-and-profiles) · [Project setup](#7-configure-each-software-project) · [SWE cycle](#8-use-the-skills-across-the-software-engineering-cycle) · [Testing](#9-understand-tests-without-over-testing-every-edit) · [Integration](#10-what-happens-when-two-tickets-finish) · [Create lab](#11-worked-example-create-the-quotation-lab) · [Execute](#12-execute-the-graph-and-observe-it) · [Inspect](#13-inspect-the-final-result) · [Failure drills](#14-negative-exercises-prove-failures-remain-failures) · [PR decision](#15-decide-whether-pr-1-is-ready) · [Real application](#16-move-from-the-lab-to-a-real-application) · [Troubleshooting](#17-troubleshooting) · [Daily practice](#18-daily-checklist-and-retrospective)
 
 ## 1. What you are building
 
-Imagine a small development team. You discuss the product with a planner. A coordinator assigns bounded work. Implementers build it in separate checkouts. Reviewers inspect the committed results. The coordinator combines only verified work and records what happened.
+The overview described the journey from a need to an accepted change. This section explains the components that make that journey possible. You are configuring a reusable development workflow; the quotation application is the small project used to exercise it. Read the table as a division of responsibility, not as a list of products to install immediately.
 
 | Piece | Plain-language meaning | Owns | Does not establish by itself |
 | --- | --- | --- | --- |
@@ -44,7 +132,7 @@ Paseo uses installed coding-agent CLIs; those agents and their authentication mu
 
 ### Written procedures and executable checks: how they work together
 
-The earlier wording “the PR has two kinds of behavior” was imprecise. A **pull request (PR)** is a proposed set of repository changes for review; it does not run the workflow itself. This PR adds two complementary kinds of material: written procedures for agents and executable programs that check specific conditions.
+A **pull request (PR)** is a proposed set of repository changes for review; it does not run the workflow itself. This PR adds two complementary kinds of material: written procedures for agents and executable programs that check specific conditions.
 
 A useful analogy is a development team's checklist and its test suite. “Review the change before merging” is a checklist instruction. A program that rejects a dirty checkout is an executable check. The first tells someone what to do; the second performs one specific check when it is invoked.
 
@@ -104,6 +192,8 @@ That last distinction is why this PR needs both **offline tests** and **live val
 Sources for this package's actual responsibilities: [coordinator skill](../skills/engineering/implement-spec/SKILL.md), [delegation policy](../skills/engineering/_shared/DELEGATION.md), [testing policy](../skills/engineering/_shared/TESTING.md), and the linked executable files above.
 
 ## 2. Vocabulary you will use
+
+Use this section as a reference while following the overview and lab. The terms describe the artifacts and checkpoints passed between planning, implementation, review and integration; you do not need to memorize them before setup.
 
 | Term | Meaning | Example |
 | --- | --- | --- |
@@ -187,7 +277,9 @@ These milestones can occur at different times. Integrated does not mean deployed
 
 ## 3. Choose a role arrangement
 
-Use this as a starting arrangement, not a requirement to purchase named model versions:
+Roles divide responsibility within the two loops. The planner works with you to establish the agreement. The coordinator executes the approved plan. Implementers build bounded changes; reviewers judge those changes independently. Planning and coordination can use the same harness/model, but a role change should be explicit so the planning conversation does not drift into unapproved implementation.
+
+Use the table below as a starting arrangement, not a requirement to purchase named model versions:
 
 | Role | Suggested harness | Model family | Fresh session? |
 | --- | --- | --- | --- |
@@ -514,7 +606,25 @@ You may later add a small project `CLAUDE.md` pointer to shared project instruct
 
 ## 8. Use the skills across the software engineering cycle
 
-Not every change needs every stage. Enter at the first stage where you lack a necessary decision or artifact.
+This section maps the overview's planning and delivery loops to specific skills. Choose a route based on what is already known; the skills are tools for making progress, not a ceremony to repeat for every edit.
+
+### Choose your entry point
+
+| Starting situation | Begin with | Move to execution when |
+| --- | --- | --- |
+| A broad goal with many unresolved decisions | `wayfinder`, research and human discussions | Enough decisions are resolved to specify a bounded deliverable |
+| A bounded feature whose behavior needs clarification | `grill-with-docs`, then `to-spec` and `to-tickets` where useful | Behavior, test seams and the proposed breakdown are agreed |
+| An already approved spec and task graph | `implement-spec` | Required project configuration and verification resources are available |
+| One clear small ticket | `implement` in standalone mode | Its scope and checks are understood; independent review is still required |
+| A bug whose cause is unknown | `diagnosing-bugs` | The failure is understood well enough to implement and verify a scoped fix |
+
+### Hand off from planning to execution deliberately
+
+The handoff is an agreed set of artifacts, not just a model switch. The coordinator needs the spec, ticket graph, tracker location, model-role configuration and testing/environment contract. Requirements still marked undecided cannot be resolved by silently choosing convenient implementation behavior.
+
+At that boundary you can say: “This spec and breakdown are approved. Execute this graph under the configured limits; return for new product decisions or genuine blockers.” The coordinator then owns routine dispatch, collection and integration. You retain scope and delivery decisions.
+
+### Match each skill to its purpose
 
 | Stage | Main skill(s) | Your role | Output / evidence |
 | --- | --- | --- | --- |
@@ -563,7 +673,11 @@ In Pi, invoke the explicit `/skill:name` form when you want to force a skill. In
 
 ## 9. Understand tests without over-testing every edit
 
-A **category** says what boundary the test crosses. A **profile** says which checks to run at a particular workflow point.
+The delivery loop needs evidence at three scales: while a worker edits, when it submits a ticket, and when accepted changes are combined. Fast feedback helps the worker correct mistakes; committed checks let others assess an exact revision; combined checks catch interactions between tickets.
+
+Tests and reviews answer complementary questions. A test executes a selected behavior and checks its result. The Spec reviewer inspects whether the change satisfies the agreed requirements, including omissions. The Standards reviewer inspects documented conventions and design concerns. Tests do not prove that every required case was specified, and a persuasive review is not evidence that a command actually passed.
+
+A **category** says what boundary the test crosses. A **profile** says which checks to run at a particular workflow point. Keep those distinctions in mind when reading the tables below: the objective is useful evidence at each handoff, not the maximum number of test runs.
 
 | Category | Lab example | What it can catch | What it does not prove |
 | --- | --- | --- | --- |
@@ -586,6 +700,10 @@ For a database-backed application, worktrees still share a database unless you c
 
 ## 10. What happens when two tickets finish
 
+Parallel implementation reduces waiting when tickets are independent. Integration brings those separate changes back into one coherent application. The two activities have different ownership: multiple workers can write in their own worktrees, but this workflow gives one coordinator control of the shared integration branch.
+
+This serial integration point prevents workers from racing to change the shared starting revision. It also gives every dependent ticket a clear answer to “which accepted code am I building on?” The tracker records that answer as an integrated SHA with supporting evidence.
+
 Suppose A and B started from integration revision `S0`:
 
 ```mermaid
@@ -604,7 +722,7 @@ flowchart TD
 4. That combined candidate gets the required checks and refreshed review. Only then does integration advance again.
 5. C starts only after both A and B have verified integration records.
 
-Even a conflict-free merge produces a different target. A green B branch does not by itself prove A+B is green. This is enforced as a procedure in [implement-spec](../skills/engineering/implement-spec/SKILL.md); the lab checks whether the coordinator actually follows it.
+Even a conflict-free merge produces a different target. A green B branch does not by itself prove A+B is green. This is required by the procedure in [implement-spec](../skills/engineering/implement-spec/SKILL.md); the lab checks whether the coordinator actually follows it.
 
 ## 11. Worked example: create the quotation lab
 
