@@ -264,6 +264,65 @@ git rev-parse HEAD
 npm test
 ```
 
+### What each command does
+
+The block above prepares a local copy of the **skills package** and tests that package. It does not yet create the quotation lab, install the skills into Pi, start Paseo, or launch AI workers. Those steps come later.
+
+Run these commands in order in a Bash terminal on the chosen execution host. If a command reports an error, stop and resolve it before continuing; separate lines in an interactive shell do not automatically stop after a failure.
+
+| Command | Explanation | Expected result |
+| --- | --- | --- |
+| `mkdir -p "$HOME/dev"` | Creates a `dev` directory inside your home directory. `-p` creates missing parent directories and tolerates an existing directory. `dev` is simply our chosen folder name for development projects. | The directory exists; success normally prints nothing. |
+| `cd "$HOME/dev"` | Changes this terminal's current working directory to that folder. The relative destination in the next command will be created here. | The terminal is now working in your development folder. |
+| `git clone …` | Downloads the repository and checks out the selected PR branch into a new local directory. The three displayed lines are one command; see the breakdown below. | A `pi-adapted-mp-skills-pr1` directory containing the repository, with the PR branch checked out. |
+| `export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-pr1"` | Defines an environment variable holding the absolute path to that checkout. `export` also makes it available to programs launched from this shell. It stores a path; it does not install or copy anything. | Later commands can refer to the checkout as `$MP_SKILLS`. |
+| `cd "$MP_SKILLS"` | Enters the skills repository using that variable. | Commands now run from the directory containing the package's `package.json`. |
+| `git rev-parse HEAD` | Prints the full commit ID currently checked out. Record it to identify exactly which revision you tested, even if the PR branch advances later. | A hexadecimal commit SHA. Save it as the **skills-under-test SHA**. |
+| `npm test` | Executes the `test` script defined by this repository's `package.json`. Here it validates the skills and runs the offline helper/lab tests. | A validation result and test summary; success requires no failing checks and exit code 0. |
+
+### Understand the clone command
+
+Here is the complete command again, with its original line breaks:
+
+```bash
+git clone --branch improve/paseo-testing-workflow --single-branch \
+  https://github.com/netname/pi-adapted-mp-skills.git \
+  pi-adapted-mp-skills-pr1
+```
+
+- `git clone` creates a local Git repository from the remote repository.
+- `--branch improve/paseo-testing-workflow` selects the branch containing this PR instead of the default branch. The slash is part of the branch name, not a request to create an `improve` folder.
+- `--single-branch` limits the clone to the selected branch's history and configures ordinary future fetches for that branch. It does not mean “one commit”; this command has no shallow-history option.
+- The HTTPS URL identifies the source repository on GitHub.
+- `pi-adapted-mp-skills-pr1` is the local destination directory name. It is deliberately distinct from an ordinary checkout so you can recognize it as the PR-validation copy.
+- Each trailing `\` continues the same Bash command onto the next line. It must be the final character before the newline—do not add spaces or a comment after it.
+
+The command downloads the branch's state at the time you clone. It does not merge the PR, modify GitHub or automatically keep the local checkout updated. Source: [git clone reference](https://git-scm.com/docs/git-clone).
+
+### Understand the paths and variables
+
+`$HOME` is the current user's home directory as seen by this Bash environment. On Linux it might be `/home/alberto`; under native Windows Git Bash it commonly points into the Windows user directory. Use the actual value for your host rather than assuming the example username.
+
+Double quotes keep paths containing spaces together as one argument while still allowing `$HOME` and `$MP_SKILLS` to expand. `MP_SKILLS` is a name chosen for this manual, not a built-in Git, Pi or Paseo setting. The manual later uses `MP_LAB` for the separate application being built: do not point both variables at the same directory.
+
+For example, if `$HOME` is `/home/alberto`, the commands create/use `/home/alberto/dev/pi-adapted-mp-skills-pr1`. They leave your terminal inside that checkout. To inspect your actual paths, run:
+
+```bash
+printf '%s\n' "$HOME"
+printf '%s\n' "$MP_SKILLS"
+pwd
+```
+
+The variable assignment lasts for the current shell and processes it launches; it does not permanently configure every terminal or an already-running Paseo daemon. A fresh terminal generally needs the `export MP_SKILLS=…` line again. See section 4 for the separate PowerShell variable syntax.
+
+### Understand the test result
+
+`npm test` is a project-defined command, not a universal suite that npm supplies. For this checkout, [package.json](../package.json) defines it as skill validation followed by Node's test runner. If skill validation fails, the test runner is not started. No dependency installation or model authentication is needed for these offline checks.
+
+At this manual revision the package has 11 offline tests; future PR revisions can change that count. Judge success by the complete result and exit status, not by matching a fixed number. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
+
+Passing here means the package's static/helper checks passed on this machine. It does not mean the quotation application has been implemented or the live Paseo workflow has been validated. Those are later exercises. Sources: [npm test reference](https://docs.npmjs.com/cli/v11/commands/npm-test/) and this repository's [test script](../package.json).
+
 If the directory already exists, inspect it before fetching/checking out. Do not run the clone command over it or reset away local changes. Record the SHA printed by `git rev-parse HEAD` as **skills-under-test SHA**. Keep this checkout unchanged throughout one validation run; fetching a new PR revision requires a new run record.
 
 The package's offline tests validate skill structure and helper behavior. They do not launch Paseo. No `npm install` is required for this package's tests.
