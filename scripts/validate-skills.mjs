@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * validate-skills.mjs — dependency-free validator for this package's `skills/**`.
+ * validate-skills.mjs — static validator for this package's `skills/**`.
  *
- * Runs on a bare Node install (no `npm install`, no runtime dependencies). It is
+ * Run `npm ci` first to install the development-only YAML parser. It is
  * the static half of §7's validation strategy and enforces the frozen §5 contract:
  *
  *   0. D5 freeze     — recompute `tokenMap.hash` from `tokenMap.rows` and fail on drift.
@@ -31,6 +31,7 @@
  * Exits 0 when clean; exits 1 with `path:line: message` lines otherwise.
  */
 
+import { parseFrontmatter } from "../lib/frontmatter.mjs";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -110,55 +111,6 @@ function listFiles(dir) {
   return out;
 }
 
-/**
- * Minimal YAML frontmatter reader covering the shapes this repo writes:
- * top-level scalars, quoted scalars, block scalars (`|` / `>`), and nested
- * mappings/lists (whose indented lines are skipped). Returns `null` when the
- * file does not open with a `---` fence.
- */
-function parseFrontmatter(text) {
-  const lines = text.split(/\r?\n/);
-  if ((lines[0] ?? "").trim() !== "---") return null;
-  let end = -1;
-  for (let i = 1; i < lines.length; i += 1) {
-    if (lines[i].trim() === "---") {
-      end = i;
-      break;
-    }
-  }
-  if (end === -1) return { error: "unterminated frontmatter fence", keys: [], data: {}, bodyStartLine: 2 };
-
-  const fm = lines.slice(1, end);
-  const keys = [];
-  const data = {};
-
-  for (let i = 0; i < fm.length; i += 1) {
-    const match = /^([A-Za-z0-9_.-]+):(.*)$/.exec(fm[i]);
-    if (!match) continue; // indented continuation / nested line
-    const key = match[1];
-    const rest = match[2];
-    let value;
-    if (/^\s*[|>][-+]?\s*$/.test(rest)) {
-      const buf = [];
-      let j = i + 1;
-      while (j < fm.length && (fm[j].trim() === "" || /^\s+/.test(fm[j]))) {
-        buf.push(fm[j].replace(/^\s+/, ""));
-        j += 1;
-      }
-      value = buf.join("\n").trim();
-      i = j - 1;
-    } else {
-      value = rest.trim().replace(/^["']/, "").replace(/["']$/, "");
-    }
-    keys.push({ key, line: i + 2 });
-    data[key] = value;
-    // Skip any nested mapping/list body belonging to this key.
-    let j = i + 1;
-    while (j < fm.length && /^\s+\S/.test(fm[j])) j += 1;
-    i = j - 1;
-  }
-  return { keys, data, bodyStartLine: end + 2, text };
-}
 
 function frontmatterName(absPath) {
   const fm = parseFrontmatter(readText(absPath));
@@ -216,7 +168,7 @@ function checkFrontmatter(absPath, fm, droppedSet, isSkillFile) {
     return null;
   }
   if (fm.error) {
-    fail(absPath, 1, fm.error);
+    fail(absPath, fm.errorLine ?? 1, fm.error);
     return null;
   }
 
@@ -440,3 +392,4 @@ function main() {
 }
 
 main();
+

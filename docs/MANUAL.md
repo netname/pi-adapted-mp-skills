@@ -405,6 +405,7 @@ git clone --branch improve/paseo-testing-workflow --single-branch \
 export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-pr1"
 cd "$MP_SKILLS"
 git rev-parse HEAD
+npm ci
 npm test
 ```
 
@@ -422,6 +423,7 @@ Run these commands in order in a Bash terminal on the chosen execution host. If 
 | `export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-pr1"` | Defines an environment variable holding the absolute path to that checkout. `export` also makes it available to programs launched from this shell. It stores a path; it does not install or copy anything. | Later commands can refer to the checkout as `$MP_SKILLS`. |
 | `cd "$MP_SKILLS"` | Enters the skills repository using that variable. | Commands now run from the directory containing the package's `package.json`. |
 | `git rev-parse HEAD` | Prints the full commit ID currently checked out. Record it to identify exactly which revision you tested, even if the PR branch advances later. | A hexadecimal commit SHA. Save it as the **skills-under-test SHA**. |
+| `npm ci` | Installs the exact development dependencies from package-lock.json, including the YAML parser used for skill validation. Run it after checkout or dependency changes. | Reproducible validation tooling; no model authentication. |
 | `npm test` | Executes the `test` script defined by this repository's `package.json`. Here it validates the skills and runs the offline helper/lab tests. | A validation result and test summary; success requires no failing checks and exit code 0. |
 
 ### Understand the clone command
@@ -461,15 +463,15 @@ The variable assignment lasts for the current shell and processes it launches; i
 
 ### Understand the test result
 
-`npm test` is a project-defined command, not a universal suite that npm supplies. For this checkout, [package.json](../package.json) defines it as skill validation followed by Node's test runner. If skill validation fails, the test runner is not started. No dependency installation or model authentication is needed for these offline checks.
+`npm test` is a project-defined command, not a universal suite that npm supplies. For this checkout, [package.json](../package.json) defines it as skill validation followed by Node's test runner. If skill validation fails, the test runner is not started. Run `npm ci` first to install the pinned development-only YAML parser. The checks themselves are offline and require no model authentication.
 
-At this manual revision the package has 11 offline tests; future PR revisions can change that count. Judge success by the complete result and exit status, not by matching a fixed number. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
+This corrected workflow branch has 19 offline tests; dependent PRs can add more. Judge success by the complete result and exit status, not by matching a fixed number. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
 
 Passing here means the package's static/helper checks passed on this machine. It does not mean the quotation application has been implemented or the live Paseo workflow has been validated. Those are later exercises. Sources: [npm test reference](https://docs.npmjs.com/cli/v11/commands/npm-test/) and this repository's [test script](../package.json).
 
 If the directory already exists, inspect it before fetching/checking out. Do not run the clone command over it or reset away local changes. Record the SHA printed by `git rev-parse HEAD` as **skills-under-test SHA**. Keep this checkout unchanged throughout one validation run; fetching a new PR revision requires a new run record.
 
-The package's offline tests validate skill structure and helper behavior. They do not launch Paseo. No `npm install` is required for this package's tests.
+The package's offline tests validate skill structure and helper behavior. They do not launch Paseo. Use `npm ci` before running them in a fresh checkout; the execution helpers and generated application do not need that dependency.
 
 Keep `MP_SKILLS` available in the terminal for later commands. After opening a new terminal, set it again to the same absolute path.
 
@@ -535,7 +537,7 @@ Start one harmless session for each harness. Ask it to report its working direct
 
 If Paseo does not expose enough information to verify the effective model, record the limitation. Under this PR's policy the independent-review gate remains unverified until you can establish it; do not silently weaken the gate.
 
-Reviewers are instructed to be read-only. Configure actual provider permissions where available. Neither profile notes nor a “plan” label by itself proves filesystem isolation. The coordinator checks candidate cleanliness afterward.
+Code reviewers read the exact candidate and relevant unchanged source, return reports in their session responses, and leave report-file creation to the coordinator in its evidence store. Reviewers are instructed to be read-only. Configure actual provider permissions where available. Neither profile notes nor a “plan” label by itself proves filesystem isolation. The coordinator checks candidate cleanliness afterward.
 
 ### Useful observation commands
 
@@ -600,9 +602,9 @@ You may later add a small project `CLAUDE.md` pointer to shared project instruct
 
 ### Two setup traps this PR still needs to expose
 
-**Skill command visibility.** The current setup skill inherits a claim that `enableSkillCommands: false` makes skills unreachable. Current Pi documentation says manually typed `/skill:name` commands still work even when interactive command discovery is disabled. If setup stops solely for that reason, record a compatibility defect; for the main lab keep command discovery enabled. Do not interpret the inherited claim as current Pi behavior. Source: [Pi skills, “Understand how skills load”](https://pi.dev/docs/latest/skills#understand-how-skills-load).
+**Skill command visibility.** Setup now treats `enableSkillCommands: false` as a discoverability setting, not a failure. Manually typed `/skill:name` commands still work. If invocation fails, inspect installation paths, startup diagnostics and YAML frontmatter. Source: [Pi skills](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md).
 
-**Local tracker location.** Git worktrees do not share untracked/ignored files. The generic local tracker uses `.scratch/`, so a worker must receive the **canonical absolute path** in the original lab directory. The bundled lab makes this explicit. If a worker creates a second tracker in its own worktree, validation fails even if the implementation is correct. This is a project configuration requirement, not an automatic tracker service supplied by Paseo.
+**Local tracker location.** Git worktrees do not share untracked/ignored files. Setup records a canonical absolute state root, normally the original project's `.scratch/` directory, so a worker must receive the **canonical absolute path** in the original lab directory. The bundled lab makes this explicit. If a worker creates a second tracker in its own worktree, validation fails even if the implementation is correct. This is a project configuration requirement, not an automatic tracker service supplied by Paseo.
 
 ## 8. Use the skills across the software engineering cycle
 
@@ -1104,7 +1106,7 @@ For maintenance, reproduce a bug at an approved public seam, write a regression 
 | Review profile silently changed model | Fallback or host configuration changed | Verify effective settings and invalidate unverified approval |
 | Pi blocks push | Optional git-guardrails enabled | Inspect its configuration; lab needs no push; do not disable blindly |
 | Coordinator keeps asking to launch the next ticket | Loop instruction not followed | Record failure; supply the coordinator skill and durable state, not repeated manual dispatch |
-| Setup insists commands are unreachable with discovery disabled | Inherited Pi compatibility assumption | Record the known setup issue from section 7; distinguish discovery from invocation |
+| Setup insists commands are unreachable with discovery disabled | An older or shadowed setup skill may be loaded | Inspect skill provenance; the corrected setup only reports visibility and does not block |
 
 When reporting a problem, include the stage, expected/observed behavior, exact skills/tool versions, run ID, revision, command exit and relevant log. A good failure report often improves the workflow more than another optimistic retry.
 

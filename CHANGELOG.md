@@ -1,5 +1,10 @@
 # 0.2.0 (unreleased)
 
+- Correct malformed PR-skill YAML and use a pinned development-only YAML parser with regression tests; run npm ci before package validation.
+- Test and correct Git guardrail opt-in and common global-option handling; document pattern-check limits.
+- Add shared-worktree tracker conventions, coordinator-owned review reports and production handoffs for diagnosis/prototypes. Correct the Pi command-visibility check.
+- Strengthen quotation acceptance assertions and prove missing-newline/input-mutation failures are detected.
+
 - Add a comprehensive setup/SWE-cycle manual, reproducible quotation lab, evidence runner and live validation report template.
 
 - Selectively port upstream v1.3.1: implement-spec, pr, retro, tdd, to-spec and to-tickets.

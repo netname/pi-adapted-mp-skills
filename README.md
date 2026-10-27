@@ -48,9 +48,10 @@ Enable Paseo tools on the host or use its CLI. See [Paseo orchestration](https:/
 
 ## Tests and helpers
 
-Node.js 20+ and Git are required for the dependency-free helpers.
+Node.js 20+ and Git are required. Execution helpers remain dependency-free; package validation uses a pinned development-only YAML parser.
 
 ```bash
+npm ci
 npm test
 npm run smoke
 node scripts/frontier.mjs /path/to/graph.json
@@ -59,6 +60,6 @@ node scripts/review-target.mjs --repo /absolute/worktree --base BASE --head HEAD
 
 The frontier helper validates dependencies and prints ready IDs. The review helper rejects staged, unstaged and untracked work, pins commits, and writes a manifest/diff outside the worktree. Neither is a standalone background scheduler. `implement-spec` drives the loop through Paseo, with durable state in the tracker.
 
-`npm run drift` compares against the v1.3.1 baseline, including deliberate adaptations and skills still sourced from the original pin. It is a review aid, not proof that everything was upgraded. `npm test` is offline; live Paseo acceptance is documented separately.
+`npm run drift` compares against the v1.3.1 baseline, including deliberate adaptations and skills still sourced from the original pin. It is a review aid, not proof that everything was upgraded. After `npm ci`, `npm test` is offline; live Paseo acceptance is documented separately.
 
 MIT. Original methodology © Matt Pocock; attribution and source pins in [NOTICE](NOTICE). Historical v0.1 docs remain for provenance and are explicitly superseded by the current workflow.

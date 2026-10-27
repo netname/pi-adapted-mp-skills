@@ -29,3 +29,35 @@ Used by `/skill:wayfinder`. The **map** is a file with one **child** file per ti
 - **Frontier**: scan `.scratch/<effort>/issues/` for files that are open, unblocked, and unclaimed; first by number wins.
 - **Claim**: set `Status: claimed` and save before any work.
 - **Resolve**: append the answer under an `## Answer` heading, set `Status: resolved`, then append a context pointer (gist + link) to the map's Decisions-so-far in `map.md`.
+
+
+## Implementation coordination (separate from Wayfinding)
+
+Wayfinding resolves planning questions. Implementation uses the states below; an issue being closed or a planning question being resolved does not establish verified integration.
+
+Only one coordinator writes execution state for an effort. Record its run ID, host, integration branch and starting SHA, concurrency limit and repair budget in the effort record before dispatch. This is a single-writer ownership record, not an atomic lock. On restart, inspect live sessions and reconcile saved runs before launching replacements; unknown ownership blocks dispatch.
+
+For each implementation ticket, retain these fields in a marked Implementation state section. Keep triage labels/Status separate from Execution status; the graph export maps Execution status to its status field:
+
+| Field | Meaning |
+| --- | --- |
+| Execution status | ready, running, review, blocked, integrated |
+| Blocked by | Stable implementation ticket IDs |
+| Claim | Active Paseo run ID, or empty when unclaimed |
+| Candidate | Host, branch, absolute worktree path, immutable base/head and implementation model families |
+| Verification | Profile, command, environment ID, exit code and durable log/manifest references |
+| Reviews | Separate Spec and Standards outcomes, effective model settings, base/head and persisted reports |
+| Integration | Resulting integrated SHA and combined verification/review evidence |
+| History | Timestamped transitions, failures, cancelled runs and repair attempts; append rather than erase |
+
+A ticket becomes integrated only after the coordinator verifies the resulting revision and its evidence. Only this status unblocks dependents. ready means dependency eligibility, not authorization to skip required scope, design or test gates. Clear a claim only after its run is finished/cancelled and the outcome is recorded.
+
+Export graph.json for scripts/frontier.mjs from these authoritative records. The export is disposable, never a second tracker; include verified=true and integratedSha only after checking actual Git and evidence. Do not infer verified=true from an issue's closed state. Retain evidence and reachable commits before removing worktrees. Preserve records across restarts and back up local state.
+
+### Local storage and closure
+
+During setup, resolve and record one canonical **absolute state root** in this document, normally the original project's .scratch directory. Every effort lives beneath that root. Never resolve .scratch relative to a worker or integration worktree. Supply absolute spec/ticket paths to every session, including sessions on another host (copy inputs explicitly if the root is not accessible).
+
+Keep the effort record in <state-root>/<effort>/coordinator.md, ticket fields in issues/<NN>-<slug>.md, and append transitions to events.md. The existing ticket body is authoritative; graph.json is its export. Ignore the state root when it is inside the Git repository so routine claims/evidence do not dirty candidates. Do not remove already tracked content automatically.
+
+Default closure: complete the local effort after final accepted integration. If delivery requires a PR/MR, record that choice and defer closure until its merge; integrated still unblocks dependencies before closure.

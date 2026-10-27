@@ -8,7 +8,7 @@ The tracker is the durable source of tickets, dependency edges, claims and evide
 
 Use Wayfinder for unresolved decisions. It can batch and repeat **ready research**; it must stop for a human's grilling/prototype decisions. Once the route is clear, synthesize a spec and approved dependency graph. The `implement-spec` coordinator launches ready implementation tickets in separate worktrees, collects committed results, dispatches independent review and integrates serially. Dependencies unblock only after verified integration.
 
-Persist run IDs, branches, claims and evidence in the tracker after every transition. On resumption, inspect existing runs before launching replacements. A single coordinator avoids duplicate claims; a multi-coordinator deployment needs an actual lock/lease mechanism. This package supplies no distributed locking service.
+Setup supplies implementation-specific fields and closure rules in every tracker template. A local tracker has one canonical absolute state root shared by all worktrees. Remote issue closure remains separate from verified integration. Persist run IDs, branches, claims and evidence in the tracker after every transition. On resumption, inspect existing runs before launching replacements. A single coordinator avoids duplicate claims; a multi-coordinator deployment needs an actual lock/lease mechanism. This package supplies no distributed locking service.
 
 ## Normalized frontier input
 
