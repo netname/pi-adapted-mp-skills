@@ -42,14 +42,66 @@ Imagine a small development team. You discuss the product with a planner. A coor
 
 Paseo uses installed coding-agent CLIs; those agents and their authentication must work on the host first. See [Paseo providers](https://paseo.sh/docs/providers). The division of workflow responsibilities above is this package's policy, defined by [implement-spec](../skills/engineering/implement-spec/SKILL.md).
 
-### A workflow instruction is not an executable guarantee
+### Written procedures and executable checks: how they work together
 
-The PR has two kinds of behavior:
+The earlier wording “the PR has two kinds of behavior” was imprecise. A **pull request (PR)** is a proposed set of repository changes for review; it does not run the workflow itself. This PR adds two complementary kinds of material: written procedures for agents and executable programs that check specific conditions.
 
-- **Executable checks:** `frontier.mjs` validates a supplied graph; `review-target.mjs` rejects dirty review candidates and captures commit identities. The lab's `verify.mjs` runs acceptance suites and preserves their results.
-- **Agent procedures:** choosing profiles, checking model families, creating worktrees, honoring concurrency limits, pausing at human decisions, reconciling a restart and merging serially.
+A useful analogy is a development team's checklist and its test suite. “Review the change before merging” is a checklist instruction. A program that rejects a dirty checkout is an executable check. The first tells someone what to do; the second performs one specific check when it is invoked.
 
-A successful helper test does not prove the second group. That is why the lab includes observation and failure exercises. The supplied graph's `verified: true` field is an assertion supplied by the coordinator, not a Git/CI lookup performed by the frontier helper.
+| Material in this repository | Who interprets or executes it? | What it contributes |
+| --- | --- | --- |
+| `SKILL.md` and shared policy documents | The AI agent reads and interprets the instructions | Which steps to take, what to delegate, when to pause and what evidence to collect |
+| Role briefs under `agents/` | The worker/reviewer reads them as supplied task context | The responsibility and output expected of that role |
+| JavaScript helper files ending in `.mjs` | Node.js executes their code when a human/agent invokes them | Repeatable checks, structured output, logs and exit status |
+| Project configuration and ticket records | The coordinator reads and updates them according to policy | Actual model settings, test commands, requirements and progress |
+
+These are not two alternative workflows. The coordinator uses the written procedure to decide **when and why to call the executable checks**.
+
+### Who creates and handles the `.mjs` files?
+
+`.mjs` identifies a JavaScript module file; here these files are command-line programs run with Node.js. They are ordinary source code, not special Paseo objects and not model conversations.
+
+I authored the new workflow/lab helpers while preparing this PR. They are committed to the skills repository for review and maintenance. They are not created anew by Paseo or generated on every development task. The repository already had other `.mjs` maintenance tools, including its skill validator.
+
+Once this package is installed or checked out, the scripts remain in that package directory. Your software project has its own source, tests and tracker. Workers should use the supplied helper version, not quietly rewrite a helper to make their own ticket pass. Improving a helper is a separate package change with its own review.
+
+| File | Usually invoked by | Input → output | What it does not do |
+| --- | --- | --- | --- |
+| [frontier.mjs](../scripts/frontier.mjs) | Coordinator; you can also run it manually | Normalized ticket graph → eligible ticket IDs, or an error | Query the tracker directly, claim tickets, launch workers or prove recorded evidence is true |
+| [review-target.mjs](../scripts/review-target.mjs) | Coordinator before review | Worktree and base/head refs → immutable revision manifest, diff and commit list; rejects dirty/mismatched targets | Judge code quality, select a model or launch reviewers |
+| [create.mjs](../examples/validation-lab/create.mjs) | You, once per new disposable lab | New destination path → starter project, tests and tracker | Implement the application or configure/authenticate providers |
+| [verify.mjs](../examples/validation-lab/verify.mjs) | Coordinator or you during this lab | Clean candidate, profile and evidence path → test execution, logs, revision/status manifest | Supply a general test runner for every application or guarantee adequate test coverage |
+| [validate-skills.mjs](../scripts/validate-skills.mjs) | Package maintainer, or anyone running package checks | Skills/inventory → validation result | Execute a live SWE workflow |
+
+For example, the coordinator can use its shell tool to run `node /absolute/package/scripts/frontier.mjs /absolute/project/graph.json`. Node performs the calculation; the model reads the result and decides the next step. Paseo manages the surrounding agent sessions. It does not automatically execute every `.mjs` file merely because the files exist.
+
+The package's [npm test script](../package.json) separately runs the skill validator and automated tests of the helpers. Those tests are for the **workflow package**. The quotation lab's tests are for the **application being developed**. Keep those two test results distinct.
+
+### Why an instruction is not a guarantee
+
+Consider this instruction in the coordinator skill: **“Do not start ticket C until A and B are integrated and verified.”** An agent can read it and follow it, but the sentence alone does not install a scheduler rule that makes premature launch impossible. The agent could omit a check, use stale tracker data or misunderstand a worker's “done” message.
+
+The frontier helper reduces this risk by calculating readiness from explicit data. However, if the coordinator incorrectly writes `verified: true` for a ticket, the helper does not independently consult Git or CI to discover that mistake. It checks the supplied graph, not the entire reality behind the graph.
+
+Similarly, the review helper refuses to capture a dirty candidate **when called**. It does not prevent an agent from bypassing the helper and sending some other diff to a reviewer. Even executable checks have a defined scope and can contain bugs. Their results must be used at the right point and tied to the right revision.
+
+A stronger mandatory gate would require additional enforcement—for example, a required CI check that the merge process cannot bypass under the configured permissions. This PR does not automatically install such repository protection or a deterministic end-to-end scheduler. Its current design combines agent-led coordination with focused executable checks.
+
+### Where both fit in a complete development run
+
+Follow the quotation example through one execution:
+
+1. **You and the planning agent agree on behavior.** The spec defines pricing, catalog loading and the CLI, with approved test seams. This is reasoning and human agreement.
+2. **The coordinator reads `implement-spec`.** It reads the tracker and exports a graph. It invokes `frontier.mjs`, which returns A and B as eligible. The coordinator still owns claims and the decision to launch.
+3. **The coordinator uses Paseo to launch workers.** It selects the configured profiles and allocates separate worktrees. These steps follow the skill; they are not performed by the frontier script.
+4. **Workers implement and commit.** They write application code and appropriate tests. Committed verification runs the applicable application checks; the lab's `verify.mjs` records their actual outcome.
+5. **The coordinator prepares review.** It calls `review-target.mjs`, then launches two fresh reviewers with the artifacts, role briefs and independent model family. The helper prepares the evidence; the reviewers reason about the code.
+6. **The coordinator integrates accepted work.** It constructs/checks any combined candidate, updates integration serially and records the verified revision. It updates the tracker and recomputes the frontier, allowing C only when A and B qualify.
+7. **You inspect final delivery evidence.** Final tests and full-diff reviews address the finished application. The validation report also asks whether the orchestration behaved correctly throughout the run.
+
+That last distinction is why this PR needs both **offline tests** and **live validation**. Offline tests show, for example, that the helper rejects a dirty checkout. Live validation shows whether the coordinator actually calls it, uses its result, chooses independent reviewers and stops when a required check fails. Correct helpers are necessary evidence; they are not proof that every surrounding agent action was correct.
+
+Sources for this package's actual responsibilities: [coordinator skill](../skills/engineering/implement-spec/SKILL.md), [delegation policy](../skills/engineering/_shared/DELEGATION.md), [testing policy](../skills/engineering/_shared/TESTING.md), and the linked executable files above.
 
 ## 2. Vocabulary you will use
 
