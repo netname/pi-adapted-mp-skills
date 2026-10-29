@@ -94,7 +94,7 @@ There are **two separate subjects** in the exercises:
 
 A correct quotation application alone does not prove the workflow was followed: perhaps one agent did everything in one checkout. Conversely, passing the package's helper tests does not prove the application was built correctly. The lab records both application results and orchestration behavior, including deliberate failures and restart recovery.
 
-The reading sequence is: understand this overview; set up the host and project; run the worked example; inspect the evidence and negative exercises; then decide whether the workflow PR is ready. **Start with the disposable project.** Its results do not establish ERPNext site isolation, migrations or browser-test readiness; those require a later application-specific adapter.
+The reading sequence is: understand this overview; set up the host and project; run the worked example; inspect the evidence and negative exercises; then decide whether the workflow PR is ready. **Start with the disposable project.** Its results establish behavior only for the local CLI and tested agent configuration; other applications need their own verification contracts.
 
 ## Reading paths
 
@@ -322,13 +322,13 @@ Most command blocks in this manual use Bash. Run them in a suitable Bash termina
 For example, these are complete equivalent variable assignments, using illustrative paths:
 
 ```bash
-export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-pr1"
-export MP_LAB="$HOME/dev/paseo-quote-lab-01"
+export MP_SKILLS="$HOME/code/pi-skills-validation-01"
+export MP_LAB="$HOME/code/quote-workflow-lab-01"
 ```
 
 ```powershell
-$env:MP_SKILLS = "C:/dev/pi-adapted-mp-skills-pr1"
-$env:MP_LAB = "C:/dev/paseo-quote-lab-01"
+$env:MP_SKILLS = "C:/code/pi-skills-validation-01"
+$env:MP_LAB = "C:/code/quote-workflow-lab-01"
 ```
 
 In PowerShell, subsequent references are `$env:MP_SKILLS` and `$env:MP_LAB`; Bash uses `$MP_SKILLS` and `$MP_LAB`. Bash `export`, backslash continuations and heredocs are not PowerShell syntax. The Linux Claude installer below also needs the official Windows alternative if you choose native Windows. Use the [Claude Code quickstart](https://code.claude.com/docs/en/quickstart).
@@ -343,7 +343,7 @@ Do not configure a reviewer with a Windows path when its agent runs on Ubuntu. A
 
 On the Windows client, first confirm `ssh user@your-ubuntu-host` works using your SSH key/agent. In Paseo Desktop choose **Settings → Add host → Remote SSH** and enter `ssh://user@your-ubuntu-host`. The remote daemon must already be running; connecting through SSH does not install or start it. Select that host before opening the lab. These steps come from [Paseo connectivity](https://paseo.sh/docs/connectivity).
 
-For the lab you need Git, Node supported by your installed agents, npm, a working Pi model, and a working independent Claude model. The lab/helpers themselves require Node 20 or newer and no npm dependencies. Authentication and model calls may incur charges under your existing accounts.
+For the complete walkthrough, use Git, Node 24 LTS, npm, a working Pi model and an independent Claude model. The lab/helpers themselves support Node 20+, but that lower minimum does not establish compatibility with current agent CLIs. Check the installed agents' requirements before launch. The generated application uses only Node's standard library; package validation separately installs its development-only YAML parser. Authentication and model calls may incur charges under your existing accounts. See [Node downloads](https://nodejs.org/en/download) and [Pi package requirements](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/package.json).
 
 In the Ubuntu terminal:
 
@@ -355,13 +355,39 @@ npm --version
 
 If Git commits have no identity, configure the desired name and email in the disposable lab after initializing it. Do not overwrite your global Git identity just to run the example.
 
+### Prepare a user-owned CLI installation directory
+
+For the Ubuntu walkthrough, install npm-based agent CLIs into `$HOME/.local` explicitly. This works even if the system npm default points at `/usr/lib/node_modules`; no administrator install or system-directory ownership change is needed.
+
+```bash
+mkdir -p "$HOME/.local/bin" &&
+export PATH="$HOME/.local/bin:$PATH" &&
+command -v node &&
+node --version &&
+npm --version &&
+npm config get prefix
+```
+
+If Node does not meet the installed agents' requirements, select/install Node 24 LTS through your existing Node manager or [Node's installation instructions](https://nodejs.org/en/download) before proceeding. The printed npm prefix may still be `/usr`; the `--prefix "$HOME/.local"` option in each install command below deliberately overrides it for that command only.
+
+For future Bash login shells, add the PATH entry once:
+
+```bash
+touch "$HOME/.profile" &&
+{ grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.profile" ||
+  printf '%s\n' 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.profile"; }
+```
+
+Already-open shells, Herdr panes and daemons do not receive later environment changes automatically. Run the export in the pane that starts Paseo and inspect provider diagnostics if its executable paths differ from your terminal. Other shells should use their normal startup file. See [npm's EACCES guidance](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally/).
+
 ### Install or verify Pi
 
 If Pi already works, keep it and record the version. For a new npm-based installation, the current official package is:
 
 ```bash
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-pi --version
+npm install --global --prefix "$HOME/.local" --ignore-scripts @earendil-works/pi-coding-agent &&
+command -v pi &&
+pi --version &&
 pi
 ```
 
@@ -384,109 +410,117 @@ Complete the CLI's login process on the execution host and check a simple reques
 For headless Ubuntu, the documented CLI path is:
 
 ```bash
-npm install -g @getpaseo/cli
-paseo
+npm install --global --prefix "$HOME/.local" @getpaseo/cli &&
+command -v paseo &&
+paseo --help
 ```
 
-Follow the host's connection/pairing flow. A desktop installation bundles and starts its own daemon; do not accidentally validate against that local daemon when your source and providers live on Ubuntu. See [Paseo getting started](https://paseo.sh/docs) and [connectivity](https://paseo.sh/docs/connectivity).
+After the checks succeed, run `paseo` from the prepared shell and follow the host's connection/pairing flow. A desktop installation bundles and starts its own daemon; do not accidentally validate against that local daemon when your source and providers live on Ubuntu. See [Paseo getting started](https://paseo.sh/docs) and [connectivity](https://paseo.sh/docs/connectivity).
 
 Before installing or updating over an existing setup, record versions and account configuration. Do not run broad global upgrades midway through a validation run.
 
 ## 5. Check out the exact PR, not the default branch
 
-A package install from the repository's default branch does not validate an unmerged PR. Use a dedicated checkout of the PR branch:
+A package install from the default branch does not validate an unmerged PR. Use a dedicated checkout outside any existing application repository. The skills package and generated lab are sibling directories:
+
+```text
+~/code/pi-skills-validation-01       skills package under test
+~/code/quote-workflow-lab-01         separate application repository
+```
+
+This block checks out PR #1's workflow branch. For the architecture extension, use [the architecture guide](ARCHITECTURE-GUIDE.md)'s branch-specific checkout instead; it includes the workflow changes too.
 
 ```bash
-mkdir -p "$HOME/dev"
-cd "$HOME/dev"
+export MP_SKILLS="$HOME/code/pi-skills-validation-01"
+mkdir -p "$HOME/code" &&
 git clone --branch improve/paseo-testing-workflow --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
-  pi-adapted-mp-skills-pr1
-export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-pr1"
-cd "$MP_SKILLS"
-git rev-parse HEAD
-npm ci
+  "$MP_SKILLS" &&
+cd "$MP_SKILLS" &&
+git rev-parse --show-toplevel &&
+git rev-parse HEAD &&
+npm ci &&
 npm test
 ```
 
+The destination is an absolute path derived from `$HOME`, so the clone goes to the same place regardless of the terminal's starting directory. Each `&&` runs the following command only after the preceding command succeeds. A failed clone or `cd` therefore prevents the Git/npm checks from running in another project. If the destination already exists, inspect it or choose a fresh numbered directory; do not overwrite or reset it.
+
 ### What each command does
-
-The block above prepares a local copy of the **skills package** and tests that package. It does not yet create the quotation lab, install the skills into Pi, start Paseo, or launch AI workers. Those steps come later.
-
-Run these commands in order in a Bash terminal on the chosen execution host. If a command reports an error, stop and resolve it before continuing; separate lines in an interactive shell do not automatically stop after a failure.
 
 | Command | Explanation | Expected result |
 | --- | --- | --- |
-| `mkdir -p "$HOME/dev"` | Creates a `dev` directory inside your home directory. `-p` creates missing parent directories and tolerates an existing directory. `dev` is simply our chosen folder name for development projects. | The directory exists; success normally prints nothing. |
-| `cd "$HOME/dev"` | Changes this terminal's current working directory to that folder. The relative destination in the next command will be created here. | The terminal is now working in your development folder. |
-| `git clone …` | Downloads the repository and checks out the selected PR branch into a new local directory. The three displayed lines are one command; see the breakdown below. | A `pi-adapted-mp-skills-pr1` directory containing the repository, with the PR branch checked out. |
-| `export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-pr1"` | Defines an environment variable holding the absolute path to that checkout. `export` also makes it available to programs launched from this shell. It stores a path; it does not install or copy anything. | Later commands can refer to the checkout as `$MP_SKILLS`. |
-| `cd "$MP_SKILLS"` | Enters the skills repository using that variable. | Commands now run from the directory containing the package's `package.json`. |
-| `git rev-parse HEAD` | Prints the full commit ID currently checked out. Record it to identify exactly which revision you tested, even if the PR branch advances later. | A hexadecimal commit SHA. Save it as the **skills-under-test SHA**. |
-| `npm ci` | Installs the exact development dependencies from package-lock.json, including the YAML parser used for skill validation. Run it after checkout or dependency changes. | Reproducible validation tooling; no model authentication. |
-| `npm test` | Executes the `test` script defined by this repository's `package.json`. Here it validates the skills and runs the offline helper/lab tests. | A validation result and test summary; success requires no failing checks and exit code 0. |
+| `export MP_SKILLS=…` | Stores the absolute skills-checkout path and exposes it to child processes. | Later commands use this exact destination. |
+| `mkdir -p "$HOME/code"` | Creates the parent directory if needed. | The destination's parent exists. |
+| `git clone … "$MP_SKILLS"` | Downloads the selected branch directly into the absolute destination. | A new skills repository, without depending on the previous working directory. |
+| `cd "$MP_SKILLS"` | Enters that checkout. | Subsequent commands operate on the skills package. |
+| `git rev-parse --show-toplevel` | Prints the Git repository root. | It matches `$MP_SKILLS`; investigate any mismatch. |
+| `git rev-parse HEAD` | Prints the exact revision under test. | Save this as the skills-under-test SHA. |
+| `npm ci` | Installs exact development dependencies from package-lock.json, including the YAML parser. | Reproducible validation tooling. |
+| `npm test` | Validates the skills, then runs the package's offline tests. | Exit 0 with no failed checks. |
 
 ### Understand the clone command
 
-Here is the complete command again, with its original line breaks:
+This is the complete clone command when `MP_SKILLS` has been set above:
 
 ```bash
 git clone --branch improve/paseo-testing-workflow --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
-  pi-adapted-mp-skills-pr1
+  "$MP_SKILLS"
 ```
 
-- `git clone` creates a local Git repository from the remote repository.
-- `--branch improve/paseo-testing-workflow` selects the branch containing this PR instead of the default branch. The slash is part of the branch name, not a request to create an `improve` folder.
-- `--single-branch` limits the clone to the selected branch's history and configures ordinary future fetches for that branch. It does not mean “one commit”; this command has no shallow-history option.
-- The HTTPS URL identifies the source repository on GitHub.
-- `pi-adapted-mp-skills-pr1` is the local destination directory name. It is deliberately distinct from an ordinary checkout so you can recognize it as the PR-validation copy.
-- Each trailing `\` continues the same Bash command onto the next line. It must be the final character before the newline—do not add spaces or a comment after it.
+- `--branch` selects the workflow PR branch; the slash in the name is not a filesystem path.
+- `--single-branch` limits the fetched branch history, not the checkout to one commit.
+- `"$MP_SKILLS"` is the absolute local destination, kept identical to the path used by later commands.
+- A trailing `\` continues the same Bash command onto the next line; it must be the final character on that line.
 
-The command downloads the branch's state at the time you clone. It does not merge the PR, modify GitHub or automatically keep the local checkout updated. Source: [git clone reference](https://git-scm.com/docs/git-clone).
+The command does not merge the PR or update GitHub. It gets the branch state at clone time. Source: [git clone](https://git-scm.com/docs/git-clone).
 
-### Understand the paths and variables
+### Understand paths and version identity
 
-`$HOME` is the current user's home directory as seen by this Bash environment. On Linux it might be `/home/alberto`; under native Windows Git Bash it commonly points into the Windows user directory. Use the actual value for your host rather than assuming the example username.
+`$HOME` is the home directory of the current execution-host user. Quotes preserve spaces while allowing variables to expand. `MP_SKILLS` and `MP_LAB` are names chosen for this manual; they are not built-in Git or Paseo settings. Keep them pointed at different sibling directories.
 
-Double quotes keep paths containing spaces together as one argument while still allowing `$HOME` and `$MP_SKILLS` to expand. `MP_SKILLS` is a name chosen for this manual, not a built-in Git, Pi or Paseo setting. The manual later uses `MP_LAB` for the separate application being built: do not point both variables at the same directory.
-
-For example, if `$HOME` is `/home/alberto`, the commands create/use `/home/alberto/dev/pi-adapted-mp-skills-pr1`. They leave your terminal inside that checkout. To inspect your actual paths, run:
+Print the actual values when diagnosing a path problem:
 
 ```bash
-printf '%s\n' "$HOME"
-printf '%s\n' "$MP_SKILLS"
+printf 'Skills checkout: %s\nLab: %s\n' "$MP_SKILLS" "${MP_LAB:-not-created-yet}"
 pwd
 ```
 
-The variable assignment lasts for the current shell and processes it launches; it does not permanently configure every terminal or an already-running Paseo daemon. A fresh terminal generally needs the `export MP_SKILLS=…` line again. See section 4 for the separate PowerShell variable syntax.
+For an existing checkout, use this complete check block after setting `MP_SKILLS` to its actual location:
+
+```bash
+cd "$MP_SKILLS" &&
+git rev-parse --show-toplevel &&
+git rev-parse HEAD &&
+test -f package-lock.json &&
+npm ci &&
+npm test
+```
+
+If a previous relative clone landed elsewhere, update `MP_SKILLS` to that checkout's actual absolute path. A missing package.json or package-lock.json is a reason to verify the directory and revision before changing dependencies. Do not generate a replacement lockfile to hide a wrong-directory error.
+
+Record the SHA printed by Git, not a commit ID copied from an older conversation. Keep the package checkout unchanged during a validation run. A new revision needs a new run record; a fresh numbered lab avoids mixing changed fixtures with old evidence. The variable assignments last for the current shell and its children, so set them again in a fresh terminal.
 
 ### Understand the test result
 
-`npm test` is a project-defined command, not a universal suite that npm supplies. For this checkout, [package.json](../package.json) defines it as skill validation followed by Node's test runner. If skill validation fails, the test runner is not started. Run `npm ci` first to install the pinned development-only YAML parser. The checks themselves are offline and require no model authentication.
+`npm test` is defined by this repository's [package.json](../package.json): skill validation followed by Node's test runner. A validation failure prevents the runner from starting. Run `npm ci` first; the checks themselves are offline and need no model authentication.
 
-This corrected workflow branch has 19 offline tests; dependent PRs can add more. Judge success by the complete result and exit status, not by matching a fixed number. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
+This workflow branch has 19 offline tests; the architecture branch adds four more. Judge success by the complete result and exit status, not only a test count. An exit status of 0 means success. In Bash, `echo $?` immediately after the test prints its status; another command replaces it.
 
-Passing here means the package's static/helper checks passed on this machine. It does not mean the quotation application has been implemented or the live Paseo workflow has been validated. Those are later exercises. Sources: [npm test reference](https://docs.npmjs.com/cli/v11/commands/npm-test/) and this repository's [test script](../package.json).
+Passing package checks does not establish that live Paseo sessions, model separation or the generated application pass. Those are later exercises. The generated application itself uses only local files and Node's standard library. Source: [npm test](https://docs.npmjs.com/cli/v11/commands/npm-test/).
 
-If the directory already exists, inspect it before fetching/checking out. Do not run the clone command over it or reset away local changes. Record the SHA printed by `git rev-parse HEAD` as **skills-under-test SHA**. Keep this checkout unchanged throughout one validation run; fetching a new PR revision requires a new run record.
+### Install the package into the lab project
 
-The package's offline tests validate skill structure and helper behavior. They do not launch Paseo. Use `npm ci` before running them in a fresh checkout; the execution helpers and generated application do not need that dependency.
-
-Keep `MP_SKILLS` available in the terminal for later commands. After opening a new terminal, set it again to the same absolute path.
-
-### How the Pi install works
-
-Install the complete directory into the **lab project's** configuration, after creating the lab in section 11:
+After creating the separate application directory in section 11:
 
 ```bash
-cd "$MP_LAB"
+cd "$MP_LAB" &&
 pi install -l "$MP_SKILLS"
 ```
 
-Local-path packages are loaded from that location; `-l` records a project installation. Pi must trust the project before loading its project packages. Check startup diagnostics and reload after edits. Avoid a second copy of these skills under another skill directory, because duplicate names can shadow the version you intended to test. See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
+`-l` records a project installation. Pi loads local-path packages from their existing location after project trust. Check startup diagnostics and avoid duplicate copies with shadowing names. See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
 
-The updated package does not require removing your existing pi-subagents or pi-web-access installations. Keep them if other workflows use them. Their presence must not cause this workflow to silently use the old delegation path.
+Keep unrelated packages when other workflows need them, but verify that this validation uses the configured Paseo delegation path.
 
 ## 6. Configure Paseo and profiles
 
@@ -746,13 +780,14 @@ There is no completed implementation in the scaffold. The agents must create it.
 
 ### Generate a new directory
 
-These commands assume section 5 set `MP_SKILLS`:
+These commands assume section 5 set `MP_SKILLS`. Generate the application beside the skills checkout, outside any existing application repository. The application uses Node's standard library and a local JSON catalog; agent providers and optional diagram tooling are validation tools, not application runtime services:
 
 ```bash
-export MP_LAB="$HOME/dev/paseo-quote-lab-01"
-node "$MP_SKILLS/examples/validation-lab/create.mjs" "$MP_LAB"
-cd "$MP_LAB"
-git init -b main
+export MP_LAB="$HOME/code/quote-workflow-lab-01"
+mkdir -p "$HOME/code" &&
+node "$MP_SKILLS/examples/validation-lab/create.mjs" "$MP_LAB" &&
+cd "$MP_LAB" &&
+git init -b main &&
 pi install -l "$MP_SKILLS"
 ```
 
@@ -771,9 +806,9 @@ Run setup as described in section 7, or fill the delegation table yourself. Reso
 Then commit the baseline, including any project package declaration and configuration:
 
 ```bash
-cd "$MP_LAB"
-git add .
-git commit -m "Define quote lab specification, acceptance tests and workflow"
+cd "$MP_LAB" &&
+git add . &&
+git commit -m "Define quote lab specification, acceptance tests and workflow" &&
 git rev-parse HEAD
 ```
 
@@ -782,7 +817,7 @@ Record this as **lab baseline SHA**. It is different from the **skills-under-tes
 Register/open this lab on the intended Paseo host. The documented CLI route is:
 
 ```bash
-cd "$MP_LAB"
+cd "$MP_LAB" &&
 paseo project create
 ```
 
@@ -802,7 +837,7 @@ The ready-made spec and tickets make execution repeatable. To exercise the earli
 4. Resolve money representation: integer cents. Confirm no tax, discounts or inventory.
 5. Use grilling, then `to-spec` and `to-tickets`, asking the agent to compare its result with the supplied reference rather than overwriting it.
 
-Success means cited research artifacts, no blocked research launched prematurely, the human decision preserved and a graph equivalent to A+B→C. Prose need not match word-for-word. If the planner invents ERPNext requirements or answers the human decision itself, record a failure.
+Success means cited research artifacts, no blocked research launched prematurely, the human decision preserved and a graph equivalent to A+B→C. Prose need not match word-for-word. If the planner invents external-system requirements or answers the human decision itself, record a failure.
 
 Use the supplied reference spec/tickets for the execution test after the rehearsal. This separates planning variability from orchestration correctness.
 
@@ -964,8 +999,8 @@ After a valid final candidate exists, create a separate probe worktree:
 
 ```bash
 git -C "$MP_LAB" worktree add --detach \
-  "$HOME/dev/quote-review-probe-01" FINAL_INTEGRATION_SHA
-export MP_PROBE="$HOME/dev/quote-review-probe-01"
+  "$HOME/code/quote-review-probe-01" FINAL_INTEGRATION_SHA
+export MP_PROBE="$HOME/code/quote-review-probe-01"
 printf 'uncommitted review probe\n' > "$MP_PROBE/review-probe.txt"
 node "$MP_SKILLS/scripts/review-target.mjs" \
   --repo "$MP_PROBE" --base "$MP_BASELINE" --head HEAD
@@ -1065,7 +1100,7 @@ Do not convert NOT RUN into PASS because the agent says it would work.
 | Recovery | No duplicate worker on coordinator resumption |
 | Limits | Model/permissions/resource gaps recorded rather than hidden |
 
-For initial approval of the orchestration PR, treat live installation, A/B→C execution, independent review, failure gating and restart reconciliation as required. A planning rehearsal is optional for that narrow acceptance, but required if you want to claim the whole SWE-cycle walkthrough has been validated. Real database/environment leasing and ERPNext remain explicitly out of scope.
+For initial approval of the orchestration PR, treat live installation, A/B→C execution, independent review, failure gating and restart reconciliation as required. A planning rehearsal is optional for that narrow acceptance, but required if you want to claim the whole SWE-cycle walkthrough has been validated. Real shared-service leasing remains outside this local-filesystem exercise.
 
 A successful local lab supports accepting the workflow on the tested host/configuration. It is not a universal compatibility claim for all models, Windows-native paths or remote hosts.
 
@@ -1083,7 +1118,7 @@ Keep the same role, ticket and review structure. Replace only the application-sp
 6. Add migration, security, deployment, rollback and monitoring checks appropriate to the application.
 7. Verify the combined revision in CI before authorizing delivery.
 
-For ERPNext, this later means deciding Bench/site topology, database ownership, workers, migrations, fixtures and browser-test environments. Do that after the general workflow passes. The quotation lab intentionally proves none of those details.
+Keep application-specific decisions in the target application's testing and architecture contracts. The quotation lab establishes a general process using a local JSON file and CLI, without assuming any external application.
 
 For maintenance, reproduce a bug at an approved public seam, write a regression test and route the fix through the same committed verification/review path. For a changed requirement, amend the spec/tickets first and invalidate approvals for affected candidates. For a broad refactor, preserve behavior and use compatible migration steps rather than parallel workers breaking each other's interfaces.
 
@@ -1091,6 +1126,8 @@ For maintenance, reproduce a bug at an approved public seam, write a regression 
 
 | Symptom | Likely cause | Next action |
 | --- | --- | --- |
+| npm install fails with EACCES under /usr | System-wide default global prefix | Use the explicit user-owned prefix and PATH preparation in section 4; do not change system directory ownership |
+| Git/npm runs in another project | A prior cd failed or the clone destination differs from MP_SKILLS | Use the absolute-path, chained command block in section 5; verify the Git root and lockfile |
 | Wrong skill behavior | Main/old package or shadowing duplicate | Check PR SHA, installed package path and startup diagnostics |
 | `/skill:…` works in Pi but not Claude | Pi command syntax used in another harness | Use the exact-file prompt from section 7 |
 | Paseo cannot find Pi/Claude | Daemon environment differs from your terminal | Inspect host provider diagnostics, binary path and authentication |

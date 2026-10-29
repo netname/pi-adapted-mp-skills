@@ -43,4 +43,4 @@ Offline tests do not prove a local Paseo installation or model/provider combinat
 4. Cause a test failure and a merge conflict. Confirm no ticket falsely closes, no shared environment is used concurrently, and retries stop at the configured limit.
 5. Restart the coordinator. Confirm persisted run IDs are reconciled without duplicate workers. Confirm retained commits/evidence before cleanup.
 
-Record host/Paseo/provider versions and outcomes. Missing tooling is unverified, not passed. ERPNext-specific Bench/site isolation is intentionally left for a subsequent adapter built on this contract.
+Record host/Paseo/provider versions and outcomes. Missing tooling is unverified, not passed. The worked example is a self-contained quotation CLI. Applications that use shared services must supply and validate their own resource-isolation contract.

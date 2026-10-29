@@ -6,7 +6,7 @@ Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh
 
 ## Manual and validation lab
 
-Read the [comprehensive setup and SWE-cycle manual](docs/MANUAL.md). It includes a worked quotation-CLI project, copyable agent prompts, negative/recovery exercises and a [validation report template](docs/VALIDATION-REPORT.md) for PR #1. The [bundled lab](examples/validation-lab/README.md) creates a disposable project with acceptance tests and records verification evidence.
+Read the [comprehensive setup and SWE-cycle manual](docs/MANUAL.md). It includes a worked quotation-CLI project, copyable agent prompts, negative/recovery exercises and a [validation report template](docs/VALIDATION-REPORT.md) for PR #1. The [bundled lab](examples/validation-lab/README.md) creates a separate quotation CLI using a local JSON catalog and Node's standard library. It has no application runtime service or npm dependency. Keep its repository beside the skills checkout, outside existing applications.
 
 ## Start
 
@@ -48,7 +48,7 @@ Enable Paseo tools on the host or use its CLI. See [Paseo orchestration](https:/
 
 ## Tests and helpers
 
-Node.js 20+ and Git are required. Execution helpers remain dependency-free; package validation uses a pinned development-only YAML parser.
+The execution helpers support Node.js 20+ and Git. Use Node 24 LTS for the full validation walkthrough and check the installed agent CLIs' requirements. Execution helpers remain dependency-free; package validation uses a pinned development-only YAML parser.
 
 ```bash
 npm ci

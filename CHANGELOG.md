@@ -1,5 +1,8 @@
 # 0.2.0 (unreleased)
 
+- Keep the quotation lab independent of other applications; remove application-specific examples and adapter guidance.
+- Use explicit user-owned CLI prefixes, absolute sibling checkout/lab paths and chained setup commands; explain recovery from prefix/path errors. Align phase-boundary advice with fresh implementation workers and independent reviewers.
+
 - Correct malformed PR-skill YAML and use a pinned development-only YAML parser with regression tests; run npm ci before package validation.
 - Test and correct Git guardrail opt-in and common global-option handling; document pattern-check limits.
 - Add shared-worktree tracker conventions, coordinator-owned review reports and production handoffs for diagnosis/prototypes. Correct the Pi command-visibility check.

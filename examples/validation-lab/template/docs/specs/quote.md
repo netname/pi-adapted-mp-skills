@@ -2,7 +2,7 @@
 
 ## Problem and solution
 
-A shop operator needs a quote for a whole number of one product, without a database, browser or ERPNext. Read a JSON catalog and print the calculated quote. This is a workflow-validation exercise, not a production POS specification.
+An operator needs a quote for a whole number of one product. Read a local JSON catalog and print the calculated quote. This self-contained command-line application uses Node's standard library and local files. Its runtime does not require a database, web server, browser or network service.
 
 ## Approved seams and acceptance criteria
 
@@ -19,4 +19,4 @@ A: focused unit checks. B: focused real-filesystem integration checks. C and com
 
 ## Out of scope
 
-Decimals/weight, VAT, discounts, inventory, payments, HTTP, UI, databases, dependencies from npm, deployment, authentication and ERPNext. Do not install a framework or generalize beyond this exercise.
+Decimals/weight, VAT, discounts, inventory, payments, HTTP, UI, databases, dependencies from npm, deployment and authentication. Do not install a framework or generalize beyond this exercise.

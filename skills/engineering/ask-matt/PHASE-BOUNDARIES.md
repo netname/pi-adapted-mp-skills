@@ -18,11 +18,13 @@ The **phase boundary** is the gap between two phases, and it is the only place t
 
 Work top to bottom at the boundary. The first **yes** wins.
 
-**1. Can you continue in this session?** Two things make the answer yes: the next phase needs this phase as a **primary source**, or you have enough [smart zone](https://www.aihero.dev/ai-coding-dictionary/smart-zone) left (~150k tokens) for the next phase to fit. Grilling → implementation is the standard yes: the implementation wants the reasoning verbatim, not a summary of it. Continue costs nothing and loses nothing, so rule it out before anything else.
+**1. Can planning or coordination continue in this session?** Keep the conversation when its context is useful and sufficient capacity remains for the next planning/coordinator step. For example, grilling can continue into specification and design preparation. Context capacity depends on the selected model and accumulated material; do not assume a fixed token threshold.
+
+Continuing the coordinator is not continuing as an implementation worker. For an approved task graph, follow `../implement-spec/SKILL.md`: launch fresh workers in separate worktrees with the approved spec/design, scoped ticket, immutable base, project instructions and test contract. The planner's full conversation is not the worker's required input. Standalone `../implement/SKILL.md` still needs its readiness, verification and independent review. Design and code reviewers always use fresh independent sessions under their configured policies.
 
 **2. Is the context irrelevant to what comes next?** Is everything in this session (the exploration, the decisions, the dead ends) disposable? If so, **`/new`**. It is the cheapest move on the board: it takes no time and hands back the whole window. `/new` also isn't terminal: the old session stays resumable.
 
-The cost of getting this wrong is one-way. Throw away a *relevant* context and you lose the **why** behind what you built, and no amount of reading the diff back gets it returned.
+The cost of getting this wrong is one-way. Throw away a *relevant* context and you lose the **why** behind what you built, so record accepted decisions, rationale and source links in durable artifacts before switching.
 
 **3. Do you need to hand off?** `/skill:handoff` is narrow. You need it only when you are:
 
@@ -31,7 +33,7 @@ The cost of getting this wrong is one-way. Throw away a *relevant* context and y
 - sending the work to a **colleague**,
 - or forking a side task you found **mid-phase** without derailing what you're doing.
 
-That list is the whole clause. What `/skill:handoff` buys is **portability**: a file that travels. If nothing is travelling, you don't need it.
+A handoff buys portability: explicit context that travels. Worker dispatch always supplies approved artifacts; a separate handoff file is optional when those artifacts already carry the necessary scope, decisions and evidence.
 
 **4. Can the task be done AFK?** Is it scoped tightly enough to run with you away from the keyboard, no steering? Then send it to a **subagent** and leave this session untouched. Automated review is the standard case: the agent reads the diff and reports, and you aren't needed while it does.
 
@@ -53,3 +55,4 @@ This is why question 1 comes first. You only pay the lossiness when staying cost
 ## These are judgement calls
 
 The questions are not objective: each has taste in it, and the same boundary can go two ways on two days. The value is in asking them **in order**, at the boundary rather than in the middle of the work.
+

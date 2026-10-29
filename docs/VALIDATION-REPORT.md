@@ -105,7 +105,7 @@ If a candidate was repaired or merged with a newer integration tip, add another 
 
 Static setup correction: `enableSkillCommands: false` no longer blocks setup. Confirm manual invocation and record the installed Pi version during live validation; the instruction change alone does not prove host compatibility.
 
-Not covered by this lab: real database/queue lease recovery; ERPNext Bench/site isolation; migrations; browser E2E; production deployment; universal compatibility across hosts/providers.
+Not covered by this lab: real database/queue lease recovery; migrations; browser E2E; production deployment; universal compatibility across hosts/providers.
 
 ## Decision
 
