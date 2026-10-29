@@ -1,0 +1,12 @@
+{
+  "name": "paseo-quote-validation-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:unit": "node --test test/unit/pricing.test.mjs",
+    "test:integration": "node --test test/integration/catalog.test.mjs",
+    "test:e2e": "node --test test/e2e/quote.test.mjs",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e"
+  },
+  "engines": { "node": ">=20" }
+}

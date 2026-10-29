@@ -18,13 +18,17 @@ The extension is inert until the user opts in, so installing this package never 
 
 ## What gets blocked
 
-- `git push` (all variants, including `--force`)
+- literal `git push` commands, including `--force` and common Git global options
 - `git reset --hard`
 - `git clean -f` / `git clean -fd`
 - `git branch -D`
 - `git checkout .` / `git restore .`
 
-When blocked, the reason reads: `BLOCKED: '<command>' matches dangerous pattern '<pattern>'. The user has prevented you from running this command.`
+The shared matcher recognizes common literal options before the command: `-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace`, `--config-env`, `--no-pager` and related pathspec flags. Quoted paths with spaces are supported. Both the extension and standalone checker use this matching logic.
+
+This is an accidental-command guardrail, not a shell sandbox. Aliases, shell functions, variables, wrappers and dynamically constructed commands can bypass it; regex matches can also flag harmless text. Do not describe it as preventing every destructive command. Use host permissions for stronger restrictions.
+
+Only boolean `enabled: true` opts in. An existing project file takes precedence over global configuration; malformed/empty/disabled project configuration does not enable the guardrail. An invalid regex in an enabled configuration blocks Bash calls with a configuration error until corrected. An explicit empty patterns array disables all pattern matches.
 
 ## Steps
 
@@ -56,7 +60,7 @@ Ask if the user wants to change what is blocked.
 - **Add or remove patterns**: edit the `DANGEROUS_PATTERNS` array in [scripts/block-dangerous-git.sh](scripts/block-dangerous-git.sh) — that file is the single source of truth for the default list, and both the extension and the standalone check use it.
 - **Per-project override**: put a `patterns` array in that project's `.pi/git-guardrails.json`. When present it replaces the default list for that scope.
 
-Patterns are regular expressions matched anywhere in the command, the same semantics upstream used.
+Patterns are regular expressions matched anywhere in the command, the applied to both the raw command and its normalized Git options.
 
 ### 4. Verify
 
@@ -68,6 +72,7 @@ bash skills/misc/git-guardrails/scripts/block-dangerous-git.sh "git push origin 
 
 It prints `BLOCKED: …` and exits 1 for a match, and exits 0 for a safe command such as `git status`.
 
-Then confirm the extension is live: ask the user to run a command that should be blocked, or note that the next matching `bash` call in this session is blocked with the reason above.
+Then confirm the extension is live: ask the user to run a command that should be blocked, or note that the next matching `bash` call in this session is blocked with a matching-pattern reason.
 
 To turn the guardrail off without deleting the file, set `"enabled": false`; for one session, set `PI_GIT_GUARDRAILS=off`.
+

@@ -1,3 +1,5 @@
+> Historical 0.1.0 record. For the current Paseo workflow and superseding decisions, read [WORKFLOW.md](WORKFLOW.md) and [MIGRATION-0.2.md](MIGRATION-0.2.md). Do not use old package prerequisites or frozen decisions as current setup instructions.
+
 # Adaptation Plan: Matt Pocock's Skills → Pi Skills
 
 Status: **Decisions frozen — implementation not started** (decisions D1–D17 recorded; §9 open questions closed; next action is M0)

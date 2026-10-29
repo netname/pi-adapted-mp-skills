@@ -1,3 +1,23 @@
+# 0.2.0 (unreleased)
+
+- Keep the quotation lab independent of other applications; remove application-specific examples and adapter guidance.
+- Use explicit user-owned CLI prefixes, absolute sibling checkout/lab paths and chained setup commands; explain recovery from prefix/path errors. Align phase-boundary advice with fresh implementation workers and independent reviewers.
+
+- Correct malformed PR-skill YAML and use a pinned development-only YAML parser with regression tests; run npm ci before package validation.
+- Test and correct Git guardrail opt-in and common global-option handling; document pattern-check limits.
+- Add shared-worktree tracker conventions, coordinator-owned review reports and production handoffs for diagnosis/prototypes. Correct the Pi command-visibility check.
+- Strengthen quotation acceptance assertions and prove missing-newline/input-mutation failures are detected.
+
+- Add a comprehensive setup/SWE-cycle manual, reproducible quotation lab, evidence runner and live validation report template.
+
+- Selectively port upstream v1.3.1: implement-spec, pr, retro, tdd, to-spec and to-tickets.
+- Replace pi-subagents registration and mandatory tool-name coupling with shared Paseo delegation and portable role briefs.
+- Add verified model-family separation, immutable committed review snapshots and tests for omitted dirty work.
+- Add a resumable worktree coordinator, deterministic frontier validation, serial integration and bounded retries.
+- Separate test categories from Fast / Verify change / Verify candidate profiles; document resource isolation and evidence.
+- Adopt GLOSSARY.md; retire resolving-merge-conflicts. Preserve historical records and individual source pins.
+- Replace the obsolete live pi-subagents smoke entry point with offline smoke checks and an explicit Paseo acceptance checklist.
+
 # Changelog
 
 All notable changes to this project are documented in this file.

@@ -119,7 +119,7 @@ User invokes with a loose idea.
 2. **Map the frontier.** Grill again, **breadth-first** this time: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** (the way to the destination is already clear, the whole journey small enough for one session), you don't need a map. Stop and ask the user how they'd like to proceed.
 3. **Create the map** (label `wayfinder:map`): Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
 4. **Create the tickets you can specify now** as child issues of the map, then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog: the **Not yet specified** section.
-5. **Fire the research subagents.** For each `research` ticket you just created, resolve it with the `research` skill: read `../research/SKILL.md` and follow it. Fire one detached `mp-researcher` child per ticket **in a single concurrent batch** through one `subagent` call, each child given its own explicit `output:` path so two children can never collide on a file. Children write only their own unique research artifact and never touch the map or a ticket; the parent serializes every map and ticket write. The parent creates the throwaway `research/<name>` branch and commits each child's note to it, then appends a context pointer from the ticket (the child has no `bash`, so it cannot branch or commit). A child that fails or is refused leaves its ticket open and is recorded as not completed.
+5. **Dispatch ready research.** Only claim unblocked, unclaimed research tickets on the frontier, up to the project's research concurrency limit. Read `../research/SKILL.md` and `../_shared/DELEGATION.md`. Give each worker a unique output path; workers never edit the tracker/map. Collect and persist notes, then serialize resolution and map updates. Failed research remains open. Do not launch blocked research merely because it was just created.
 6. Stop: charting is one session's work; it hand-resolves nothing.
 
 ### Work through the map
@@ -133,3 +133,8 @@ User invokes with a map (URL or number). A ticket is **optional**: without one, 
 5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals that a ticket (this one or another) sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
 
 The user may run unblocked tickets in parallel, so expect other sessions to be editing the tracker concurrently.
+
+
+## Continue the research frontier
+
+When the user asks to loop, repeat the ready-research batch, collect results and recompute dependencies until no eligible research remains. Stop at HITL decisions and never invent the human side of grilling. Claiming via assignee is only a visible marker: use one coordinator or a tracker lock to prevent duplicate dispatch. Implementation graphs belong to `../implement-spec/SKILL.md`.

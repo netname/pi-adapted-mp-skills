@@ -2,7 +2,7 @@
 # Default dangerous-git patterns for the `git-guardrails` skill.
 #
 # This array is the single source of truth for the guardrail: the package
-# extension `extensions/git-guardrails.ts` reads this file at load time and the
+# shared matcher `lib/git-guardrails.mjs` reads this file at load time and the
 # standalone check below matches against the same list. Edit this array to
 # change what the guardrail blocks.
 #
@@ -26,12 +26,6 @@ DANGEROUS_PATTERNS=(
   "reset --hard"
 )
 
-COMMAND="$*"
-for pattern in "${DANGEROUS_PATTERNS[@]}"; do
-  if printf '%s' "$COMMAND" | grep -qE "$pattern"; then
-    echo "BLOCKED: '$COMMAND' matches dangerous pattern '$pattern'. The user has prevented you from doing this." >&2
-    exit 1
-  fi
-done
-
-exit 0
+# Both the standalone checker and Pi handler use the same Node matching logic.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+exec node "$SCRIPT_DIR/../../../../lib/git-guardrails.mjs" "$@"

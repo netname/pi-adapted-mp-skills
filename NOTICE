@@ -1,31 +1,16 @@
 NOTICE
 ======
 
-This package (pi-adapted-mp-skills) is an adaptation of Matt Pocock's skills
-collection for the Pi coding agent.
+pi-adapted-mp-skills adapts Matt Pocock's skills under MIT.
+Repository: https://github.com/mattpocock/skills
+Original baseline: c55ee46073ed923f86ce59a5eb3b6d895095d1b7
+Selective 0.2.0 baseline: v1.3.1, commit 24fe0ef7737efae15c87225755e9f6f5965e4888
+Each SKILL.md records its source commit; local modifications are not verbatim upstream.
+Copyright (c) 2026 Matt Pocock. Original license preserved in LICENSE.
+Adaptations remain MIT. See CHANGELOG.md and docs/MIGRATION-0.2.md.
 
-Upstream
---------
-Repository:     https://github.com/mattpocock/skills
-Pinned commit:  c55ee46073ed923f86ce59a5eb3b6d895095d1b7
-                (verified equal to upstream `main` on 2026-09-18)
-Upstream path:  skills/{engineering,productivity,misc}/<skill-name>/
-License:        MIT, Copyright (c) 2026 Matt Pocock
-                The upstream license text is preserved verbatim in LICENSE.
+The pr skill retains upstream credit to Dex Horthy / Humanlayer's show-me skill:
+https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md
 
-Adapted text in this package remains under the upstream MIT license. Files
-copied from upstream are modified only in the ways recorded in
-docs/ADAPTATION_PLAN.md (D2 frontmatter policy, D4 cross-skill invocation,
-D5 harness token map, D7 sidecar placement). See CHANGELOG.md for the
-adaptation record of each release.
-
-This package
-------------
-Repository:     https://github.com/netname/pi-adapted-mp-skills
-License:        MIT (see LICENSE)
-
-Third-party runtime prerequisites are separate Pi packages and are NOT
-bundled or redistributed here (see docs/ADAPTATION_PLAN.md, D13):
-
-  pi-subagents    https://github.com/nicobailon/pi-subagents
-  pi-web-access   https://github.com/nicobailon/pi-web-access
+Package: https://github.com/netname/pi-adapted-mp-skills
+Paseo and coding-agent providers are separate installations, not bundled here.
