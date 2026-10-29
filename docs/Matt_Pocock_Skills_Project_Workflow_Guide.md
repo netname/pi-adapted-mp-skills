@@ -1136,9 +1136,9 @@ Use `/wayfinder` **before** `/to-spec` when the destination is known but the rou
 
 Examples:
 
-- “We need a POS strategy supporting unit/package pricing, discounts, and ERPNext integration, but we do not yet know the data model or compatible app choices.”
-- “We need to migrate several companies to ERPNext, but chart of accounts, opening balances, integrations, and rollout order are unknown.”
-- “We need a refund-import system, but we do not yet know the authoritative source, tolerance rules, idempotency approach, or operational review flow.”
+- “We need a local catalog tool, but we have not decided its file format, duplicate-item rules or command-line behavior.”
+- “We need to migrate a collection of local JSON catalogs to a new schema, but compatibility, validation and rollback rules are undecided.”
+- “We need a batch file-renaming tool, but collision handling, dry-run output and recovery rules are unknown.”
 
 Do **not** use Wayfinder just because a feature has several tickets. Use it when unresolved **decisions** prevent you from writing a trustworthy specification.
 

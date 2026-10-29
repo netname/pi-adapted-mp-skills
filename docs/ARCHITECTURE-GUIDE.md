@@ -71,20 +71,22 @@ An ADR is a short decision record, not a long design document. For example: inte
 
 ## 5. Set up the extension
 
-Use a separate checkout so you can compare this dependent PR with PR #1:
+Use a separate checkout so you can compare this dependent PR with PR #1. Keep it and the generated application as sibling repositories under `$HOME/code`, outside existing application repositories:
 
 ```bash
-mkdir -p "$HOME/dev"
-cd "$HOME/dev"
+export MP_SKILLS="$HOME/code/pi-skills-design-validation-01"
+mkdir -p "$HOME/code" &&
 git clone --branch improve/architecture-design-review --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
-  pi-adapted-mp-skills-design
-export MP_SKILLS="$HOME/dev/pi-adapted-mp-skills-design"
-cd "$MP_SKILLS"
-git rev-parse HEAD
-npm ci
+  "$MP_SKILLS" &&
+cd "$MP_SKILLS" &&
+git rev-parse --show-toplevel &&
+git rev-parse HEAD &&
+npm ci &&
 npm test
 ```
+
+The explicit absolute destination makes the clone independent of your starting directory. The `&&` chain stops at the first failure, including a failed clone or `cd`; it cannot fall through to npm commands in another project. If the destination exists, inspect it or choose a new numbered name. Verify the printed root, record the new skills-under-test SHA and keep that revision fixed for the run. See the manual for [user-owned CLI installation and PATH](MANUAL.md#4-prepare-the-execution-host), including recovery from npm EACCES errors.
 
 These Bash commands work on Linux or a configured Windows Bash environment such as WSL. See the main manual for host/harness setup. The Node helpers use portable filesystem APIs; Windows behavior has not been exercised by this PR's Linux checks. `MP_SKILLS` identifies the package checkout; it is not your application directory. There are now 30 skills and 23 offline tests. `npm ci` installs the pinned development-only YAML parser; execution helpers and the generated application remain dependency-free.
 
@@ -94,7 +96,7 @@ Run setup in the application, preserving existing conventions. It adds the archi
 
 ## 6. Worked example: understand the quotation tool
 
-Create the disposable quotation lab using section 11 of the main manual, using the new `MP_SKILLS` path. The generator now includes a **draft** design, LikeC4 model, proposed ADR, coverage table and ticket scope snapshot. It deliberately includes neither a completed application nor accepted design evidence.
+Create the disposable quotation lab using section 11 of the main manual, using the new `MP_SKILLS` path and `$HOME/code/quote-workflow-lab-01` as `MP_LAB`. The generated application is a standalone CLI that reads a local JSON catalog and uses Node's standard library; no external application or runtime service is assumed. Provider authentication and optional diagram downloads belong to validation tooling, not the application runtime. The generator now includes a **draft** design, LikeC4 model, proposed ADR, coverage table and ticket scope snapshot. It deliberately includes neither a completed application nor accepted design evidence.
 
 Before launching A/B workers, read these files in the generated application:
 
@@ -244,4 +246,4 @@ Start with one feature and one owner. Reuse existing ADRs, diagrams, tests and t
 
 For CI, configure the project's actual model-validation and readiness commands and make them required through its normal review/branch protections. This package does not install those protections or a Paseo scheduler. Preserve actual human authorization through the project's trusted review process; a writable JSON file alone cannot establish consent.
 
-For ERPNext later, add evidence-backed app/site boundaries, DocType ownership, hooks, migrations, background workers and test-site isolation to the same contract. The general design/review process stays the same. This lab does not claim to validate ERPNext infrastructure or production readiness.
+For another application, supply its own observed boundaries, data ownership, runtime resources and verification commands in that application's contract. The quotation CLI remains the independent worked example for this package; adopting it does not establish compatibility with any other system.

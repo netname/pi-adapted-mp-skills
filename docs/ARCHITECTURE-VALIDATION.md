@@ -13,7 +13,7 @@ This report separates checks run while preparing the PR from exercises requiring
 | Live Paseo / actual model-family inspection | NOT RUN | Requires your configured host |
 | Human acceptance of lab design | NOT GIVEN | Must come from the actual review exercise |
 | Windows execution | NOT RUN | Linux checks do not certify Windows |
-| ERPNext adapter and environments | NOT RUN | Outside this generic fixture |
+| Other applications and shared-service environments | NOT RUN | Outside the self-contained quotation fixture |
 
 The tests contain explicitly synthetic approval/reviewer records for helper validation. These are never copied into the generated lab. A passing test of record structure does not establish genuine consent or reviewer independence.
 

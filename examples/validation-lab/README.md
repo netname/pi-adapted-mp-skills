@@ -1,6 +1,6 @@
 # Reproducible workflow-validation lab
 
-Read [the full manual](../../docs/MANUAL.md) before running live agents. This is a teaching fixture for PR #1, not a ready-made quotation application.
+Read [the full manual](../../docs/MANUAL.md) before running live agents. This is a teaching fixture for PR #1. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
 
 ```bash
 node /absolute/skills/examples/validation-lab/create.mjs /new/absolute/lab-directory

@@ -16,7 +16,7 @@ Choose the cheapest boundary that proves the behavior. Prefer public interfaces 
 
 A worktree isolates source files only. Give concurrent runs separate databases/schemas, ports, cache/queue namespaces, workers, temporary files, storage and external test accounts as needed. Name resources by run ID. If isolation is unavailable, the coordinator acquires an exclusive environment lease and serializes affected verification. Record owner, resource, acquisition and release; no stealing a lease from a live or unknown run. A failed run's environment is inspected/reset before reuse.
 
-The project defines setup, seeding, cleanup and retry commands. Workers never assume an existing shared development database is disposable. ERPNext/Bench/site-specific rules belong in a later project adapter.
+The project defines setup, seeding, cleanup and retry commands. Workers never assume an existing shared development database is disposable. Application-specific service and environment rules belong in the target project's contract.
 
 ## Evidence and gates
 

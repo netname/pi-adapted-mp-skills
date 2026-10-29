@@ -6,7 +6,7 @@ Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh
 
 ## Manual and validation lab
 
-Read the [comprehensive setup and SWE-cycle manual](docs/MANUAL.md). It includes a worked quotation-CLI project, copyable agent prompts, negative/recovery exercises and a [validation report template](docs/VALIDATION-REPORT.md) for PR #1. The [bundled lab](examples/validation-lab/README.md) creates a disposable project with acceptance tests and records verification evidence.
+Read the [comprehensive setup and SWE-cycle manual](docs/MANUAL.md). It includes a worked quotation-CLI project, copyable agent prompts, negative/recovery exercises and a [validation report template](docs/VALIDATION-REPORT.md) for PR #1. The [bundled lab](examples/validation-lab/README.md) creates a separate quotation CLI using a local JSON catalog and Node's standard library. It has no application runtime service or npm dependency. Keep its repository beside the skills checkout, outside existing applications.
 
 Read the [architecture and design guide](docs/ARCHITECTURE-GUIDE.md) before the lab workers start. It adds scoped design proposals, fresh independent reviews, optional LikeC4 views and a fingerprint check for accepted design/plan records. These are local extensions, not upstream features.
 
@@ -46,13 +46,13 @@ The remaining diagnosis, architecture, productivity and guardrail skills remain 
 
 Use Paseo profiles to choose actual providers/models on your host. A useful starting point is Claude Code for planning and both review axes, with Pi/DeepSeek for implementation. The reviewer family must differ from **all** implementation families in its candidate. The harness name alone does not establish independence. No model subscriptions or global packages are changed by this package.
 
-Paseo delegation and primary-source access are required only by work that uses them. Planning works without those capabilities. `pi-subagents` and `pi-web-access` are no longer mandatory. The four files in `agents/` are portable task briefs passed explicitly by the coordinator; they are not registered Pi subagents or automatically discovered Paseo profiles.
+Paseo delegation and primary-source access are required only by work that uses them. Planning works without those capabilities. `pi-subagents` and `pi-web-access` are no longer mandatory. The files in `agents/` are portable task briefs passed explicitly by the coordinator; they are not registered Pi subagents or automatically discovered Paseo profiles.
 
 Enable Paseo tools on the host or use its CLI. See [Paseo orchestration](https://paseo.sh/docs/orchestration) and [agent profiles](https://paseo.sh/docs/agent-profiles). This package remains Pi-native: it does not automatically install skills into Claude Code. Supply relevant project instructions and role briefs explicitly to delegated sessions.
 
 ## Tests and helpers
 
-Node.js 20+ and Git are required. Execution helpers remain dependency-free; package validation uses a pinned development-only YAML parser.
+The execution helpers support Node.js 20+ and Git. Use Node 24 LTS for the full validation walkthrough and check the installed agent CLIs' requirements. Execution helpers remain dependency-free; package validation uses a pinned development-only YAML parser.
 
 ```bash
 npm ci
