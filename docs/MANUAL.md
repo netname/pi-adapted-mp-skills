@@ -102,6 +102,8 @@ The reading sequence is: understand this overview; set up the host and project; 
 
 Questions and artifacts follow a [shared plain-language policy](../skills/engineering/_shared/PLAIN-LANGUAGE.md): explain purpose first, define unfamiliar terms, preserve exact requirements and reuse previous answers. The existing comprehension review checks clarity; the [language exercise](ARCHITECTURE-GUIDE.md#language-exercise-understandable-and-still-precise) lets you validate it. This is informed by STE, without adopting its full controlled dictionary.
 
+For the workflow component map, start with [WORKFLOW.md](WORKFLOW.md#solution-overview). For the design-stage owners, artifact creation sequence and exact handoff into execution, use [the architecture operational route](ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks). The [README documentation map](../README.md#documentation-map) links the current learning and operational paths.
+
 ## Reading paths
 
 | Your goal | Read / do |
@@ -640,7 +642,7 @@ Apply the same pattern to `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets
 
 You may later add a small project `CLAUDE.md` pointer to shared project instructions, but it is not necessary for the lab when the coordinator supplies them explicitly. Do not copy all instructions into multiple files and then maintain them separately.
 
-### Two setup traps this PR still needs to expose
+### Two setup checks: command visibility and shared tracker paths
 
 **Skill command visibility.** Setup now treats `enableSkillCommands: false` as a discoverability setting, not a failure. Manually typed `/skill:name` commands still work. If invocation fails, inspect installation paths, startup diagnostics and YAML frontmatter. Source: [Pi skills](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md).
 

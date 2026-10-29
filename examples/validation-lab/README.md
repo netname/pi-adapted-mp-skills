@@ -1,6 +1,6 @@
 # Reproducible workflow-validation lab
 
-Read [the full manual](../../docs/MANUAL.md) before running live agents. This is a teaching fixture for PR #1. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
+Start with the [README documentation map](../../README.md#documentation-map), [application overview](template/docs/architecture/overview.md) and [design operational route](../../docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks). Read [the full manual](../../docs/MANUAL.md) for host setup and execution before running live agents. This is a teaching fixture for PR #1. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
 
 ```bash
 node /absolute/skills/examples/validation-lab/create.mjs /new/absolute/lab-directory

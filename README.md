@@ -4,11 +4,24 @@ Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh
 
 **0.2.0, unreleased.** This is a selective upgrade to [upstream v1.3.1](https://github.com/mattpocock/skills/tree/v1.3.1), not a wholesale rebase. Source pins remain in each skill. See [migration](docs/MIGRATION-0.2.md), [workflow](docs/WORKFLOW.md) and [changelog](CHANGELOG.md).
 
-## Manual and validation lab
+## Documentation map
 
-Read the [comprehensive setup and SWE-cycle manual](docs/MANUAL.md). It includes a worked quotation-CLI project, copyable agent prompts, negative/recovery exercises and a [validation report template](docs/VALIDATION-REPORT.md) for PR #1. The [bundled lab](examples/validation-lab/README.md) creates a separate quotation CLI using a local JSON catalog and Node's standard library. It has no application runtime service or npm dependency. Keep its repository beside the skills checkout, outside existing applications.
+There are two things to understand: **this repository's development workflow** and **the independent quotation CLI built to validate it**. The workflow coordinates planning, implementation and review; the quotation application only reads local JSON and returns a quote. Start with the solution overview, then follow the operational route for your task.
 
-Read the [architecture and design guide](docs/ARCHITECTURE-GUIDE.md) before the lab workers start. It adds scoped design proposals, fresh independent reviews, optional LikeC4 views and a fingerprint check for accepted design/plan records. These are local extensions, not upstream features.
+| Your question / task | Read here | Continue with |
+| --- | --- | --- |
+| What are we building, why, and how do the workflow components cooperate? | [Workflow solution overview](docs/WORKFLOW.md#solution-overview) | [Manual process overview](docs/MANUAL.md#overview-from-a-need-to-a-change-you-can-accept) |
+| What is the quotation application, and what are its components responsible for? | [Application overview template](examples/validation-lab/template/docs/architecture/overview.md) | [Authoritative quote spec](examples/validation-lab/template/docs/specs/quote.md) and [worked design exercise](docs/ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool) |
+| Who decides, drafts, reviews, records evidence and launches work? | [Owners and handoffs](docs/ARCHITECTURE-GUIDE.md#2-who-does-what) | Project `docs/agents/` contracts, configured during setup |
+| What is the useful minimum, and when/where is each artifact created? | [Minimum artifacts and actions](docs/ARCHITECTURE-GUIDE.md#3-choose-an-appropriate-amount-of-design) | [Path and artifact map](docs/ARCHITECTURE-GUIDE.md#4-artifacts-and-their-relationships) |
+| How do I install and configure the host/package? | [Manual host setup](docs/MANUAL.md#4-prepare-the-execution-host) | [Architecture branch checkout](docs/ARCHITECTURE-GUIDE.md#5-set-up-the-extension), then [project setup](docs/MANUAL.md#7-configure-each-software-project) |
+| In what order do I perform design review and start workers? | [Operational route and completion checks](docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks) | Its linked commands/prompts, then [coordinator execution](docs/MANUAL.md#12-execute-the-graph-and-observe-it) |
+| How do I validate, inspect failures and decide whether to accept the PRs? | [Lab introduction](examples/validation-lab/README.md), [final inspection](docs/MANUAL.md#13-inspect-the-final-result) and [failure drills](docs/MANUAL.md#14-negative-exercises-prove-failures-remain-failures) | [Workflow report](docs/VALIDATION-REPORT.md) and [architecture report](docs/ARCHITECTURE-VALIDATION.md) |
+| What changed from the previous package? | [Migration](docs/MIGRATION-0.2.md) and [changelog](CHANGELOG.md) | Historical documents only for provenance, not current operating instructions |
+
+The [main manual](docs/MANUAL.md) owns installation, everyday SWE execution, worktrees, verification and delivery. The [architecture guide](docs/ARCHITECTURE-GUIDE.md) owns the design/review walkthrough and explains exactly where to enter and return to the manual. [WORKFLOW.md](docs/WORKFLOW.md) is the compact system overview and operational contract. Skill files under `skills/` are the procedures supplied to agents; they complement the human-facing guides.
+
+The [lab generator](examples/validation-lab/README.md) creates a separate repository beside the skills checkout. Application paths in the guide refer to that generated repository; the links above open the source templates in this package. The lab requires no application runtime service or npm dependency. Its generated architecture is a proposal, and its readiness record starts as draft; creating files does not establish review or acceptance.
 
 ## Start
 

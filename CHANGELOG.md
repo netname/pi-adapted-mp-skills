@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Expand the architecture guide with solution/document boundaries, accountable owners, minimum artifact lifecycles and an explicit operational route. Add workflow/application component overviews and a README documentation map.
+
 - Connect the asynchronous questionnaire skill to the plain-language policy, with explicit conditional questions and reuse of known answers.
 - Add a shared plain-language policy for planning questions and artifacts; limit interview rounds, reuse decisions and check comprehension within existing design review. Add a language exercise without new skills, dependencies or gates.
 
