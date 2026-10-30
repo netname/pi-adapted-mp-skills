@@ -219,7 +219,7 @@ git init -b main &&
 pi install -l "$MP_SKILLS"
 ```
 
-The destination must be new. The package and lab are separate sibling repositories. Run project setup and populate actual role settings as described in [manual §7](MANUAL.md#7-configure-each-software-project), preserving the supplied spec, tests and canonical tracker root. Record the operator/decision owner, both design-review profiles, code-review profiles and the actual model families. Do not launch implementation yet.
+The destination must be new. The package and lab are separate sibling repositories. Open and configure the generated lab using the complete [manual lab setup sequence](MANUAL.md#open-and-configure-the-lab), preserving the supplied spec, tests and canonical tracker root. Record the operator/decision owner, both design-review profiles, code-review profiles and the actual model families. Do not launch implementation yet.
 
 After configuration, commit the initial lab baseline using [manual §11](MANUAL.md#generate-a-new-directory), and copy/fill the [workflow](VALIDATION-REPORT.md) and [architecture](ARCHITECTURE-VALIDATION.md) report templates in the canonical tracker directory. Keep the initial lab SHA separate from the skills-package SHA. The ignored tracker/evidence is not saved by that commit.
 

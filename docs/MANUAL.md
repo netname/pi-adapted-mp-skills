@@ -17,7 +17,7 @@ The **manual gives instructions**. The [workflow report](VALIDATION-REPORT.md) a
 | 1. Prepare the host | You | Follow [§4](#4-prepare-the-execution-host); authenticate Pi and Claude on the execution host | Both CLIs work; record host/tool versions |
 | 2. Freeze the package | You | Follow [§5](#5-check-out-the-exact-pr-not-the-default-branch), using the combined architecture branch | Package tests pass; record the skills SHA; do not update that checkout during the run |
 | 3. Configure and test delegation | You, then a diagnostic coordinator | Follow [§6](#6-configure-paseo-and-profiles): save profiles, enable tools, create harmless sessions and test a delegated child | Actual model settings, paths and parent/child run IDs verified; no implementation yet |
-| 4. Generate/configure the lab | You and setup agent | Follow [§11](#11-worked-example-create-the-quotation-lab), using [§7](#7-configure-each-software-project) for project instructions | Fresh lab, actual delegation settings, canonical tracker path and initial committed lab baseline |
+| 4. Generate/configure the lab | You and setup agent | Follow [§11](#11-worked-example-create-the-quotation-lab), following [the lab setup sequence](#open-and-configure-the-lab) | Fresh lab, actual delegation settings, canonical tracker path and initial committed lab baseline |
 | 5. Open the reports | You | Use [Record the environment first](#record-the-environment-first) | Both report copies identify this run and start with unperformed checks visibly NOT RUN |
 | 6. Exercise discovery | Planner/researchers; you decide | Use [the planning rehearsal](#optional-planning-rehearsal) for whole-cycle validation | Cited research, actual human decision and preserved reference scope; otherwise explicitly mark discovery NOT RUN |
 | 7. Review/accept the design | Planner, fresh design reviewers, you, coordinator | Go to [architecture guide §6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool); return here when its readiness check and handoff are complete | Actual reports, current input fingerprints, applicable human acceptance and committed execution baseline |
@@ -686,21 +686,15 @@ Run them on the intended host. Confirm options with the installed CLI's help if 
 
 ## 7. Configure each software project
 
-Run setup once in the target project, then update only changed decisions:
+**Following the worked example?** Create the lab first and follow the complete [lab setup sequence in §11](#open-and-configure-the-lab). Return here for general project guidance. Do not run project setup in the skills checkout or before the target project exists.
+
+For another project, select its existing directory and host, inspect current conventions, then run setup once and update only changed decisions. In a Pi session whose working directory is the target project, invoke:
 
 ```text
 /skill:setup-matt-pocock-skills
 ```
 
-For the lab, add this instruction:
-
-```text
-Preserve the supplied local tracker, agreed quote spec and testing contract.
-Use the canonical absolute tracker path already in AGENTS.md.
-Populate delegation.md from the actual Paseo host profiles; do not invent model IDs.
-Do not change global installations, supplied acceptance tests or the lab's scope.
-Report any setup instruction that conflicts with the installed Pi/Paseo version.
-```
+Use the Claude explicit-file alternative below when Claude is the setup session. Review the proposed changes, populate actual configuration, and confirm the project owner has resolved relevant decisions.
 
 Expected project artifacts:
 
@@ -910,9 +904,101 @@ Generated artifacts include:
 - Three Markdown tickets and a derived graph under `.scratch/quote-demo/`.
 - A delegation template requiring your real profile/model settings.
 
-Run setup as described in section 7, or fill the delegation table yourself. Resolve every `configure` value before execution. Preserve the supplied spec and tracker location.
+### Open and configure the lab
 
-Then commit the baseline, including any project package declaration and configuration:
+**You act next.** Confirm Paseo Desktop is connected to the execution host where `MP_LAB` exists, such as `sen03`. Open that lab directory as a project in Paseo; alternatively, register it on that host from the lab terminal:
+
+```bash
+cd "$MP_LAB" &&
+paseo project create
+```
+
+Check the host and absolute path shown in Paseo before starting a session. Registration does not configure profiles or implement code. See [Paseo CLI projects](https://paseo.sh/docs/cli#projects).
+
+Print both actual absolute paths from the same host shell:
+
+```bash
+printf 'Skills package: %s\nLab project: %s\n' "$MP_SKILLS" "$MP_LAB"
+```
+
+If a value is empty, set it to the actual existing checkout/directory; do not create another lab merely to obtain a path. Variables are shell-specific and may need to be set again in a new terminal.
+
+#### Recommended: configure with Claude in Paseo
+
+In the lab project on the correct host, create a fresh Claude planning session using the profile you configured in [§6](#create-role-profiles-on-the-execution-host). Replace both placeholders in the complete prompt below with the printed absolute paths before sending it to that session:
+
+```text
+Read PACKAGE_PATH/skills/engineering/setup-matt-pocock-skills/SKILL.md and
+follow that procedure for APPLICATION_PATH. Resolve references relative to
+the skill file. Treat Pi-specific installation checks as checks of the Pi
+worker environment. Use only actual discovered Paseo settings.
+
+Inspect and preserve the supplied local tracker, quote specification, testing
+contract, acceptance tests and application scope. Use the canonical absolute
+tracker path already recorded in the lab's AGENTS.md; do not create another
+tracker in a worktree. Inspect existing project instructions before changing
+anything, and complete them rather than replacing them unnecessarily.
+
+Help me populate docs/agents/delegation.md with the actual Paseo profiles,
+provider/model IDs and model families I provide or that can be independently
+verified. A profile must already exist in Paseo; do not invent one. Preserve
+the configured worker and retry limits unless I decide to change them.
+
+Do not implement the application, accept the design on my behalf, alter the
+supplied acceptance tests, install or change global packages, create a remote
+repository, or launch implementation workers. Report missing settings and any
+conflict with the installed Pi/Paseo versions. Summarize files changed and
+questions that need my decision so I can inspect the result.
+```
+
+`PACKAGE_PATH` is the skills checkout; `APPLICATION_PATH` is the generated lab. They are placeholders, not literal paths. Pi package installation does not create Claude slash commands. Respond to setup questions with existing verified decisions and settings; do not assume the agent can infer your actual model IDs from profile names.
+
+#### Alternative: configure with Pi
+
+Instead of the Claude route, create a Pi session in Paseo in the **same lab project**. Confirm Pi loaded the project-local package installed above. Send the following two messages in that session:
+
+```text
+/skill:setup-matt-pocock-skills
+```
+
+```text
+Configure this quotation lab using its existing instructions and actual Paseo
+profiles. Preserve the supplied spec, acceptance tests, testing contract, scope
+and canonical absolute tracker path in AGENTS.md. Inspect existing files before
+changing them; resolve all delegation.md placeholders using verified provider,
+model and family information, asking me when information is missing. Do not
+implement the application, fabricate design acceptance, modify global
+installations, create a remote repository, or launch implementation workers.
+Summarize changes, missing settings and conflicts for my inspection.
+```
+
+Use **one** setup path, not both. If Pi cannot find the skill, inspect installation/startup diagnostics and the [command visibility guidance](#two-setup-checks-command-visibility-and-shared-tracker-paths).
+
+#### Inspect the configuration before committing
+
+You inspect the agent's proposed changes; the setup session can help explain them. From a terminal on the execution host:
+
+```bash
+cd "$MP_LAB" &&
+git status --short &&
+git diff &&
+cat AGENTS.md &&
+cat docs/agents/delegation.md &&
+cat docs/agents/testing.md &&
+cat docs/agents/architecture.md
+```
+
+`git diff` shows tracked changes; new untracked files also appear in `git status`, so open any relevant new file separately. Check:
+
+- `AGENTS.md` points to the lab instructions and its canonical tracker root, `$MP_LAB/.scratch/quote-demo`. All worktrees must use that **original absolute path**.
+- `docs/agents/issue-tracker.md` describes ownership and tracker transitions. `delegation.md` contains real profile names, provider/model IDs and families, with no unresolved required `configure` placeholders.
+- `testing.md` identifies usable lab commands and resources; `architecture.md` identifies required design review and acceptance. The supplied specification, tests and scope remain intact.
+- Profiles have actually been saved in Paseo; the Markdown file records them but does not create them. Design reviewers differ from design authors, and code reviewers differ from every implementation family contributing to their target.
+- Any missing tools, model identity or unresolved decision is recorded as a blocker. Do not start implementation until the configuration and design-readiness gates are complete.
+
+#### Commit the initial lab baseline
+
+After you have inspected the intended setup changes, commit the project configuration and supplied scaffold:
 
 ```bash
 cd "$MP_LAB" &&
@@ -921,16 +1007,11 @@ git commit -m "Define quote lab specification, acceptance tests and workflow" &&
 git rev-parse HEAD
 ```
 
-Record this as **lab baseline SHA**. It is different from the **skills-under-test SHA**. The tracker/evidence under `.scratch/` is ignored and must be retained separately; it is not saved by this commit.
+Record this output as the **initial lab baseline SHA**, distinct from the skills-package SHA. The tracker/evidence under `.scratch/` is ignored: retain it separately; the commit does not save it.
 
-Register/open this lab on the intended Paseo host. The documented CLI route is:
+Later, after actual design review and human acceptance, the [architecture handoff](ARCHITECTURE-GUIDE.md#commit-and-hand-off-to-execution) records the **approved execution baseline**. It may be a later commit; workers start from that accepted revision. Preserve both identities in the reports.
 
-```bash
-cd "$MP_LAB" &&
-paseo project create
-```
-
-Alternatively open the directory through the app. Check the selected host and directory before starting the planning/coordinator session. See [Paseo CLI projects](https://paseo.sh/docs/cli#projects).
+**Next:** copy the two reports below, run the optional planning rehearsal if validating the whole cycle, then follow the linked design review. Return to §12 only after the design readiness check and handoff.
 
 ### Record the environment first
 
