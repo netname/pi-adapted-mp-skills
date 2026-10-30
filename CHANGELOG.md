@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Replace ambiguous “useful minimum” wording with required design work/artifacts. Add explicit actions to the design-route table and separate owners, actions, locations and completion checks in the preparation table.
+
 - Expand the workflow introduction to define project contracts and their locations, explain research/grilling/prototypes/Wayfinder, and connect discovery to design acceptance and execution. Align the cooperation summary with the complete process.
 
 - Give the coordinator its own workflow component row and distinguish planning, worker and reviewer responsibilities. Clarify startup baselines, decision versus implementation readiness, verification profiles, review independence and local-state preservation.

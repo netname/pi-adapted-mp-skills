@@ -105,7 +105,7 @@ The spec owns requirements. The design references those requirements and explain
 
 `to-spec` synthesizes agreed behavior. `design-solution` prepares an inspectable proposal. For a new application, label the architecture as **intended**. For an existing application, distinguish the observed current system, proposed target and transition, citing inspected source/configuration/tests.
 
-A small change can use a short design note. New boundaries, persistence, ownership or external contracts require more explanation. Choose the [smallest useful artifact set](ARCHITECTURE-GUIDE.md#3-choose-an-appropriate-amount-of-design); do not create the same document set for every change.
+A small change can use a short design note. New boundaries, persistence, ownership or external contracts require more explanation. Choose the [required design work and artifacts](ARCHITECTURE-GUIDE.md#3-choose-an-appropriate-amount-of-design); do not create the same document set for every change.
 
 ### 3. Review the design before substantial decomposition
 

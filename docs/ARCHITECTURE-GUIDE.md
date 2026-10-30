@@ -2,7 +2,7 @@
 
 This guide extends the [setup and SWE manual](MANUAL.md) with design explanation, visualization and independent review. It describes a local extension to Matt Pocock's adapted skills, not a feature attributed to upstream. The architecture branch depends on the workflow work in PR #1; validate these additions separately from live implementation orchestration. The older commit-linked edition remains historical; use the guide from the same package revision you are testing.
 
-Start at the [repository README](../README.md#documentation-map). Within this guide: [purpose and solution overview](#1-the-purpose-and-overall-process) → [owners](#2-who-does-what) → [minimum artifacts and actions](#3-choose-an-appropriate-amount-of-design) → [artifact locations](#4-artifacts-and-their-relationships) → [operational route](#operational-route-and-completion-checks) → [worked example](#6-worked-example-understand-the-quotation-tool).
+Start at the [repository README](../README.md#documentation-map). Within this guide: [purpose and solution overview](#1-the-purpose-and-overall-process) → [owners](#2-who-does-what) → [required design work and artifacts](#3-choose-an-appropriate-amount-of-design) → [artifact locations](#4-artifacts-and-their-relationships) → [operational route](#operational-route-and-completion-checks) → [worked example](#6-worked-example-understand-the-quotation-tool).
 
 ## 1. The purpose and overall process
 
@@ -84,32 +84,32 @@ For the Claude-planning / Pi-implementation example, use two fresh Pi design-rev
 
 ## 3. Choose an appropriate amount of design
 
-“Useful minimum” means the smallest set of **decisions, references, artifacts and actions** that lets another session implement and review the change without guessing. It does not mean creating every possible document, and it is not permission to skip an unresolved requirement or failed review.
+Required design work and artifacts are the **decisions, references, documents and reviews** needed for someone else to implement and review the change without guessing. Reuse existing material when it applies. Create or update only what the change needs, while resolving requirements and completing the applicable review and acceptance steps.
 
-### Choose a route
+### Choose the design work appropriate for the change
 
-| Situation | Useful minimum | Add only when it explains a real decision |
-| --- | --- | --- |
-| Small fix inside accepted boundaries | Existing requirement/issue reference, a short design note, reused decisions, specific checks, scoped ticket and applicable review/acceptance evidence | A diagram or new ADR if existing documentation cannot explain the change |
-| Greenfield feature/application | Agreed requirements, intended actors/components/interfaces, success/failure paths, alternatives and verification mapping | Shared LikeC4 model when several views benefit from consistent identities |
-| Brownfield feature | The above plus evidence-backed current state at a named commit and proposed differences | Transition, compatibility, migration and rollback when the change needs them |
-| Cross-cutting boundary/data change | Full change design, explicit ownership/contracts, significant ADRs and verification for the affected boundaries | Deployment/resource model and operational checks when relevant |
+| Situation | Action to take | Required information and artifacts | Add when relevant |
+| --- | --- | --- | --- |
+| Small fix inside accepted boundaries | Confirm existing requirements and decisions still apply; write a short change note and identify affected checks | Requirement/issue reference, scoped ticket, design note, reused decisions and applicable review/acceptance evidence | Diagram or ADR when existing material cannot explain the change |
+| Greenfield feature/application | Define intended responsibilities and interactions; explain success/failure paths and compare significant alternatives | Agreed requirements, intended actors/components/interfaces, proposed design and verification mapping | Shared LikeC4 model when several views need consistent component identities |
+| Brownfield feature | Inspect the current implementation at a named commit; describe proposed differences and the relevant alternatives | Agreed requirements, evidence-backed current state, proposed design and verification mapping | Transition, compatibility, migration and rollback plans when the change needs them |
+| Cross-cutting boundary/data change | Identify affected boundaries and owners; agree on contracts and record significant decisions | Full change design, explicit ownership/contracts, significant ADRs and verification for affected boundaries | Deployment/resource views and operational checks |
 
 Lightweight reduces the amount of prose and optional modeling. This package still expects applicable independent review and actual human acceptance. The configured readiness helper requires both recorded review axes; it does not automatically waive one for a small note. Reuse existing reports/authorization only when they genuinely cover unchanged inputs and scope. Missing evidence remains incomplete.
 
-### Build the minimum in order
+### Prepare and review the design
 
-These are application-repository paths unless otherwise stated. Existing artifacts may be reused; “create” does not mean duplicate them for each change.
+These are application-repository paths unless otherwise stated. Existing artifacts may be reused; “create” does not mean duplicate them for each change. Use the completion checks to decide whether a step is ready for handoff. For runnable commands and prompts, follow the [operational route](#operational-route-and-completion-checks).
 
-| When | Action and responsible role | Minimum artifact / location | How to know it is enough |
-| --- | --- | --- | --- |
-| Once per project, before execution | Maintainer/planner runs setup and preserves current conventions | `AGENTS.md` plus `docs/agents/architecture.md`, `delegation.md`, `testing.md` and `issue-tracker.md` | Paths, actual role settings, commands and owners are usable; no blocking placeholders |
-| When behavior is clarified | Planner synthesizes agreed requirements, normally with `to-spec` | `docs/specs/<feature>.md` or an authoritative tracker issue | Stable requirement references, examples/exclusions and observable acceptance; no unresolved product choice hidden as an implementation assumption |
-| Before design review | Planner creates a scoped proposal with `design-solution` | `docs/designs/<feature>.md`, starting from [the design template](../skills/engineering/_shared/design.template.md) | Explains what changes, responsibilities, a success/failure path, consequences and checks; a short note can link existing overview/ADRs |
-| When system context is missing or changes | Planner creates/updates the application overview; records a significant decision if needed | `docs/architecture/overview.md`; optional `docs/adr/<decision>.md`; optional model under `docs/architecture/model/` | The reader can place the change in the system. No new diagram or ADR is needed merely to fill a folder |
-| Before major decomposition | Coordinator arranges `review-design`; fresh reviewers explain/challenge the proposal | Reports in the configured evidence store; the lab uses `docs/designs/reviews/` | Both axes actually ran against identified inputs; blockers have dispositions; unresolved choices return to the human |
-| After the design is understood | Planner uses `to-tickets`; human confirms scope/breakdown; coordinator checks consistency | Tickets in the configured tracker and requirement → component → ticket → check mapping, normally `docs/designs/<feature>-traceability.md` | Every in-scope requirement has coverage; blockers and resource assumptions make execution feasible |
-| Before any affected worker is dispatched | Coordinator records final reviewed inputs and actual acceptance, then checks readiness | `docs/designs/<feature>-readiness.json` when using the supplied helper; include a stable approved-ticket snapshot among its inputs | Files/reports match the accepted target, required reviews are complete, real acceptance is linked and the readiness command passes |
+| When | Responsible role | Action to take | Artifact / location | Completion check |
+| --- | --- | --- | --- | --- |
+| Once per project, before execution | Maintainer/planner | Run setup, preserve current conventions and configure the project instructions | `AGENTS.md` plus `docs/agents/architecture.md`, `delegation.md`, `testing.md` and `issue-tracker.md` | Paths, actual role settings, commands and owners are usable; no blocking placeholders |
+| When behavior is clarified | Planner | Synthesize agreed requirements, normally with `to-spec` | `docs/specs/<feature>.md` or an authoritative tracker issue | Stable requirement references, examples/exclusions and observable acceptance; no unresolved product choice hidden as an implementation assumption |
+| Before design review | Planner | Create a scoped proposal with `design-solution`, linking applicable existing decisions | `docs/designs/<feature>.md`, starting from [the design template](../skills/engineering/_shared/design.template.md) | Explains what changes, responsibilities, success/failure paths, consequences and checks; a short note can link existing overview/ADRs |
+| When system context is missing or changes | Planner | Create/update the application overview; record a significant decision if needed | `docs/architecture/overview.md`; optional `docs/adr/<decision>.md`; optional model under `docs/architecture/model/` | The reader can place the change in the system. No new diagram or ADR is needed merely to fill a folder |
+| Before major decomposition | Coordinator arranges; fresh reviewers review; planner addresses findings; human decides unresolved choices | Run `review-design` for comprehension and challenge; record findings and resolve blockers | Reports in the configured evidence store; the lab uses `docs/designs/reviews/` | Both axes actually ran against identified inputs; blockers have dispositions; unresolved choices return to the human |
+| After the design is understood | Planner prepares; human authorizes scope/breakdown; coordinator checks consistency | Use `to-tickets`, map requirements to work/checks, and reconcile dependencies and resource assumptions | Tickets in the configured tracker and requirement → component → ticket → check mapping, normally `docs/designs/<feature>-traceability.md` | Every in-scope requirement has coverage; blockers and resource assumptions make execution feasible; actual scope/plan authorization covers these artifacts |
+| Before any affected worker is dispatched | Coordinator records/checks; human supplies applicable acceptance | Record final reviewed inputs and actual acceptance, then check readiness | `docs/designs/<feature>-readiness.json` when using the supplied helper; include a stable approved-ticket snapshot among its inputs | Files/reports match the accepted target, required reviews are complete, real acceptance is linked and the readiness command passes |
 
 For a lightweight change, the design note can contain the short coverage table and links to existing decisions. One ticket can be sufficient; the traceability table need not become a separate file. The machine record and evidence still identify the applicable files. For remote requirements/tickets, preserve an immutable export or revision reference; do not hash a URL string and imply its changing content was reviewed.
 
