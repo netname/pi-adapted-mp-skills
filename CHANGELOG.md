@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Remove the premature lab installation command and clarify when the generator creates the lab. Align coordinator and final-review prompts with the accepted execution baseline and actual human approval.
+
 - Put lab project setup in chronological order: open the correct host/project, choose Claude or Pi, follow complete prompts, inspect configuration and commit the initial baseline before review. Clarify the later approved execution baseline.
 
 - Make the manual the single entry route for first-time framework validation. Expand Paseo profile/delegation/session preflight, explain A/B/C and optional administrative terminals, link design handoffs and both live reports, and distinguish historical preparation results, feedback and acceptance decisions.

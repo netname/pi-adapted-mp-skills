@@ -17,7 +17,7 @@ The **manual gives instructions**. The [workflow report](VALIDATION-REPORT.md) a
 | 1. Prepare the host | You | Follow [§4](#4-prepare-the-execution-host); authenticate Pi and Claude on the execution host | Both CLIs work; record host/tool versions |
 | 2. Freeze the package | You | Follow [§5](#5-check-out-the-exact-pr-not-the-default-branch), using the combined architecture branch | Package tests pass; record the skills SHA; do not update that checkout during the run |
 | 3. Configure and test delegation | You, then a diagnostic coordinator | Follow [§6](#6-configure-paseo-and-profiles): save profiles, enable tools, create harmless sessions and test a delegated child | Actual model settings, paths and parent/child run IDs verified; no implementation yet |
-| 4. Generate/configure the lab | You and setup agent | Follow [§11](#11-worked-example-create-the-quotation-lab), following [the lab setup sequence](#open-and-configure-the-lab) | Fresh lab, actual delegation settings, canonical tracker path and initial committed lab baseline |
+| 4. Generate/configure the lab | You and setup agent | Follow [§11](#11-worked-example-create-the-quotation-lab), then [the lab setup sequence](#open-and-configure-the-lab) | Fresh lab, actual delegation settings, canonical tracker path and initial committed lab baseline |
 | 5. Open the reports | You | Use [Record the environment first](#record-the-environment-first) | Both report copies identify this run and start with unperformed checks visibly NOT RUN |
 | 6. Exercise discovery | Planner/researchers; you decide | Use [the planning rehearsal](#optional-planning-rehearsal) for whole-cycle validation | Cited research, actual human decision and preserved reference scope; otherwise explicitly mark discovery NOT RUN |
 | 7. Review/accept the design | Planner, fresh design reviewers, you, coordinator | Go to [architecture guide §6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool); return here when its readiness check and handoff are complete | Actual reports, current input fingerprints, applicable human acceptance and committed execution baseline |
@@ -538,18 +538,11 @@ This corrected architecture branch has 23 offline tests; PR #1 has 19. Judge suc
 
 Passing package checks does not establish that live Paseo sessions, model separation or the generated application pass. Those are later exercises. The generated application itself uses only local files and Node's standard library. Source: [npm test](https://docs.npmjs.com/cli/v11/commands/npm-test/).
 
-### Install the package into the lab project
+### Install the package into the lab project later
 
-After creating the separate application directory in section 11:
+Do not run a lab installation command yet: `$MP_LAB` may not exist. In [§11: Generate a new directory](#generate-a-new-directory), the generator creates the application directory first. The same command block then enters it and runs `pi install -l "$MP_SKILLS"`. Follow that block once; there is no separate installation to repeat here.
 
-```bash
-cd "$MP_LAB" &&
-pi install -l "$MP_SKILLS"
-```
-
-`-l` records a project installation. Pi loads local-path packages from their existing location after project trust. Check startup diagnostics and avoid duplicate copies with shadowing names. See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
-
-Keep unrelated packages when other workflows need them, but verify that this validation uses the configured Paseo delegation path.
+The `-l` option records a project-local installation. Pi loads the package from its existing checkout after project trust. Check startup diagnostics and avoid duplicate skill copies with shadowing names. Keep unrelated packages where needed, but verify the configured Paseo delegation path. See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
 
 ## 6. Configure Paseo and profiles
 
@@ -894,7 +887,7 @@ git init -b main &&
 pi install -l "$MP_SKILLS"
 ```
 
-The generator refuses an existing destination. Use a new numbered directory for a fresh attempt rather than deleting a failed run's evidence. It does not initialize Git, install providers, launch agents or modify your global setup.
+The generator refuses an existing destination. Use a new numbered directory for a fresh attempt rather than deleting a failed run's evidence. The generator itself only creates the scaffold; the following commands initialize Git and install the Pi package locally. If a later command fails, inspect the newly created directory and resume the failed step; do not rerun the generator over it. No command in this block installs providers, launches agents or changes global setup.
 
 Generated artifacts include:
 
@@ -1063,21 +1056,23 @@ C must not be included. The graph is an export of ticket state. Have the coordin
 
 ### Start the coordinator
 
-Start one fresh Claude Code session inside Paseo for the lab, using your planning/coordinator profile. Supply this prompt with the two absolute paths filled in:
+Start one fresh Claude Code session inside Paseo for the lab, using your planning/coordinator profile. Continue only after the human has actually accepted the current design and plan and the readiness check passes. Supply this prompt with the two absolute paths and the approved execution baseline SHA filled in:
 
 ```text
 Read /ABSOLUTE/SKILLS/PATH/skills/engineering/implement-spec/SKILL.md and follow it
 for /ABSOLUTE/LAB/PATH. Resolve skill references relative to their files.
 
 Use the agreed spec at docs/specs/quote.md and the canonical tracker path in AGENTS.md.
-Read project tracker, delegation and testing configuration. The spec and three-ticket
-breakdown are approved for this validation run. Do not reconfirm existing decisions.
+Read project tracker, delegation and testing configuration. Verify the recorded human
+acceptance of the current spec, design and three-ticket plan. Do not invent approval
+or reconfirm an existing decision that covers the current inputs.
 
 Use the configured Paseo implementation and independent review profiles.
 Maximum two implementation workers. You are the sole tracker and integration writer.
 Do not implement code yourself. Never have a worker dispatch its own review.
 
-Create a dedicated integration branch/worktree from the committed lab baseline.
+Create a dedicated integration branch/worktree from the approved execution baseline
+commit APPROVED_EXECUTION_BASELINE_SHA. Confirm it matches the accepted inputs.
 For this first supervised run, launch A and B into separate worktrees and ask both to
 pause before editing until I have inspected their run IDs, base revisions, worktree
 paths and effective models. This is an observation checkpoint, not a new requirement.
@@ -1174,10 +1169,10 @@ Expected: manifest `passed: true`, required tests executed, clean candidate, and
 
 ### Capture a full review target
 
-Use the lab baseline SHA you recorded, not a branch name that may move:
+Use the approved execution baseline SHA from the architecture handoff (the coordinator’s original integration base), not the earlier initial scaffold baseline or a branch name that may move:
 
 ```bash
-export MP_BASELINE="paste-the-recorded-lab-baseline-SHA"
+export MP_BASELINE="paste-the-approved-execution-baseline-SHA"
 node "$MP_SKILLS/scripts/review-target.mjs" \
   --repo "$MP_CANDIDATE" --base "$MP_BASELINE" --head HEAD
 ```
