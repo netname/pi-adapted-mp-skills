@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Expand the workflow introduction to define project contracts and their locations, explain research/grilling/prototypes/Wayfinder, and connect discovery to design acceptance and execution. Align the cooperation summary with the complete process.
+
 - Give the coordinator its own workflow component row and distinguish planning, worker and reviewer responsibilities. Clarify startup baselines, decision versus implementation readiness, verification profiles, review independence and local-state preservation.
 
 - Explain planning through delivery in the workflow, including stage owners, readiness, claims, independent review, serial integration and restart behavior. Add a README table distinguishing each document's purpose and links into the explanation.
