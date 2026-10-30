@@ -1,6 +1,8 @@
-# PR #1 validation report
+# Framework workflow validation report
 
 Copy this file into the lab's `.scratch/quote-demo/validation-report.md`. Fill observed results; never use the expected result as evidence that a test ran. The procedure is in [MANUAL.md](MANUAL.md) in the skills repository. After copying, that relative link may no longer resolve; keep the skills checkout path below.
+
+Use this report for orchestration behavior. For the combined framework also complete [the architecture report](ARCHITECTURE-VALIDATION.md). Follow [the first-time route](MANUAL.md#validate-the-framework-for-the-first-time) for instructions. Leave unperformed checks NOT RUN; a copied template is not evidence.
 
 ## Run identity
 
@@ -9,9 +11,10 @@ Copy this file into the lab's `.scratch/quote-demo/validation-report.md`. Fill o
 | Run ID / date / operator | |
 | Skills checkout absolute path | |
 | Skills-under-test Git SHA | |
-| PR URL | https://github.com/netname/pi-adapted-mp-skills/pull/1 |
+| PR URL(s) / tested scope | Record PR #1 alone or combined PR #1 + PR #2 |
 | Lab original directory | |
-| Lab baseline SHA | |
+| Initial lab baseline SHA | |
+| Approved execution baseline SHA | |
 | Final integration branch / worktree / SHA | |
 | Canonical tracker/evidence directory | |
 | OS / host | |
@@ -113,6 +116,8 @@ Not covered by this lab: real database/queue lease recovery; migrations; browser
 - Negative/recovery exercises: PASS / FAIL / INCOMPLETE
 - Whole SWE-cycle rehearsal: PASS / FAIL / NOT RUN
 - Remaining blocking defects:
+- NOT RUN / BLOCKED checks and limitations:
+- Architecture report location / outcome (combined run):
 - Nonblocking follow-ups:
 - Proposed PR action: keep draft / ready for independent review / ready for maintainer decision
 - Human making this assessment:

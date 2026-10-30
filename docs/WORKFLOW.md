@@ -227,7 +227,7 @@ When all tickets are integrated, run Verify candidate and review the full change
 
 Remove only this effort's clean, inactive worktrees after retaining commits and evidence. Preserve failed work for diagnosis. Release coordination and close tickets according to the configured lifecycle.
 
-Operations: [final inspection](MANUAL.md#13-inspect-the-final-result), [acceptance decision](MANUAL.md#15-decide-whether-pr-1-is-ready) and [architecture completion policy](../skills/engineering/_shared/ARCHITECTURE.md#change-and-completion).
+Operations: [final inspection](MANUAL.md#13-inspect-the-final-result), [acceptance decision](MANUAL.md#15-evaluate-the-framework-and-recommend-acceptance) and [architecture completion policy](../skills/engineering/_shared/ARCHITECTURE.md#change-and-completion).
 
 ## Normalized frontier input
 

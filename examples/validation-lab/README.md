@@ -1,6 +1,8 @@
 # Reproducible workflow-validation lab
 
-Start with the [README documentation map](../../README.md#documentation-map), [application overview](template/docs/architecture/overview.md) and [design operational route](../../docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks). Read [the full manual](../../docs/MANUAL.md) for host setup and execution before running live agents. This is a teaching fixture for PR #1. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
+For the complete exercise, follow the [first-time validation route](../../docs/MANUAL.md#validate-the-framework-for-the-first-time). Use the manual as your main procedure and return to it after the linked design review.
+
+Start with the [README documentation map](../../README.md#documentation-map), [application overview](template/docs/architecture/overview.md) and [design operational route](../../docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks). Read [the full manual](../../docs/MANUAL.md) for host setup and execution before running live agents. This is a teaching fixture for the orchestration workflow and its architecture/design extension. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
 
 ```bash
 node /absolute/skills/examples/validation-lab/create.mjs /new/absolute/lab-directory

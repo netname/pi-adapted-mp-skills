@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Make the manual the single entry route for first-time framework validation. Expand Paseo profile/delegation/session preflight, explain A/B/C and optional administrative terminals, link design handoffs and both live reports, and distinguish historical preparation results, feedback and acceptance decisions.
+
 - Replace ambiguous “useful minimum” wording with required design work/artifacts. Add explicit actions to the design-route table and separate owners, actions, locations and completion checks in the preparation table.
 
 - Expand the workflow introduction to define project contracts and their locations, explain research/grilling/prototypes/Wayfinder, and connect discovery to design acceptance and execution. Align the cooperation summary with the complete process.

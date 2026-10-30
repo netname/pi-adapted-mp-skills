@@ -1,12 +1,33 @@
 # Skills + Paseo: setup, daily development and PR validation manual
 
-Version: PR #1 workflow plus the dependent architecture-design extension / proposed package 0.2.0. Updated 2026-10-28.
+Version: PR #1 workflow plus the dependent architecture-design extension / proposed package 0.2.0. Updated 2026-10-30.
 
 This manual explains how to take a software change from an initial need to a verified, reviewed result using Matt Pocock's adapted skills, coding agents and Paseo. It then shows how to set up that workflow and validate it with a disposable project.
 
-The manual describes [PR #1](https://github.com/netname/pi-adapted-mp-skills/pull/1), which proposes this workflow. Its short operational contract is [WORKFLOW.md](WORKFLOW.md); upgrade differences are in [MIGRATION-0.2.md](MIGRATION-0.2.md). Treat differences between promised and observed behavior as validation findings.
+The current combined walkthrough covers [PR #1: orchestration](https://github.com/netname/pi-adapted-mp-skills/pull/1) and [PR #2: architecture/design extension](https://github.com/netname/pi-adapted-mp-skills/pull/2). [WORKFLOW.md](WORKFLOW.md) explains the process; [ARCHITECTURE-GUIDE.md](ARCHITECTURE-GUIDE.md) supplies the detailed design exercise. Treat differences between promised and observed behavior as findings. Upgrade differences are in [MIGRATION-0.2.md](MIGRATION-0.2.md).
 
-**Architecture extension:** Read [Understand and approve the design before building it](ARCHITECTURE-GUIDE.md). It supplies the design stage, visualization, exact setup for the dependent branch and additional worked-example checks. The section 5 checkout below describes the original PR #1 branch; use the architecture guide's checkout to validate the extension.
+## Validate the framework for the first time
+
+**Start here for the worked example and keep this manual as your main route.** The example builds an independent quotation CLI; it also tests whether the framework coordinates planning, workers, reviews and integration correctly. A correct application alone does not prove a correct workflow.
+
+The **manual gives instructions**. The [workflow report](VALIDATION-REPORT.md) and [architecture report](ARCHITECTURE-VALIDATION.md) **record your observations**. Complete both when validating the combined framework. The architecture report contains clearly marked historical preparation checks; these are not your live-run results.
+
+| Step | Who acts | Action / instructions | Checkpoint and evidence before continuing |
+| --- | --- | --- | --- |
+| 1. Prepare the host | You | Follow [§4](#4-prepare-the-execution-host); authenticate Pi and Claude on the execution host | Both CLIs work; record host/tool versions |
+| 2. Freeze the package | You | Follow [§5](#5-check-out-the-exact-pr-not-the-default-branch), using the combined architecture branch | Package tests pass; record the skills SHA; do not update that checkout during the run |
+| 3. Configure and test delegation | You, then a diagnostic coordinator | Follow [§6](#6-configure-paseo-and-profiles): save profiles, enable tools, create harmless sessions and test a delegated child | Actual model settings, paths and parent/child run IDs verified; no implementation yet |
+| 4. Generate/configure the lab | You and setup agent | Follow [§11](#11-worked-example-create-the-quotation-lab), using [§7](#7-configure-each-software-project) for project instructions | Fresh lab, actual delegation settings, canonical tracker path and initial committed lab baseline |
+| 5. Open the reports | You | Use [Record the environment first](#record-the-environment-first) | Both report copies identify this run and start with unperformed checks visibly NOT RUN |
+| 6. Exercise discovery | Planner/researchers; you decide | Use [the planning rehearsal](#optional-planning-rehearsal) for whole-cycle validation | Cited research, actual human decision and preserved reference scope; otherwise explicitly mark discovery NOT RUN |
+| 7. Review/accept the design | Planner, fresh design reviewers, you, coordinator | Go to [architecture guide §6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool); return here when its readiness check and handoff are complete | Actual reports, current input fingerprints, applicable human acceptance and committed execution baseline |
+| 8. Execute A/B → C | You start one coordinator; it launches workers/reviewers | Follow [§12](#12-execute-the-graph-and-observe-it), including the observation checkpoint | Distinct concurrent A/B worktrees; independent review; serial verified integration; C launches automatically afterward |
+| 9. Inspect and exercise failures | You and coordinator in isolated probes | Follow [§13](#13-inspect-the-final-result), [§14](#14-negative-exercises-prove-failures-remain-failures) and [architecture guide §7](ARCHITECTURE-GUIDE.md#7-failure-exercises-and-acceptance-evidence) | Final SHA/evidence agree; failures remain failures; restart does not duplicate workers |
+| 10. Report/recommend | You | Follow [§15](#15-evaluate-the-framework-and-recommend-acceptance) | Both reports complete, limitations explicit, evidence retained and proposed PR action stated |
+
+If a checkpoint fails, save the actual result and diagnose it before dependent work continues. Feedback is welcome before completing the run. Use PASS for observed success, FAIL for an observed violation, NOT RUN for an unperformed check and BLOCKED for a missing prerequisite. Never copy an expected outcome into the evidence column as if observed.
+
+Keep three decisions distinct: **lab design acceptance** authorizes this proposal/plan; **framework validation recommendation** assesses observed behavior on your tested configuration; **PR merge authorization** follows ordinary repository review. No lab report automatically authorizes a merge or proves all hosts/providers work.
 
 ## Overview: from a need to a change you can accept
 
@@ -93,7 +114,7 @@ There are **two separate subjects** in the exercises:
 
 | Subject | What it is | What success demonstrates |
 | --- | --- | --- |
-| Skills package / PR #1 | The procedures, briefs and helpers being improved in this repository | Offline checks and live observations support this proposed workflow on your tested configuration |
+| Skills package / workflow PRs | The procedures, briefs and helpers being improved in this repository | Offline checks and live observations support this proposed workflow on your tested configuration |
 | Quotation application | The disposable software your agents build using that workflow | Its implementation meets the supplied quote specification |
 
 A correct quotation application alone does not prove the workflow was followed: perhaps one agent did everything in one checkout. Conversely, passing the package's helper tests does not prove the application was built correctly. The lab records both application results and orchestration behavior, including deliberate failures and restart recovery.
@@ -119,7 +140,7 @@ Commands in `bash` blocks run in a terminal on the **execution host**. Blocks ma
 
 ### Jump to a section
 
-[Overview](#overview-from-a-need-to-a-change-you-can-accept) · [Concepts](#1-what-you-are-building) · [Vocabulary](#2-vocabulary-you-will-use) · [Roles](#3-choose-a-role-arrangement) · [Host setup](#4-prepare-the-execution-host) · [PR checkout](#5-check-out-the-exact-pr-not-the-default-branch) · [Paseo profiles](#6-configure-paseo-and-profiles) · [Project setup](#7-configure-each-software-project) · [SWE cycle](#8-use-the-skills-across-the-software-engineering-cycle) · [Testing](#9-understand-tests-without-over-testing-every-edit) · [Integration](#10-what-happens-when-two-tickets-finish) · [Create lab](#11-worked-example-create-the-quotation-lab) · [Execute](#12-execute-the-graph-and-observe-it) · [Inspect](#13-inspect-the-final-result) · [Failure drills](#14-negative-exercises-prove-failures-remain-failures) · [PR decision](#15-decide-whether-pr-1-is-ready) · [Real application](#16-move-from-the-lab-to-a-real-application) · [Troubleshooting](#17-troubleshooting) · [Daily practice](#18-daily-checklist-and-retrospective)
+[Overview](#overview-from-a-need-to-a-change-you-can-accept) · [Concepts](#1-what-you-are-building) · [Vocabulary](#2-vocabulary-you-will-use) · [Roles](#3-choose-a-role-arrangement) · [Host setup](#4-prepare-the-execution-host) · [PR checkout](#5-check-out-the-exact-pr-not-the-default-branch) · [Paseo profiles](#6-configure-paseo-and-profiles) · [Project setup](#7-configure-each-software-project) · [SWE cycle](#8-use-the-skills-across-the-software-engineering-cycle) · [Testing](#9-understand-tests-without-over-testing-every-edit) · [Integration](#10-what-happens-when-two-tickets-finish) · [Create lab](#11-worked-example-create-the-quotation-lab) · [Execute](#12-execute-the-graph-and-observe-it) · [Inspect](#13-inspect-the-final-result) · [Failure drills](#14-negative-exercises-prove-failures-remain-failures) · [PR decision](#15-evaluate-the-framework-and-recommend-acceptance) · [Real application](#16-move-from-the-lab-to-a-real-application) · [Troubleshooting](#17-troubleshooting) · [Daily practice](#18-daily-checklist-and-retrospective)
 
 ## 1. What you are building
 
@@ -436,12 +457,12 @@ A package install from the default branch does not validate an unmerged PR. Use 
 ~/code/quote-workflow-lab-01         separate application repository
 ```
 
-This block checks out PR #1's workflow branch. For the architecture extension, use [the architecture guide](ARCHITECTURE-GUIDE.md)'s branch-specific checkout instead; it includes the workflow changes too.
+For a first validation of the current combined framework, use the architecture branch below; it includes the orchestration changes. Only when intentionally testing PR #1 alone, substitute `improve/paseo-testing-workflow` and record that narrower scope. These commands capture the branch at clone time: record the printed SHA and keep it fixed for the run.
 
 ```bash
 export MP_SKILLS="$HOME/code/pi-skills-validation-01"
 mkdir -p "$HOME/code" &&
-git clone --branch improve/paseo-testing-workflow --single-branch \
+git clone --branch improve/architecture-design-review --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
   "$MP_SKILLS" &&
 cd "$MP_SKILLS" &&
@@ -471,12 +492,12 @@ The destination is an absolute path derived from `$HOME`, so the clone goes to t
 This is the complete clone command when `MP_SKILLS` has been set above:
 
 ```bash
-git clone --branch improve/paseo-testing-workflow --single-branch \
+git clone --branch improve/architecture-design-review --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
   "$MP_SKILLS"
 ```
 
-- `--branch` selects the workflow PR branch; the slash in the name is not a filesystem path.
+- `--branch` selects the combined architecture/workflow PR branch; the slash in the name is not a filesystem path.
 - `--single-branch` limits the fetched branch history, not the checkout to one commit.
 - `"$MP_SKILLS"` is the absolute local destination, kept identical to the path used by later commands.
 - A trailing `\` continues the same Bash command onto the next line; it must be the final character on that line.
@@ -536,7 +557,7 @@ Keep unrelated packages when other workflows need them, but verify that this val
 
 A **Paseo agent profile** is a named preset of launch settings: provider, model, thinking level, mode and supported features, with notes describing when to use it. It saves choosing those options repeatedly. Profiles are saved on a particular host; changing one affects future selections, not sessions already launched. Source: [Paseo agent profiles](https://paseo.sh/docs/agent-profiles).
 
-For this workflow, imagine a preset named `mp-build` that selects Pi and your configured DeepSeek model. The coordinator selects those settings, then gives a fresh worker its actual assignment: “Implement ticket A in this worktree.” `mp-spec-review` selects your Claude review settings, then receives the Spec brief and a particular candidate to review. These example names have no built-in meaning.
+For this workflow, imagine a preset named `mp-build` that selects Pi and your configured DeepSeek model. The coordinator selects those settings, then gives a fresh worker its actual assignment: “Implement ticket A in this worktree.” `mp-code-review` selects your Claude review settings, then receives the Spec brief and a particular candidate to review. These example names have no built-in meaning.
 
 Keep four concepts separate:
 
@@ -547,31 +568,85 @@ Keep four concepts separate:
 | Task prompt | Review ticket A at a specific SHA | The assignment for this run |
 | Session / run | A concrete Paseo agent ID | The actual execution and its history |
 
-The profile is not a running agent, a skill, a worktree or a ticket. Several fresh sessions can use the same profile. The coordinator still needs to place them in the correct workspaces and send the right instructions. In this package, role briefs are supplied explicitly; naming a profile `mp-spec-review` does not automatically load that file.
+The profile is not a running agent, a skill, a worktree or a ticket. Several fresh sessions can use the same profile. The coordinator still needs to place them in the correct workspaces and send the right instructions. In this package, role briefs are supplied explicitly; naming a profile `mp-code-review` does not automatically load that file.
 
 Also distinguish **agent profiles** from this manual's **test profiles**. Fast / Verify change / Verify candidate are project-defined selections of checks. They do not select an AI model or create a Paseo agent.
 
-In the selected execution host's settings:
+### Create role profiles on the execution host
 
-1. Confirm that Pi and Claude Code are discovered and can start sessions.
-2. Open **Settings → host → Agents** and enable Paseo tools. Start/reload the coordinator afterward so it receives those tools.
-3. Create profiles for planning/coordinator, implementation, Spec review, Standards review and research.
-4. For each profile, select the actual provider, model and appropriate mode/thinking setting.
-5. Add short “When to use” notes, then send an explicit task when creating a session.
+You configure profiles in **Paseo**, not by typing a skill command into Pi/Claude. First confirm both providers are discovered on the intended host. A Windows client connected to Linux must configure that Linux host, not accidentally its local daemon.
 
-Tool injection is disabled by default. CLI orchestration is an alternative; enabling injection is useful for this lab because it makes delegation directly visible to the coordinator. Sources: [orchestration](https://paseo.sh/docs/orchestration), [profiles](https://paseo.sh/docs/agent-profiles), [MCP reference](https://paseo.sh/docs/mcp).
+1. Open **Settings → your execution host → Agents → Agent profiles**.
+2. Select **New profile** and enter a name from the table below.
+3. Choose the installed provider and an actual available model. Select supported mode/thinking settings appropriate to the role; do not guess unavailable options.
+4. Fill **When to use** with the notes below, then **Save**.
+5. Repeat for the remaining profiles. These names are examples, not preinstalled keywords.
 
-Suggested profile notes, written in your own profile UI:
+| Profile label | Harness / model family for this example | When to use notes |
+| --- | --- | --- |
+| `mp-plan` | Claude Code / Claude | Plan and coordinate one effort. Delegate implementation; own tracker and integration. May research when configured with source access. |
+| `mp-build` | Pi / DeepSeek | Implement one ticket in its assigned worktree; return committed revision and verification evidence. Do not dispatch reviews. |
+| `mp-design-review` | Pi / DeepSeek | Independently reconstruct or challenge a Claude-authored design. Use separate fresh sessions for comprehension and challenge. |
+| `mp-code-review` | Claude Code / Claude | Review code implemented only by DeepSeek. Use separate fresh sessions for Spec and Standards; no edits or test execution. |
 
-| Profile label | Notes |
-| --- | --- |
-| `mp-plan` | Planning and single-coordinator work. Delegate implementation; keep tracker/integration ownership. |
-| `mp-build` | Implement one ticket in its allocated worktree. Return committed revision and verification evidence. Do not dispatch reviews. |
-| `mp-spec-review` | Fresh Spec-axis review. Read the supplied brief/spec/diff. No source edits or test execution. |
-| `mp-standards-review` | Fresh Standards-axis review. Read project standards and supplied brief/diff. Separate blocking violations from suggestions. |
-| `mp-research` | Bounded primary-source research. Save a cited artifact; make uncertainties visible. |
+These four presets can cover all role rows in the lab's `docs/agents/delegation.md`: Planning → `mp-plan`; Implementation → `mp-build`; Spec and Standards → `mp-code-review`; Design comprehension and challenge → `mp-design-review`; Research → a source-capable `mp-plan` session, or a separately configured research profile. Reusing settings never means reusing the author/implementer conversation as its reviewer. Check source access before selecting a research profile.
 
-These are proposed labels; they are not preinstalled profiles or special Paseo keywords. Record their real model settings in `docs/agents/delegation.md` inside the target project.
+Record **actual** profiles, harness/providers, exact model IDs and families in that file. Editing the file does not create a Paseo profile; saving a Paseo profile does not update the file. Reconcile both. Changing an implementation/design-author family can invalidate this example's review assignments. A profile label is not enforcement of read-only access or a guarantee of model identity.
+
+Source: [Paseo agent profiles](https://paseo.sh/docs/agent-profiles). Available controls depend on the installed version/provider. If a control is absent, record the version and gap rather than inventing a UI action or setting.
+
+### Enable delegation access
+
+**Delegation access** means the coordinator can call Paseo to discover providers/profiles, launch child agents/workspaces, monitor them and collect output. It is distinct from model authentication and tracker access. For this first run use built-in Paseo tools:
+
+1. Open **Settings → your execution host → Agents**.
+2. Turn on **Enable Paseo tools**; injection is off by default.
+3. Start a new coordinator session or reload the existing one so it receives the tools.
+4. Run the discovery and child-launch checks below before trusting the full graph.
+
+The CLI is an alternative for an agent with shell access to the correct running Paseo host; it does not require tool injection. Use one verified route for the first exercise. Enabling tools does not itself install this package, choose the correct model, supply role briefs or prove the coordinator follows workflow rules. Sources: [orchestration](https://paseo.sh/docs/orchestration) and [MCP reference](https://paseo.sh/docs/mcp).
+
+### Create the first Pi and Claude sessions
+
+For workflow validation, create agents **inside Paseo**. Running `pi` or `claude` directly in a terminal is useful for installation/authentication checks but does not establish that Paseo can manage that session.
+
+1. Select the correct host and a local workspace at the skills checkout for harmless preflight checks. No application exists yet. If the lab already exists, use its workspace and `AGENTS.md` instead.
+2. Start creating an agent. Open the model picker and select the saved profile under **Profiles**.
+3. Check the actual provider/model and workspace directory before sending a task. Button placement may differ between versions; profile selection is documented by Paseo.
+4. Create one Pi session using `mp-build` and one Claude session using `mp-plan`, each with this harmless prompt:
+
+```text
+This is a setup check, not an implementation assignment.
+Report the working directory and read README.md in this workspace.
+Summarize the project's purpose. Do not edit files, run tests, create commits,
+or launch other agents. Report any missing file or capability honestly.
+```
+
+Inspect effective provider/model in Paseo's session settings or available status metadata, rather than accepting generated self-identification. Record run IDs, directory and inspected model settings. Stop/archive these diagnostic sessions when their work is complete; they are not the A/B workers.
+
+### Test discovery and one delegated child
+
+In the diagnostic Claude session, first send:
+
+```text
+Without modifying files or creating agents, inspect the available Paseo tools,
+current host/workspace, providers, models and saved profiles. Identify mp-plan,
+mp-build, mp-design-review and mp-code-review and any missing capabilities.
+Do not invent model IDs or silently substitute profiles.
+```
+
+After discovery succeeds, test an actual launch:
+
+```text
+Use the installed Paseo tool schemas or CLI help to launch exactly one fresh Pi
+child using the verified mp-build settings in this workspace. Its only task is
+to read README.md and return a short summary. No edits, tests, commits, further
+delegation or implementation. Record the child run ID, effective settings and
+workspace; observe its terminal status and collect its output. Do not launch
+replacement children if its status is unknown. Report any capability gap.
+```
+
+Success means you can inspect the child in Paseo, verify its model/directory, and see the parent collect its actual output. Discovery alone does not prove launch access. Missing tools, authentication or observable settings remain blockers. Keep this evidence in the run report once the lab is created. Source: [Paseo orchestration](https://paseo.sh/docs/orchestration).
 
 ### Prove a profile works before using the full graph
 
@@ -580,6 +655,20 @@ Start one harmless session for each harness. Ask it to report its working direct
 If Paseo does not expose enough information to verify the effective model, record the limitation. Under this PR's policy the independent-review gate remains unverified until you can establish it; do not silently weaken the gate.
 
 Code reviewers read the exact candidate and relevant unchanged source, return reports in their session responses, and leave report-file creation to the coordinator in its evidence store. Reviewers are instructed to be read-only. Configure actual provider permissions where available. Neither profile notes nor a “plan” label by itself proves filesystem isolation. The coordinator checks candidate cleanliness afterward.
+
+### Optional administrative terminals: Herdr, tmux or your editor
+
+Paseo owns the validation agents and their lifecycle. Use a normal terminal, VS Code Remote SSH terminal, tmux or Herdr to inspect Git, files and logs and run manual verification. None is an additional framework requirement. Do not launch duplicate A/B/C workers through another tool.
+
+If you already use Herdr on the Linux execution host, it is suitable for persistent administrative panes. From the host shell:
+
+```bash
+herdr session attach quote-validation
+```
+
+Keep one pane for Git/reports and another for diagnostic/test commands. Detach with `Ctrl+B q`; reattach with the same command. Panes remain running while the server remains alive; detaching is not a promise of recovery after a host/server restart. If you run the Paseo daemon in a persistent pane, continue to create validation agents through Paseo. Otherwise keep the existing daemon arrangement. Sources: [Herdr CLI](https://herdr.dev/tui/docs/cli-reference/) and [remote/persistent sessions](https://herdr.dev/tui/docs/how-to-work/).
+
+For the first run, use the terminal arrangement you already know. Validate orchestration through Paseo before adding a second agent-management workflow.
 
 ### Useful observation commands
 
@@ -770,6 +859,18 @@ Even a conflict-free merge produces a different target. A green B branch does no
 
 ## 11. Worked example: create the quotation lab
 
+### What A, B and C mean
+
+These letters identify three implementation tickets, not models, profiles or different applications:
+
+| Ticket | Worker implements | Verification boundary | Dependency |
+| --- | --- | --- | --- |
+| A | `src/pricing.mjs`: total in integer cents | Pricing unit tests | No implementation blocker; design/readiness gates still apply |
+| B | `src/catalog.mjs`: read and validate a JSON catalog | Real filesystem integration tests | Can overlap A in a different worktree |
+| C | `src/cli.mjs`: parse input and combine catalog/pricing | Complete CLI process E2E | Waits for verified integration of A and B |
+
+A and B use separate fresh sessions with the same implementation profile. C uses another fresh session later. The coordinator creates these workers and their worktrees; you do not manually launch each ticket. The model/profile/run distinctions are explained in [§6](#6-configure-paseo-and-profiles).
+
 ### What you will build
 
 An operator runs:
@@ -833,7 +934,18 @@ Alternatively open the directory through the app. Check the selected host and di
 
 ### Record the environment first
 
-Copy [VALIDATION-REPORT.md](VALIDATION-REPORT.md) into the lab's `.scratch/quote-demo/` as `validation-report.md`. Fill its environment section. Record actual Node/Git/Pi/Paseo/Claude versions and exact models. No secrets belong in the report.
+Copy both reports after generating the lab. This copies templates; it does not mark any check as passed:
+
+```bash
+cp "$MP_SKILLS/docs/VALIDATION-REPORT.md" \
+  "$MP_LAB/.scratch/quote-demo/validation-report.md" &&
+cp "$MP_SKILLS/docs/ARCHITECTURE-VALIDATION.md" \
+  "$MP_LAB/.scratch/quote-demo/architecture-validation.md"
+```
+
+Fill run identity and actual Node/Git/Pi/Paseo/Claude versions/models in both. The workflow report covers execution/recovery; the architecture report covers design/review/readiness. Add evidence from the harmless session/delegation checks. Historical offline checks in the architecture template are reference information, not results from your run. After copying, relative documentation links may not resolve: use the recorded skills checkout or GitHub links. No secrets belong in reports. These copies are ignored by Git, so retain them separately.
+
+**Next:** do the planning rehearsal below for whole-cycle validation, then [architecture guide §6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool). After its accepted readiness record is committed, return to [§12](#12-execute-the-graph-and-observe-it).
 
 ### Optional planning rehearsal
 
@@ -1085,13 +1197,14 @@ For bounded retries, use a controlled failing candidate and tell the implementat
 
 This exercises scheduling and reporting. It does **not** prove real database lease recovery; that needs an application adapter with a real shared resource.
 
-## 15. Decide whether PR #1 is ready
+## 15. Evaluate the framework and recommend acceptance
 
-Use the companion [validation report](VALIDATION-REPORT.md). Keep three outcomes distinct:
+Use the [workflow report](VALIDATION-REPORT.md) and, for the combined framework, the [architecture report](ARCHITECTURE-VALIDATION.md). Complete the copies in your run's tracker directory, not the package templates. An agent can help assemble evidence; you own the assessment. Keep these outcomes distinct:
 
 - **PASS:** required behavior was observed with evidence.
 - **FAIL:** observed behavior violated the contract.
-- **NOT RUN / BLOCKED:** no adequate evidence, including missing tools or credentials.
+- **NOT RUN:** the check was not performed.
+- **BLOCKED:** a prerequisite prevented it, such as missing tools, credentials or environment.
 
 Do not convert NOT RUN into PASS because the agent says it would work.
 
@@ -1115,6 +1228,33 @@ For initial approval of the orchestration PR, treat live installation, A/B→C e
 A successful local lab supports accepting the workflow on the tested host/configuration. It is not a universal compatibility claim for all models, Windows-native paths or remote hosts.
 
 To share results with the PR, copy a concise report into a PR comment or a committed report file after checking logs for credentials/private paths. This manual does not automatically publish your logs. Cite the skills SHA and attach/link the relevant evidence; a screenshot of a green final chat alone is insufficient.
+
+### Report a problem before finishing the run
+
+You can provide useful feedback at any stage. For each finding record skills SHA, host/tool versions, section/prompt, expected behavior, actual behavior, minimal reproduction, run/ticket IDs, relevant candidate SHA, evidence location and impact. Include confusing instructions as findings even if execution eventually succeeds. Retain failures instead of replacing them with successful retries. Remove secrets before sharing.
+
+### Make the decision explicit
+
+| Decision | Meaning | Record |
+| --- | --- | --- |
+| Lab design acceptance | You authorize the exact reviewed proposal and A/B/C plan | Actual decision reference and input identities in the readiness record |
+| Framework recommendation | You assess observed behavior on this configuration | Both live reports, failures, limitations and proposed PR action |
+| Repository merge authorization | Maintainer follows ordinary PR review/CI/authorization | PR decision; a lab report alone does not grant it |
+
+A recommendation can say:
+
+```text
+Validated skills SHA: <actual SHA>
+Host / tools / effective models: <record or report link>
+Scope exercised: <orchestration / architecture / whole SWE cycle>
+Observed results and evidence: <report and artifact locations>
+Blocking defects: <list, or none observed within the tested scope>
+NOT RUN / BLOCKED checks and limitations: <list>
+Recommendation: <keep draft / request fixes / ready for maintainer decision>
+Assessed by: <human and date>
+```
+
+For combined-framework acceptance, include both design-readiness and execution/recovery results. For whole-cycle claims, also complete the research/grilling rehearsal and applicable questionnaire/language checks. A partial run can support feedback or a narrower recommendation, but cannot certify unperformed gates. Preserve artifacts before allowing cleanup; final archival policy improvements remain tracked in [Issue #3](https://github.com/netname/pi-adapted-mp-skills/issues/3).
 
 ## 16. Move from the lab to a real application
 
@@ -1171,7 +1311,7 @@ Afterward, use `retro` to identify one or two concrete improvements. Prefer an e
 
 These sources were consulted for this manual. External interfaces can change; retain version information with each validation run.
 
-- [PR #1](https://github.com/netname/pi-adapted-mp-skills/pull/1): exact proposed workflow being validated.
+- [PR #1](https://github.com/netname/pi-adapted-mp-skills/pull/1) and [PR #2](https://github.com/netname/pi-adapted-mp-skills/pull/2): orchestration and architecture/design changes; record the exact tested SHA.
 - [Package delegation policy](../skills/engineering/_shared/DELEGATION.md), [testing policy](../skills/engineering/_shared/TESTING.md), [coordinator](../skills/engineering/implement-spec/SKILL.md), [review](../skills/engineering/code-review/SKILL.md): normative local workflow requirements.
 - [Paseo getting started](https://paseo.sh/docs): desktop versus headless installation.
 - [Paseo providers](https://paseo.sh/docs/providers): installed external-agent model.

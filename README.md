@@ -20,6 +20,8 @@ There are two things to understand: **this repository's development workflow** a
 
 Read the [workflow overview](docs/WORKFLOW.md#solution-overview) and [planning/execution explanation](docs/WORKFLOW.md#planning-and-execution) first. Then use the architecture guide and manual for concrete operations. Skill procedures complement these human-facing explanations.
 
+**To run the worked example and review the framework, start at [First-time validation route](docs/MANUAL.md#validate-the-framework-for-the-first-time).** It takes you through setup, design review, execution and failure drills, and tells you when to fill the two reports. The manual is the procedure; the reports record your observations.
+
 ### Find an answer or operation
 
 | Your question / task | Read here | Continue with |
@@ -29,7 +31,7 @@ Read the [workflow overview](docs/WORKFLOW.md#solution-overview) and [planning/e
 | What is the quotation application, and what are its components responsible for? | [Application overview template](examples/validation-lab/template/docs/architecture/overview.md) | [Authoritative quote spec](examples/validation-lab/template/docs/specs/quote.md) and [worked design exercise](docs/ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool) |
 | Who decides, drafts, reviews, records evidence and launches work? | [Owners and handoffs](docs/ARCHITECTURE-GUIDE.md#2-who-does-what) | Project `docs/agents/` contracts, configured during setup |
 | What design work is required, who performs it, and where do the results go? | [Required design work and artifacts](docs/ARCHITECTURE-GUIDE.md#3-choose-an-appropriate-amount-of-design) | [Path and artifact map](docs/ARCHITECTURE-GUIDE.md#4-artifacts-and-their-relationships) |
-| How do I install and configure the host/package? | [Manual host setup](docs/MANUAL.md#4-prepare-the-execution-host) | [Architecture branch checkout](docs/ARCHITECTURE-GUIDE.md#5-set-up-the-extension), then [project setup](docs/MANUAL.md#7-configure-each-software-project) |
+| How do I install and configure the host/package? | [Manual host setup](docs/MANUAL.md#4-prepare-the-execution-host) | [Combined-framework checkout](docs/MANUAL.md#5-check-out-the-exact-pr-not-the-default-branch), then [project setup](docs/MANUAL.md#7-configure-each-software-project) |
 | In what order do I perform design review and start workers? | [Operational route and completion checks](docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks) | Its linked commands/prompts, then [coordinator execution](docs/MANUAL.md#12-execute-the-graph-and-observe-it) |
 | How do I validate, inspect failures and decide whether to accept the PRs? | [Lab introduction](examples/validation-lab/README.md), [final inspection](docs/MANUAL.md#13-inspect-the-final-result) and [failure drills](docs/MANUAL.md#14-negative-exercises-prove-failures-remain-failures) | [Workflow report](docs/VALIDATION-REPORT.md) and [architecture report](docs/ARCHITECTURE-VALIDATION.md) |
 | What changed from the previous package? | [Migration](docs/MIGRATION-0.2.md) and [changelog](CHANGELOG.md) | Historical documents only for provenance, not current operating instructions |
