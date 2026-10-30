@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Explain the purpose, inputs, outputs and limits of each JavaScript helper in plain language, including the design-readiness helper and terminology used by the lab.
+
 - Remove the premature lab installation command and clarify when the generator creates the lab. Align coordinator and final-review prompts with the accepted execution baseline and actual human approval.
 
 - Put lab project setup in chronological order: open the correct host/project, choose Claude or Pi, follow complete prompts, inspect configuration and commit the initial baseline before review. Clarify the later approved execution baseline.
