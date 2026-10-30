@@ -1,8 +1,10 @@
 # Current workflow
 
-For setup, a beginner-friendly explanation and a runnable PR-validation exercise, see [MANUAL.md](MANUAL.md).
+This document explains the process and why its gates exist. For installation, commands and a runnable PR-validation exercise, see [MANUAL.md](MANUAL.md). For design artifacts and review operations, see [ARCHITECTURE-GUIDE.md](ARCHITECTURE-GUIDE.md).
 
-The tracker is the durable source of tickets, dependency edges, claims and evidence. The coordinator is one active agent session that reads that state and controls the loop. Paseo launches and supervises sessions and workspaces. Git and project scripts/CI provide source isolation and verification. These responsibilities are separate.
+Read by topic: [components](#components-and-responsibilities) · [planning and execution](#planning-and-execution) · [frontier input](#normalized-frontier-input) · [verification](#verification) · [live acceptance](#live-acceptance-checklist). Terms such as claim, base/head and candidate are defined in the [manual vocabulary](MANUAL.md#2-vocabulary-you-will-use).
+
+The tracker is the authoritative record of tickets, dependency edges, claims and evidence links. Its persistence and backup depend on the configured tracker; the lab's ignored local files need separate preservation. The coordinator is one active agent session that reads that state and controls the loop. Paseo launches and supervises sessions and workspaces. Git and project scripts/CI provide source isolation and verification. These responsibilities are separate.
 
 ## Solution overview
 
@@ -17,11 +19,16 @@ The independent quotation CLI is the teaching application built with that workfl
 | Human owner/operator | Supplies goals and scope, resolves consequential choices, inspects evidence and makes acceptance decisions | Project `docs/agents/architecture.md` and run/decision records; [ownership guide](ARCHITECTURE-GUIDE.md#2-who-does-what) | An agent cannot substitute its own decision for missing human authorization |
 | Skill procedures | Tell planners, coordinator, workers and reviewers how to perform their roles | [skills/](../skills/), especially [implement-spec](../skills/engineering/implement-spec/SKILL.md) and [architecture policy](../skills/engineering/_shared/ARCHITECTURE.md) | Written procedures must actually be followed; they are not a scheduler or enforced permissions |
 | Project contracts and artifacts | Identify requirements, accepted decisions, role settings, tracker location, test commands and resources | Target application's `AGENTS.md`, `docs/agents/`, spec/design/ADRs | Templates contain proposals/placeholders until the project configures and reviews them |
-| Coding-agent sessions | Planner proposes; coordinator controls the loop; workers implement scoped tickets; fresh reviewers judge identified targets | Configured harnesses such as Pi/Claude Code plus [role briefs](../agents/) | A harness/profile label does not prove actual model identity or independence |
+| Planner and research sessions | Investigate open questions, draft requirements/design and prepare the dependency plan; bring consequential choices to the human | [Wayfinder](../skills/engineering/wayfinder/SKILL.md), [design-solution](../skills/engineering/design-solution/SKILL.md) and project contracts | Research findings and proposed decisions are not human acceptance or implementation authorization |
+| Coordinator | Checks accepted inputs, reads the tracker, claims eligible tickets, asks Paseo to launch workers/reviewers, collects evidence, integrates serially and reconciles runs after restart | [implement-spec](../skills/engineering/implement-spec/SKILL.md), project tracker/delegation/testing contracts | One active agent session, not a standalone durable scheduler; multiple coordinators require actual locking |
+| Implementation workers | Implement scoped tickets in assigned worktrees and return committed candidates with Verify change evidence | [implement](../skills/engineering/implement/SKILL.md), assigned ticket and project test contract | Do not own integration, tracker transitions or recursive review dispatch; source isolation does not isolate runtime services |
+| Fresh review sessions | Explain/challenge designs or review exact code candidates on the Spec and Standards axes; return findings for collection | [review-design](../skills/engineering/review-design/SKILL.md), [code-review](../skills/engineering/code-review/SKILL.md) and [role briefs](../agents/) | Cannot approve their own work; actual model families must satisfy independence rules. Code reviewers do not edit candidates or run tests |
 | Paseo | Launches and exposes sessions, profiles and workspaces for the coordinator to use | Installed host tools/API and project delegation settings; [delegation policy](../skills/engineering/_shared/DELEGATION.md) | Does not define correct requirements, review verdicts or completion policy |
 | Tracker | Stores authoritative tickets, dependencies, one coordinator's claims, run IDs, transitions and evidence links | Project tracker contract; the lab uses one absolute `.scratch/quote-demo` root | A derived graph export is not a second tracker; a record is not an atomic distributed lock |
 | Git and worktrees | Give workers separate source checkouts, identify candidates and retain integrated history | Coordinator/worker procedures and Git revisions | Worktrees do not isolate shared runtime services or establish test success |
 | Focused scripts and tests | Check selected structural conditions or execute application verification; record evidence for identified revisions | [frontier](../scripts/frontier.mjs), [design readiness](../scripts/design-check.mjs), [review target](../scripts/review-target.mjs), [lab verification](../examples/validation-lab/verify.mjs) and project tests | Each command has a narrow scope; none alone proves overall design quality or correct orchestration |
+
+Roles are responsibilities, not separate installed products. A coordinator is itself a coding-agent session, usually run through a configured harness such as Pi or Claude Code. Paseo manages sessions; the coordinator decides the next workflow action. Profile names select settings, but actual launched provider/model identities must be checked. The human owns acceptance; the coordinator records and applies it.
 
 ### How the components cooperate
 
@@ -99,7 +106,7 @@ A small change can use a short design note. New boundaries, persistence, ownersh
 | Comprehension | Can another session correctly explain the proposal, components and workflows? |
 | Challenge | Are there missing requirements, weak assumptions, failure cases or better alternatives? |
 
-Comprehension matters because a proposal can sound reasonable while remaining too ambiguous to implement. Challenge matters because a clear proposal can still contain a bad decision. Apply the configured [review independence policy](../skills/engineering/_shared/DELEGATION.md) and record actual models; a different harness name alone does not establish independence.
+Comprehension matters because a proposal can sound reasonable while remaining too ambiguous to implement. Challenge matters because a clear proposal can still contain a bad decision. Each design reviewer must use a model family different from every design author, in a fresh session. Record actual models; a different harness name alone does not establish independence. See [review-design](../skills/engineering/review-design/SKILL.md) and the [delegation policy](../skills/engineering/_shared/DELEGATION.md).
 
 The planner addresses blocking findings and presents consequential choices to the human. A proposal and two report files do not by themselves establish acceptance: reports must represent actual reviews, and relevant human decisions must be resolved. Reuse applicable explicit authorization already given; do not invent consent or ask again merely because the session changed.
 
@@ -136,6 +143,8 @@ Repeat readiness checks after restart, before new dispatch and before accepting 
 
 ### 6. Execution: run the coordinator loop
 
+Before the first worker starts, the coordinator records the agreed starting base SHA, integration branch, worker cap and bounded retry budget. It creates a dedicated integration worktree from that base and establishes exclusive coordination for the effort. The base is the reference for final full-change review; each later worker starts from the current verified integration SHA. Existing user checkouts must not be reset to prepare these workspaces.
+
 `implement-spec` instructs one coordinator session to repeat these actions:
 
 | Step | Coordinator action | Result |
@@ -150,7 +159,7 @@ Repeat readiness checks after restart, before new dispatch and before accepting 
 
 A **claim** records that a particular worker/run owns a ticket, so another dispatch skips it. It does not mean completion. A **candidate** is committed code proposed for integration; its SHA identifies the exact version tested and reviewed. For other terms, see the [manual vocabulary](MANUAL.md#2-vocabulary-you-will-use).
 
-This is an agent-driven loop. Paseo provides sessions and workspaces; the coordinator applies requirements and procedures and updates the tracker. The [frontier helper](#normalized-frontier-input) calculates eligibility from exported state. It does not launch agents, claim tasks or run as a standalone durable scheduler.
+This is an agent-driven loop. Paseo provides sessions and workspaces; the coordinator applies requirements and procedures and updates the tracker. The [frontier helper](#normalized-frontier-input) calculates eligibility from exported implementation state. Planning tickets instead become ready when their decision prerequisites are resolved; do not apply implementation integration states to Wayfinder decisions. It does not launch agents, claim tasks or run as a standalone durable scheduler.
 
 Setup supplies execution fields and closure rules in every [tracker template](../skills/engineering/setup-matt-pocock-skills/). Use one active coordinator for an effort. Multiple coordinators require a real lock/lease mechanism; assigning an issue or writing a Markdown claim is not an atomic distributed lock. This package supplies no distributed locking service.
 
@@ -223,13 +232,27 @@ The helper is read-only. Export tracker state to this shape; do not treat the ex
 }
 ```
 
+This small helper example is a two-ticket chain. It is different from the quotation lab above, where A and B are initially independent and C depends on both.
+
 `node scripts/frontier.mjs graph.json` returns `["A"]`. Allowed states are `ready`, `running`, `review`, `blocked`, `integrated`. A nonempty `claim` prevents dispatch. Integrated tickets require `verified: true` and an `integratedSha`. The helper validates consistency of that representation; the coordinator must verify the SHA/evidence against Git/CI before exporting it. It detects missing blockers and cycles, but does not claim tasks or invoke Paseo.
 
 ## Verification
 
 Read [testing policy](../skills/engineering/_shared/TESTING.md). Unit/component/integration/E2E describe test boundaries; Fast/Verify change/Verify candidate describe when and how much to run. Configure exact project commands and required environment resources once, then inherit them in tickets. Worktrees do not isolate databases, ports or workers: provision isolated resources or serialize tests through an exclusive lease.
 
-Read [delegation policy](../skills/engineering/_shared/DELEGATION.md). A different harness using the same model family does not satisfy independent review. Check the actual launched provider/model. If that cannot be verified, do not report the review gate as passed. Read-only prompts are not permission enforcement.
+These profiles describe when verification runs, rather than naming a fixed test suite:
+
+| Profile | When it runs | Revision/evidence expectations |
+| --- | --- | --- |
+| Fast | During each meaningful implementation cycle | Focused feedback; dirty work is allowed during development |
+| Verify change | Before a worker reports a candidate | Relevant project checks on a clean committed candidate; record exact revision, commands, environment and outcomes |
+| Verify candidate | After integration and before delivery | Required combined regression/integration/E2E checks on the clean committed result |
+
+Verify change and Verify candidate must check source cleanliness and HEAD before and after execution. Source changes invalidate evidence for the previous revision. A timeout, skipped required check or unavailable environment remains blocked/unverified. Workers run their configured implementation checks; the coordinator runs or collects required verification evidence and owns integration verification. Code reviewers inspect supplied evidence and source; they do not run tests.
+
+Code review has two axes: **Spec** checks required behavior and **Standards** checks project conventions and accepted design constraints. Both must pass for the exact target. A failed, cancelled or missing reviewer output remains incomplete, even when all application tests pass.
+
+Read [delegation policy](../skills/engineering/_shared/DELEGATION.md). For code review, each reviewer's model family must differ from every implementation family that contributed to its target; both axes may use the same review family in separate fresh sessions. Design review instead separates reviewers from design authors. A different harness using the same model family does not satisfy independent review. Check the actual launched provider/model. If that cannot be verified, do not report the review gate as passed. Read-only prompts are not permission enforcement.
 
 Review snapshots are outside the source tree and must be retained in the evidence store before cleanup. Keep the source worktree frozen while reviews run. A modified candidate invalidates its approval. CI/branch protection remains authoritative for merges; this package does not install application-specific CI.
 
