@@ -1,5 +1,7 @@
 # 0.2.0 (unreleased)
 
+- Explain planning through delivery in the workflow, including stage owners, readiness, claims, independent review, serial integration and restart behavior. Add a README table distinguishing each document's purpose and links into the explanation.
+
 - Expand the architecture guide with solution/document boundaries, accountable owners, minimum artifact lifecycles and an explicit operational route. Add workflow/application component overviews and a README documentation map.
 
 - Connect the asynchronous questionnaire skill to the plain-language policy, with explicit conditional questions and reuse of known answers.
