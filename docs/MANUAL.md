@@ -10,20 +10,20 @@ The current combined walkthrough covers [PR #1: orchestration](https://github.co
 
 **Start here for the worked example and keep this manual as your main route.** The example builds an independent quotation CLI; it also tests whether the framework coordinates planning, workers, reviews and integration correctly. A correct application alone does not prove a correct workflow.
 
-The **manual gives instructions**. The [workflow report](VALIDATION-REPORT.md) and [architecture report](ARCHITECTURE-VALIDATION.md) **record your observations**. Complete both when validating the combined framework. The architecture report contains clearly marked historical preparation checks; these are not your live-run results.
+The **manual gives instructions**. The [workflow report](VALIDATION-REPORT.md) and [architecture report](ARCHITECTURE-VALIDATION.md) **record your observations**. Complete both when validating the combined framework. The architecture report contains clearly marked historical preparation checks; these are not your live-run results. The ten steps below are instructions for running **this validation**. Lifecycle **Stages 1–9** name the work performed on a software change; the [stage map](#why-each-stage-exists) names their artifacts and operations. Steps 1–5 prepare the lab and do not imply that planning or implementation has begun.
 
-| Step | Who acts | Action / instructions | Checkpoint and evidence before continuing |
-| --- | --- | --- | --- |
-| 1. Prepare the host | You | Follow [§4](#4-prepare-the-execution-host); authenticate Pi and Claude on the execution host | Both CLIs work; record host/tool versions |
-| 2. Freeze the package | You | Follow [§5](#5-check-out-the-exact-pr-not-the-default-branch), using the combined architecture branch | Package tests pass; record the skills SHA; do not update that checkout during the run |
-| 3. Configure and test delegation | You, then a diagnostic coordinator | Follow [§6](#6-configure-paseo-and-profiles): save profiles, enable tools, create harmless sessions and test a delegated child | Actual model settings, paths and parent/child run IDs verified; no implementation yet |
-| 4. Generate/configure the lab | You and setup agent | Follow [§11](#11-worked-example-create-the-quotation-lab), then [the lab setup sequence](#open-and-configure-the-lab) | Fresh lab, actual delegation settings, canonical tracker path and initial committed lab baseline |
-| 5. Open the reports | You | Use [Record the environment first](#record-the-environment-first) | Both report copies identify this run and start with unperformed checks visibly NOT RUN |
-| 6. Exercise discovery | Planner/researchers; you decide | Use [the planning rehearsal](#optional-planning-rehearsal) for whole-cycle validation | Cited research, actual human decision and preserved reference scope; otherwise explicitly mark discovery NOT RUN |
-| 7. Review/accept the design | Planner, fresh design reviewers, you, coordinator | Go to [architecture guide §6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool); return here when its readiness check and handoff are complete | Actual reports, current input fingerprints, applicable human acceptance and committed execution baseline |
-| 8. Execute A/B → C | You start one coordinator; it launches workers/reviewers | Follow [§12](#12-execute-the-graph-and-observe-it), including the observation checkpoint | Distinct concurrent A/B worktrees; independent review; serial verified integration; C launches automatically afterward |
-| 9. Inspect and exercise failures | You and coordinator in isolated probes | Follow [§13](#13-inspect-the-final-result), [§14](#14-negative-exercises-prove-failures-remain-failures) and [architecture guide §7](ARCHITECTURE-GUIDE.md#7-failure-exercises-and-acceptance-evidence) | Final SHA/evidence agree; failures remain failures; restart does not duplicate workers |
-| 10. Report/recommend | You | Follow [§15](#15-evaluate-the-framework-and-recommend-acceptance) | Both reports complete, limitations explicit, evidence retained and proposed PR action stated |
+| Validation step | Lifecycle stage | Who acts | Action / instructions | Checkpoint and evidence before continuing |
+| --- | --- | --- | --- | --- |
+| 1. Prepare the host | Preparation | You | Follow [§4](#4-prepare-the-execution-host); authenticate Pi and Claude on the execution host | Both CLIs work; record host/tool versions |
+| 2. Freeze the package | Preparation | You | Follow [§5](#5-check-out-the-exact-pr-not-the-default-branch), using the combined architecture branch | Package tests pass; record the skills SHA; do not update that checkout during the run |
+| 3. Configure and test delegation | Preparation | You, then a diagnostic coordinator | Follow [§6](#6-configure-paseo-and-profiles): save profiles, enable tools, create harmless sessions and test a delegated child | Actual model settings, paths and parent/child run IDs verified; no implementation yet |
+| 4. Generate/configure the lab | Preparation | You and setup agent | Follow [§11](#11-worked-example-create-the-quotation-lab), then [the lab setup sequence](#open-and-configure-the-lab) | Fresh lab, actual delegation settings, canonical tracker path and initial committed lab baseline |
+| 5. Open the reports | Preparation | You | Use [Record the environment first](#record-the-environment-first) | Both report copies identify this run and start with unperformed checks visibly NOT RUN |
+| 6. Exercise discovery | **1 Discover and clarify; 2 Specify (rehearsal)** | Planner/researchers; you decide | Use [the planning rehearsal](#optional-planning-rehearsal) for whole-cycle validation; the supplied spec remains the execution reference | Cited research, actual human decision and preserved reference scope; otherwise explicitly mark the rehearsal NOT RUN |
+| 7. Review/accept the design | **3 Design and review; 4 Plan and authorize; 5 Check readiness** | Planner, fresh design reviewers, you, coordinator | Go to [architecture guide §6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool); return here when its readiness check and handoff are complete | Actual reports, current input fingerprints, applicable human acceptance and committed execution baseline |
+| 8. Execute A/B → C | **6 Implement; 7 Review and integrate** | You start one coordinator; it launches workers/reviewers | Follow [§12](#12-execute-the-graph-and-observe-it), including the observation checkpoint | Distinct concurrent A/B worktrees; independent review; serial verified integration; C launches automatically afterward |
+| 9. Inspect and exercise failures | **8 Verify complete change** (plus validation drills) | You and coordinator in isolated probes | Follow [§13](#13-inspect-the-final-result), [§14](#14-negative-exercises-prove-failures-remain-failures) and [architecture guide §7](ARCHITECTURE-GUIDE.md#7-failure-exercises-and-acceptance-evidence) | Final SHA/evidence agree; failures remain failures; restart does not duplicate workers |
+| 10. Report/recommend | **9 Evaluate and decide** | You | Follow [§15](#15-evaluate-the-framework-and-recommend-acceptance) | Both reports complete, limitations explicit, evidence retained and proposed PR action stated |
 
 If a checkpoint fails, save the actual result and diagnose it before dependent work continues. Feedback is welcome before completing the run. Use PASS for observed success, FAIL for an observed violation, NOT RUN for an unperformed check and BLOCKED for a missing prerequisite. Never copy an expected outcome into the evidence column as if observed.
 
@@ -47,32 +47,37 @@ Once the behavior is clear, the problem changes: now you want agents to implemen
 
 ```mermaid
 flowchart TD
-    N["Need or change request"] --> P["Clarify and agree on behavior"]
-    P --> D["Explain and review the design"]
-    D --> S["Coverage and approved task graph"]
-    S --> W["Coordinator launches ready workers"]
-    W --> V["Verify and independently review"]
-    V -->|"Repair required"| W
-    V -->|"Accepted candidate"| I["Integrate and check combined changes"]
-    I -->|"More tickets become ready"| W
-    I -->|"Scope complete"| F["Final checks and human delivery decision"]
-    P -->|"Unresolved decision"| P
+    N["Need or change request"] --> D1["1 Discover and clarify"]
+    D1 --> D2["2 Specify"]
+    D2 --> D3["3 Design and review"]
+    D3 --> D4["4 Plan and authorize"]
+    D4 --> D5["5 Check readiness"]
+    D5 --> D6["6 Implement"]
+    D6 --> D7["7 Review and integrate"]
+    D7 -->|"Repair or more ready tickets"| D6
+    D7 -->|"Scope complete"| D8["8 Verify complete change"]
+    D8 -->|"Ready for decision"| D9["9 Evaluate and decide"]
+    D8 -->|"Fix required"| D6
+    D3 -->|"Unresolved decision"| D1
 ```
 
-The diagram summarizes control flow, not automatic permission to launch any task or repeat indefinitely. Workers run only when their dependencies and resources permit it; failed work has a bounded repair budget. Changed requirements return to planning rather than becoming undocumented code changes.
+The numbers in the diagram are **lifecycle stages**, not the numbered manual sections or the ten validation steps above. Stages 6–7 repeat for each ready ticket; Stage 8 checks the whole integrated change. The diagram summarizes control flow, not automatic permission to launch any task or repeat indefinitely. Workers run only when their dependencies and resources permit it; failed work has a bounded repair budget. Changed requirements return to planning rather than becoming undocumented code changes.
 
 ### Why each stage exists
 
-| Stage | Question it answers | Why it matters | What you have afterward |
+| Lifecycle stage | Question it answers | Main action / command | Named artifacts created or updated in the lab |
 | --- | --- | --- | --- |
-| Clarify | What problem should we solve, and what choices remain? | Avoids building an agent's assumptions instead of your intent | Resolved decisions and explicit open questions |
-| Specify | What behavior will count as correct? | Gives implementers, tests and reviewers the same target | An agreed spec with examples, exclusions and test seams |
-| Design and review | How will the components satisfy the requirements, and why this design? | Makes responsibilities, failure paths and tradeoffs inspectable before coding | Reviewed design and explicit decisions |
-| Plan the work | What can be delivered independently, and what must wait? | Enables useful parallelism without premature dependent work | Tickets with acceptance criteria and blocking relationships |
-| Implement | How do we make one agreed behavior work? | Keeps each worker's context and changes bounded | Committed code and focused verification evidence |
-| Verify and review | Does the candidate work, satisfy the spec and follow standards? | Checks observed behavior and applies independent judgment | Test results, separate review findings and their dispositions |
-| Integrate | Do the accepted changes work together? | Individually successful branches can still conflict or interact badly | A verified shared revision for subsequent work |
-| Deliver and learn | Is the complete change ready to accept, and what should improve? | Keeps release decisions accountable and the workflow maintainable | Delivery evidence, a human decision and targeted follow-ups |
+| **1 Discover and clarify** | What problem and choices remain? | `wayfinder`, research, grilling and human answers; optional [planning rehearsal](#optional-planning-rehearsal) | `.scratch/quote-discovery/` map, research notes, decision tickets/answers **if rehearsed**; otherwise the supplied decisions stand |
+| **2 Specify** | What behavior counts as correct? | `to-spec`; inspect the supplied reference for the lab | `docs/specs/quote.md` (R1–R4), examples and exclusions; lab generation supplies it before the run |
+| **3 Design and review** | How will components satisfy the spec, and can independent readers challenge it? | `design-solution`, fresh `review-design` sessions; [design exercise](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool) | `docs/designs/quote.md`, `docs/architecture/overview.md`, optional ADR/model, `docs/designs/reviews/` comprehension and challenge reports |
+| **4 Plan and authorize** | Which tickets and dependencies cover the accepted scope? | `to-tickets` in a new project; inspect supplied A/B/C tickets and coverage in this lab; human accepts actual proposal | `.scratch/quote-demo/issues/` ticket files, `.scratch/quote-demo/graph.json`, `docs/designs/quote-plan.md`, `docs/designs/quote-traceability.md`, acceptance reference |
+| **5 Check readiness** | Do current inputs still match what was reviewed and accepted? | `node "$MP_SKILLS/scripts/design-check.mjs" check "$MP_LAB" docs/designs/quote-readiness.json`; [record acceptance](ARCHITECTURE-GUIDE.md#record-acceptance-and-check-readiness) | `docs/designs/quote-readiness.json`, current fingerprints/review references, committed approved execution baseline SHA |
+| **6 Implement** | Does each assigned ticket produce working code? | `implement-spec` dispatches workers; `verify.mjs` runs focused checks | Separate worktrees, claims/run IDs, committed `src/pricing.mjs`, `src/catalog.mjs`, `src/cli.mjs` as tickets progress, test logs |
+| **7 Review and integrate** | Does each committed candidate meet spec/standards and work with integrated code? | Fresh `code-review` axes, serial integration and combined checks | Base/head review reports, dispositions, integrated SHA and verification manifests under `.scratch/quote-demo/` |
+| **8 Verify complete change** | Does the full delivered revision meet the agreed requirements? | `verify.mjs ... all`, `review-target.mjs` from approved baseline; [final inspection](#13-inspect-the-final-result) | Final all-suite manifest/logs, full-change review, final integration SHA; update design/coverage if implementation changed them |
+| **9 Evaluate and decide** | Is this result acceptable and what should improve? | Human inspects evidence and completes [§15](#15-evaluate-the-framework-and-recommend-acceptance) | `.scratch/quote-demo/validation-report.md`, `architecture-validation.md`, findings and proposed PR action; a real project may also have a PR |
+
+The [workflow stage map](WORKFLOW.md#stages-owners-and-completion-conditions) adds owners and completion gates. The lab generator supplies draft spec/design/tickets before you start: **supplied** means you inspect and validate the artifact, not claim that a live agent just created it. The `.scratch` records are ignored by Git and need separate retention. In a real project, tracker issues may replace the lab's Markdown ticket files.
 
 ### How the tools serve that process
 
@@ -733,7 +738,7 @@ You may later add a small project `CLAUDE.md` pointer to shared project instruct
 
 ## 8. Use the skills across the software engineering cycle
 
-This section maps the overview's planning and delivery loops to specific skills. Choose a route based on what is already known; the skills are tools for making progress, not a ceremony to repeat for every edit.
+This section maps the [nine lifecycle stages](#why-each-stage-exists) to specific skills. Choose a route based on what is already known; the skills are tools for making progress, not a ceremony to repeat for every edit. The stage names below match the diagram and the [workflow stage map](WORKFLOW.md#stages-owners-and-completion-conditions).
 
 ### Choose your entry point
 
@@ -753,21 +758,19 @@ At that boundary you can say: “This spec and breakdown are approved. Execute t
 
 ### Match each skill to its purpose
 
-| Stage | Main skill(s) | Your role | Output / evidence |
+| Lifecycle stage | Main skill(s) / action | Your role | Output / evidence |
 | --- | --- | --- | --- |
-| Intake | `triage`, `ask-matt` | Clarify the request and priority | Routed issue, missing facts |
-| Explore a large uncertainty | `wayfinder`, `research` | Decide destination and answer HITL questions | Decision map, cited research, resolved questions |
-| Define behavior | `grill-with-docs`, `domain-modeling`, `prototype` | Answer business questions and inspect examples | Shared language, decisions, prototype where useful |
-| Specify | `to-spec` | Approve seams/behavior not already agreed | Spec with exclusions and testing decisions |
-| Decompose | `to-tickets` | Check useful slices and real dependencies | Approved task graph |
-| Build | `implement-spec` / `implement`, `tdd` | Observe or resolve new product questions | Committed worker candidates and check evidence |
-| Review | `code-review` | Decide genuine tradeoffs or requirement changes | Separate Spec/Standards findings tied to revisions |
-| Integrate | `implement-spec` | Approve delivery when appropriate | Verified combined revision |
-| Deliver | `pr` | Review and authorize the merge/release | PR evidence, residual risks and required checks |
-| Maintain | `diagnosing-bugs`, `improve-codebase-architecture` | Confirm reproduced behavior / scope | Regression fix or scoped improvement |
-| Improve the process | `retro` | Choose useful improvements | Targeted workflow/check changes |
+| **1 Discover and clarify** | `triage`, `ask-matt` for intake; `wayfinder`, `research`, `grill-with-docs`, `domain-modeling`, `prototype` as needed | Answer consequential product questions and inspect examples | Routed issue, decision map, cited research, shared language and resolved answers; optional lab rehearsal under `.scratch/quote-discovery/` |
+| **2 Specify** | `to-spec` | Agree on behavior and exclusions | `docs/specs/quote.md` in the lab (supplied reference); in new work, an agreed spec |
+| **3 Design and review** | `design-solution`, fresh `review-design` sessions | Inspect proposal, settle consequential choices | Design/overview, optional ADR/model, comprehension/challenge reports under `docs/designs/reviews/` |
+| **4 Plan and authorize** | `to-tickets`, coverage check | Check useful slices, dependencies and scope | `.scratch/quote-demo/issues/` A/B/C ticket files, `docs/designs/quote-plan.md`, `quote-traceability.md`, actual scope decision |
+| **5 Check readiness** | Coordinator checks `design-check.mjs`, contracts and accepted inputs | Make or confirm the applicable human design/plan decision | Current `quote-readiness.json`, approved execution baseline SHA |
+| **6 Implement** | `implement-spec` dispatches `implement` workers; `tdd` where useful | Observe or answer new product questions | Claims, worktrees, committed worker candidates and focused check logs |
+| **7 Review and integrate** | Fresh `code-review` Spec/Standards axes; coordinator serially combines and checks candidates | Decide genuine tradeoffs or requirement changes | Immutable-target reports, dispositions, integrated SHA and combined verification evidence |
+| **8 Verify complete change** | Full tests, full-change review, reconcile design | Inspect final application and evidence | `all` manifest, final SHA, full-diff review and reconciled docs |
+| **9 Evaluate and decide** | `pr`, `retro` as appropriate | Assess delivery and authorize any merge/release separately | Completed lab reports and findings, or real-project PR evidence and follow-ups |
 
-The relevant procedures live in the [engineering skills directory](../skills/engineering) and [productivity skills directory](../skills/productivity). A PR description is not a deployment process: add the application's release, rollback, migration and operational checks in its own project policy.
+`diagnosing-bugs` and `improve-codebase-architecture` are ways to investigate a later change; enter the lifecycle at the stage that matches what is already known. The relevant procedures live in the [engineering skills directory](../skills/engineering) and [productivity skills directory](../skills/productivity). A PR description is not a deployment process: add the application's release, rollback, migration and operational checks in its own project policy.
 
 ### When to keep a session, and when to start a fresh one
 

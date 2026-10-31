@@ -52,26 +52,29 @@ For actual commands follow [MANUAL.md](MANUAL.md). For the design operations, ar
 
 Planning makes the route clear: resolve uncertainty, agree on behavior, explain the design and approve scoped work. Execution follows that route: implement eligible tickets, review committed candidates, integrate one at a time and verify the combined result. A planning ticket can finish with a decision and no production code. An implementation ticket reaches integrated status only after its code passes the required integration checks.
 
-**Quick route:** clarify decisions → specify behavior → propose and review the design → produce and approve tickets → dispatch isolated workers → review committed candidates → integrate and verify → repeat → inspect the final result.
+**Quick route:** 1 Discover and clarify → 2 Specify → 3 Design and review → 4 Plan and authorize → 5 Check readiness → 6 Implement → 7 Review and integrate → repeat 6–7 for ready tickets → 8 Verify complete change → 9 Evaluate and decide. These nine names are the shared lifecycle vocabulary in the [manual](MANUAL.md#why-each-stage-exists) and [architecture guide](ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks). Host installation, package checkout, project configuration and opening validation reports are **preparation**, not extra lifecycle stages. A small change can reuse applicable stage artifacts rather than generate new copies; its gates still apply.
 
 The following explanation connects the [architecture policy](../skills/engineering/_shared/ARCHITECTURE.md) and [implement-spec procedure](../skills/engineering/implement-spec/SKILL.md). For commands and prompts, use the [architecture operational route](ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks) and [manual execution walkthrough](MANUAL.md#12-execute-the-graph-and-observe-it).
 
 ### Stages, owners and completion conditions
 
-An owner here is the role responsible for the action or decision. The same person may fill several roles; fresh review sessions still remain separate from authorship.
+An owner here is the role responsible for the action or decision. The same person may fill several roles; fresh review sessions still remain separate from authorship. Paths below are **inside the generated lab** unless marked as package scripts; in another project, use its configured tracker and artifact locations. A ticket is a scoped work item, not a GitHub issue by necessity: this lab uses Markdown tickets under its ignored `.scratch/quote-demo/`; a team may configure an issue tracker instead. Creating a file is not proof that its review or approval happened.
 
-| Stage | Inputs | Responsible role | Outputs | Completion condition |
-| --- | --- | --- | --- | --- |
-| Clarify | Need, existing source and open questions | Planner; human decides consequential choices | Answers, research and optional Wayfinder map | Required product choices are resolved; remaining unknowns are explicit |
-| Specify | Agreed behavior and exclusions | Planner, with human scope ownership | Spec with stable requirement IDs | Behavior and observable acceptance are clear |
-| Design and review | Spec and inspected project context | Planner drafts; fresh reviewers explain/challenge; human decides | Design proposal, review reports and decisions | Required reports exist and blocking findings are resolved |
-| Plan and authorize | Reviewed design and requirements | Planner prepares tickets; human authorizes scope/plan | Tickets, dependencies and requirement coverage | Current design and exact plan have applicable acceptance |
-| Check readiness | Accepted artifacts, tracker and project contracts | Coordinator | Readiness evidence and eligible work | Current inputs match acceptance; tests/resources and ownership are configured |
-| Implement | Claimed ticket, spec, constraints and immutable base | Scoped worker launched by coordinator | Committed candidate and Verify change evidence | Required worker checks pass; exact revision is identified |
-| Review and integrate | Frozen candidate, review findings and latest integration revision | Fresh code reviewers; coordinator integrates | Reviewed, verified integrated SHA and evidence | Required review/checks cover the resulting integrated code |
-| Complete and deliver | All integrated tickets and original starting base | Coordinator prepares evidence; human inspects/accepts | Final verification, full-change review and delivery report/draft PR | Remaining gates are explicit; merge follows project authorization |
+| Lifecycle stage | Owner and main action | Named artifacts created or updated in the lab | Check / handoff |
+| --- | --- | --- | --- |
+| **1. Discover and clarify** | Planner uses `wayfinder`, research and grilling; human answers product questions | Optional `.scratch/quote-discovery/` decision map, research notes, decision tickets and recorded answers; the lab already supplies the agreed choices | Needed decisions are resolved; unresolved questions remain explicit |
+| **2. Specify** | Planner uses `to-spec` to write agreed behavior | `docs/specs/quote.md` (R1–R4 in the supplied lab), examples and exclusions; optionally a glossary | Observable behavior is clear; the lab's reference spec is inspected, not regenerated |
+| **3. Design and review** | Planner uses `design-solution`; fresh reviewers use `review-design` for comprehension and challenge | `docs/designs/quote.md`, `docs/architecture/overview.md`, applicable ADR/model, and real reports in `docs/designs/reviews/` | Reports identify reviewed inputs; blocking findings and consequential choices are resolved |
+| **4. Plan and authorize** | Planner uses `to-tickets`; human accepts actual scope and design | Ticket A/B/C files in `.scratch/quote-demo/issues/`, `.scratch/quote-demo/graph.json`, `docs/designs/quote-plan.md`, `docs/designs/quote-traceability.md`, and human decision reference | Requirement → component → ticket → check coverage holds; lab tickets are supplied for inspection |
+| **5. Check readiness** | Coordinator checks current accepted inputs, profiles, resources and tracker | `docs/designs/quote-readiness.json` with input fingerprints, review references and actual human acceptance; initial/approved baseline SHAs in the run record | `scripts/design-check.mjs check` passes and accepted artifacts are committed before dispatch |
+| **6. Implement** | Coordinator uses `implement-spec` to claim/dispatch; workers implement A and B separately, then C when ready | Tracker claims/run IDs, separate Git worktrees/branches, source commits such as `src/pricing.mjs`, `src/catalog.mjs`, `src/cli.mjs`, and Verify change logs | Worker returns committed candidate SHA and required focused checks |
+| **7. Review and integrate** | Fresh reviewers use `code-review`; coordinator combines one accepted candidate at a time | Spec/Standards review reports for immutable base/head, dispositions, combined test manifests, integrated SHA and tracker transitions in `.scratch/quote-demo/` | Combined revision passes required checks/review; then repeat 6–7 for newly ready tickets |
+| **8. Verify complete change** | Coordinator checks final behavior and full diff; human inspects evidence | Final `all` test manifest/logs, full-change review from approved execution baseline, final integrated SHA, updated design/coverage if needed | Complete scope and source/reviews/checks agree; no unresolved blocking finding |
+| **9. Evaluate and decide** | Human assesses the delivered change and, for this lab, the framework | `.scratch/quote-demo/validation-report.md` and `architecture-validation.md`, finding records and proposed PR action; real project may create a PR | Human decision is explicit; any merge/release follows repository authorization |
 
-### 1. Planning: make the route clear
+The [manual first-time route](MANUAL.md#validate-the-framework-for-the-first-time) also has ten **operational steps**; its first five prepare the experiment, and later rows point to the numbered lifecycle stages here. The [architecture guide route](ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks) uses its own numbered instructions and labels the corresponding stages. Neither numbering is another name for the lifecycle.
+
+### Stage 1. Discover and clarify: make the route clear
 
 **Use Wayfinder for unresolved decisions.** It is useful when an effort contains too many connected questions to resolve in one conversation. It organizes those questions into a map and decision tickets. It produces decisions that make subsequent work possible; it does not automatically authorize implementation. Its map points to tickets containing the detailed answers.
 
@@ -92,7 +95,7 @@ These questions illustrate discovery. The supplied quotation lab already defines
 
 Procedure: [Wayfinder](../skills/engineering/wayfinder/SKILL.md). Worked planning exercise: [architecture guide, section 6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool).
 
-### 2. Turn decisions into requirements and a design
+### Stages 2–3. Specify behavior and propose a design
 
 Once the important questions are settled, produce two complementary artifacts:
 
@@ -107,7 +110,7 @@ The spec owns requirements. The design references those requirements and explain
 
 A small change can use a short design note. New boundaries, persistence, ownership or external contracts require more explanation. Choose the [required design work and artifacts](ARCHITECTURE-GUIDE.md#3-choose-an-appropriate-amount-of-design); do not create the same document set for every change.
 
-### 3. Review the design before substantial decomposition
+### Stage 3. Design and review before substantial decomposition
 
 `review-design` uses fresh sessions for two purposes:
 
@@ -122,7 +125,7 @@ The planner addresses blocking findings and presents consequential choices to th
 
 Operations and handoffs: [architecture guide](ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks). Procedure: [review-design](../skills/engineering/review-design/SKILL.md).
 
-### 4. Convert the reviewed proposal into implementation tickets
+### Stage 4. Plan and authorize implementation tickets
 
 `to-tickets` breaks the work into scoped tasks and records dependencies. The quotation lab illustrates this with:
 
@@ -138,7 +141,7 @@ Ticket decomposition can expose a design problem. Material changes to responsibi
 
 Procedure: [to-tickets](../skills/engineering/to-tickets/SKILL.md). Fixture source: [lab generator](../examples/validation-lab/create.mjs) and [ticket proposals](../examples/validation-lab/tickets/).
 
-### 5. Check that the accepted plan is still current
+### Stage 5. Check readiness against the accepted plan
 
 Acceptance applies to particular artifacts. If the design changes after review, an old approval may no longer cover it. Before dispatch, the coordinator checks that:
 
@@ -151,7 +154,7 @@ Where configured, `design-check.mjs` checks recorded file fingerprints and requi
 
 Repeat readiness checks after restart, before new dispatch and before accepting integration. See [planning gates and change policy](../skills/engineering/_shared/ARCHITECTURE.md) and the [design-check helper](../scripts/design-check.mjs).
 
-### 6. Execution: run the coordinator loop
+### Stages 6–7. Run the implementation and integration loop
 
 Before the first worker starts, the coordinator records the agreed starting base SHA, integration branch, worker cap and bounded retry budget. It creates a dedicated integration worktree from that base and establishes exclusive coordination for the effort. The base is the reference for final full-change review; each later worker starts from the current verified integration SHA. Existing user checkouts must not be reset to prepare these workspaces.
 
@@ -173,7 +176,7 @@ This is an agent-driven loop. Paseo provides sessions and workspaces; the coordi
 
 Setup supplies execution fields and closure rules in every [tracker template](../skills/engineering/setup-matt-pocock-skills/). Use one active coordinator for an effort. Multiple coordinators require a real lock/lease mechanism; assigning an issue or writing a Markdown claim is not an atomic distributed lock. This package supplies no distributed locking service.
 
-### 7. Implement in parallel; integrate one at a time
+### Stages 6–7. Implement in parallel; review and integrate one at a time
 
 A and B can start together because neither depends on the other, subject to the worker cap and resources. Each gets its own branch/worktree, spec, scoped ticket, immutable starting commit, accepted constraints and test contract. Workers return committed candidates with verification evidence.
 
@@ -191,7 +194,7 @@ A clean reviewed candidate can fast-forward when its base is still the integrati
 
 Operations: [manual execution](MANUAL.md#12-execute-the-graph-and-observe-it). Exact integration rules: [implement-spec](../skills/engineering/implement-spec/SKILL.md#coordinator-loop).
 
-### 8. Unblock dependencies only after verified integration
+### Stage 7. Unblock dependencies only after verified integration
 
 C waits until A and B are available in the shared, verified integration revision.
 
@@ -207,7 +210,7 @@ C waits until A and B are available in the shared, verified integration revision
 
 Record the resulting SHA and evidence before unblocking dependents. The [frontier input rules](#normalized-frontier-input) express this distinction; the coordinator still checks the records against Git and actual evidence.
 
-### 9. Persist state so another session can resume
+### Stages 5–8. Persist state so another session can resume
 
 After every transition, record ticket status/dependencies, claims/run IDs, branches/revisions, verification/review evidence, failures, cancellations and blockers in the authoritative tracker.
 
@@ -217,7 +220,7 @@ For a local tracker, pass the same **canonical absolute state-root path** to eve
 
 Operations: [manual tracker setup](MANUAL.md#7-configure-each-software-project) and [restart exercise](MANUAL.md#14-negative-exercises-prove-failures-remain-failures).
 
-### 10. Know when the loop pauses and finishes
+### Stages 8–9. Verify the complete change and decide what to do
 
 Continue automatically while eligible work remains. Pause when a required human decision is missing, resources are unavailable, ownership is uncertain, or the configured repair budget is exhausted. Record failures and cancelled runs; do not turn an incomplete review into a pass. No unbounded repair loops.
 

@@ -20,6 +20,8 @@ There are two things to understand: **this repository's development workflow** a
 
 Read the [workflow overview](docs/WORKFLOW.md#solution-overview) and [planning/execution explanation](docs/WORKFLOW.md#planning-and-execution) first. Then use the architecture guide and manual for concrete operations. Skill procedures complement these human-facing explanations.
 
+**Shared lifecycle names:** 1 Discover and clarify → 2 Specify → 3 Design and review → 4 Plan and authorize → 5 Check readiness → 6 Implement → 7 Review and integrate (repeat 6–7 as needed) → 8 Verify complete change → 9 Evaluate and decide. The [manual's numbered diagram and artifact/action table](docs/MANUAL.md#the-process-has-two-connected-loops) and [workflow's owner/gate table](docs/WORKFLOW.md#stages-owners-and-completion-conditions) use these same names. The manual's ten validation steps and numbered sections are **instructions for the example**, not another lifecycle. Setup and report preparation come before the lifecycle exercise.
+
 **To run the worked example and review the framework, start at [First-time validation route](docs/MANUAL.md#validate-the-framework-for-the-first-time).** It takes you through setup, design review, execution and failure drills, and tells you when to fill the two reports. The manual is the procedure; the reports record your observations.
 
 ### Find an answer or operation
