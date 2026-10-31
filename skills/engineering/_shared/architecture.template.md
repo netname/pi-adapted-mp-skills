@@ -18,3 +18,7 @@ Model validation: configure an installed, pinned LikeC4 command if using LikeC4;
 Gate: node PACKAGE/scripts/design-check.mjs check REPO RECORD
 
 Coordinator owns the readiness record and links the human's actual acceptance message/issue to it. Capture acceptance after final ticket coverage review; earlier design feedback can be reused if the target is unchanged. Never convert absent approval into accepted status.
+
+Implementation preview: part of the feature design, with change references, concrete examples and accepted constraints versus estimates/open choices.
+Sequence diagrams: required when order, asynchronous execution, state changes or failure handling explain the change; otherwise record why unnecessary. Use shared LikeC4 identities where modeled, or Mermaid for a lightweight note.
+Model presentation: configure a pinned preview/export command and destination accessible to the human. Record source snapshot and view IDs; visually inspect the rendered views before acceptance. Include decision-bearing model configuration among readiness inputs. No model means validation/rendering is not applicable; an unavailable required renderer means incomplete.

@@ -52,6 +52,16 @@ A Wayfinder **decision ticket** answers a question before implementation; an **i
 
 A lightweight note may include a small coverage table and link existing decisions. The amount of prose varies; applicable review and human acceptance still apply. Do not treat a missing contract as permission to bypass a gate. [Design template](../skills/engineering/_shared/design.template.md).
 
+## Preview the implementation before acceptance
+
+`design-solution` fills the feature design's expected implementation table: change reference, current evidence, proposed behavior with concrete examples, affected components/contracts, likely code areas and decision status. Accepted constraints govern workers; estimated private file placement may evolve. Surface unresolved behavior rather than hiding it in a diagram. For user-facing changes, include the output example or UI mockup needed to understand the experience.
+
+Sequence diagrams are an explicit conditional deliverable. Use them when ordering, asynchronous work, state changes or failure handling explain the change. Record a short reason when unnecessary. Use a shared LikeC4 model for related views, with `variant sequence` on dynamic views, or Mermaid for a lightweight note. Start with the scenario and consequential exception; split crowded branches and avoid function-by-function inventories. Reuse meaningful component identities, mark current/proposed/transition and show important responses and writes. See the [shared policy](../skills/engineering/_shared/ARCHITECTURE.md#implementation-preview-and-sequence-diagrams) for guardrails.
+
+For example, the lab's [preview](../examples/validation-lab/template/docs/designs/quote.md) links changes C1-C3 to [component and sequence views](../examples/validation-lab/template/docs/architecture/model/quote.c4). It shows the CLI awaiting catalog validation before calculating and emitting a quote, and the error path ending without a calculation. Render and inspect these views using the configured pinned tooling, then show the human the result alongside the walkthrough. Keep preview evidence tied to the exact model snapshot; a raw file link or a syntax pass does not demonstrate that the human saw an understandable proposal.
+
+Tickets link the change/scenario references and checks. Workers report planned versus actual behavior and distinguish ordinary internal adjustments from material deviations. Existing Spec/Standards reviews check accepted scenario semantics and structural constraints respectively. Preserve proposal history when reconciling final observed documentation. The [existing-code exercise](../examples/validation-lab/design-change-exercise/README.md) tests a change whose normal outputs can pass while its sequence violates a design decision.
+
 ## Operational route and completion checks
 
 This table gives the **normal project route**, not the PR experiment's numbered steps. Use the linked skills for the agent procedures and [manual setup](MANUAL.md#configure-each-software-project) for host/project preparation. Existing documents can be reused when the scope and input identity still match.

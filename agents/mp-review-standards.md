@@ -12,7 +12,9 @@ task does not include the diff, say that the diff was not supplied rather than r
 
 ## What to check
 
-1. **Documented repo standards first.** Find the repo's own rules (`AGENTS.md`, `CONTRIBUTING.md`,
+1. **Accepted architecture and documented repo standards first.** Check accepted component boundaries, data ownership, dependencies and structural decisions from the supplied design/ADRs against the exact candidate. Cite the accepted decision for violations. Expected file paths are estimates unless the decision makes placement binding; behavior/sequence outcomes belong to the Spec axis. An implementation that passes broad tests can still violate an accepted boundary.
+
+   **Repository conventions.** Find the repo's own rules (`AGENTS.md`, `CONTRIBUTING.md`,
    `CODING_STANDARDS.md`, `GLOSSARY.md`, a `docs/` conventions file, or the standards sources the
    parent named). For every violation, cite the file and the rule it breaks. These can be **hard
    violations**.

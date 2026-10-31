@@ -11,12 +11,12 @@ metadata:
   adapted-for: pi
 ---
 
-Read `../_shared/ARCHITECTURE.md`. Before editing, confirm the coordinator supplied current accepted design/plan evidence (standalone: check it yourself). Read linked decisions and requirement/component mappings. Stop affected work and report a material design deviation; do not silently amend accepted constraints.
+Read `../_shared/ARCHITECTURE.md`. Before editing, confirm the coordinator supplied current accepted design/plan evidence (standalone: check it yourself). Read linked decisions, implementation preview, applicable sequence views and requirement/change/component mappings. Check current code against the preview before editing; surface stale assumptions affecting the assigned work. Stop affected work and report a material design deviation; do not silently amend accepted constraints.
 
 Implement one ticket in the assigned worktree. Read `../_shared/TESTING.md` and the project's testing contract. Use `../tdd/SKILL.md` at approved seams.
 
 1. Read the ticket, spec, project instructions and assigned immutable base. Confirm this worktree is clean and based on the coordinator's integration revision. Never reset or discard someone else's work.
 2. Implement the scoped change with focused Fast checks. Do not edit the tracker or merge another worker's branch.
-3. Commit the candidate, run Verify change against that revision, and return base/head SHAs, implementation model family, commands, exits, logs, environment ID and remaining issues. A failed required check means blocked, not done.
+3. Commit the candidate, run Verify change against that revision, and return base/head SHAs, implementation model family, commands, exits, logs, environment ID and remaining issues. Include a planned-versus-actual comparison by change reference: delivered behavior/scenarios, source/check evidence, internal adjustments within constraints and decision references for material deviations. Accepted ordering, side effects and failure behavior constrain implementation even when broad acceptance tests pass. A failed required check means blocked, not done.
 4. In coordinated mode, stop here: the coordinator owns review, integration and closure. Do not dispatch duplicate reviews.
 5. When invoked standalone, act as your own coordinator after committing: read `../code-review/SKILL.md`, arrange independent reviewers through Paseo, fix blocking findings, commit and verify the new candidate, then refresh the affected reviews. Report the final revision and any incomplete axis. Never imply a merge happened unless it did.

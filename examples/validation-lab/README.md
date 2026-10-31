@@ -30,3 +30,12 @@ Use [VALIDATION-REPORT.md](../../docs/VALIDATION-REPORT.md) for live results. `n
 ## Design validation extension
 
 The generated project includes a draft architecture, LikeC4 views, proposed ADR, requirement coverage and an unaccepted readiness record. Follow [the design exercise](../../docs/PR-VALIDATION.md#3-review-the-quotation-design) before worker dispatch. Dependency readiness and green application tests do not establish design acceptance. Record results separately in [ARCHITECTURE-VALIDATION.md](../../docs/ARCHITECTURE-VALIDATION.md).
+
+
+## Implementation preview and sequence diagrams
+
+The worked example includes a concrete [implementation preview](template/docs/designs/quote.md#expected-implementation) for changes C1-C3, a component view and explicit success/failure sequence views in [quote.c4](template/docs/architecture/model/quote.c4). The [coverage table](template/docs/designs/quote-traceability.md) connects requirements, changes, components, scenarios, tickets and checks. Present the rendered views before actual design acceptance; record planned-versus-actual behavior at delivery. The supplied draft records still confer no approval.
+
+After completing the original lab, use the separate [existing-code design exercise](design-change-exercise/README.md) to investigate a cached implementation that passes fixed-catalog examples but violates the proposed per-request read sequence. It also describes a harmless private-helper rename control. The exercise adds no batch functionality to the original lab and does not change its acceptance tests.
+
+An already generated lab is a separate repository: updating this package does not migrate its documents. For a fresh validation, generate a new lab from the updated package revision. To continue an existing lab, reconcile its design, model, coverage and ticket snapshot deliberately; retain existing implementation and evidence, and refresh affected reviews/acceptance when their inputs change.

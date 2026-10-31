@@ -18,7 +18,7 @@ The goals are to make a valid quote predictable, preserve exact integer-cent ari
 | Price calculation (`pricing`) | Validates numeric inputs and calculates a safe integer-cent total | Pure input/output function; owns arithmetic/range checks and has no filesystem or terminal side effects | Proposed `src/pricing.mjs`, `calculateTotalCents(unitPriceCents, quantity)`; ticket A and `test/unit/pricing.test.mjs` |
 | Catalog file (`file`) | Holds the operator-supplied product list | Read-only application input; no component writes it | A local JSON path; tests create independent temporary fixtures |
 
-The model identifiers in parentheses match [quote.c4](model/quote.c4). They are runtime responsibilities, not names of human approval roles. The human owner, planner, coordinator and reviewers belong to the development process configured in [the architecture contract](../agents/architecture.md).
+The implementation preview in [the feature design](../designs/quote.md#expected-implementation) maps changes C1-C3 to these responsibilities and the sequence views. The model identifiers in parentheses match [quote.c4](model/quote.c4). They are runtime responsibilities, not names of human approval roles. The human owner, planner, coordinator and reviewers belong to the development process configured in [the architecture contract](../agents/architecture.md).
 
 ## Successful quotation
 

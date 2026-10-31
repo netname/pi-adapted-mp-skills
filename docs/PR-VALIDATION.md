@@ -343,7 +343,7 @@ npx --yes --package=likec4@1.60.0 likec4 start
 
 The first command checks model syntax/layout validity and exits. The second starts a local preview; use its printed URL and stop it with Ctrl+C when done. The package version is pinned for the exercise. This may download documentation tooling from npm; it does not add runtime dependencies to the quotation application. In a real project, pin tooling in the project's development dependencies and lockfile for CI reproducibility.
 
-Inspect the component, success and failure views. Rendering makes relationships easier to see; it does not review them. Official references: [LikeC4 tutorial](https://likec4.dev/tutorial/), [CLI](https://likec4.dev/tooling/cli/), [dynamic views](https://likec4.dev/dsl/views/dynamic/).
+Inspect the component view and explicitly rendered success/failure sequence views. Read the expected implementation table C1-C3 in the feature design alongside them. Record source snapshot, view IDs, renderer command and preview/export evidence actually shown to the human. Check labels, interaction order and the error path that skips pricing; missing rendering is incomplete presentation. Rendering makes relationships easier to see; it does not review them. Official references: [LikeC4 tutorial](https://likec4.dev/tutorial/), [CLI](https://likec4.dev/tooling/cli/), [dynamic views](https://likec4.dev/dsl/views/dynamic/).
 
 ### Explain the proposal
 
@@ -820,3 +820,6 @@ Assessed by: <human and date>
 
 For combined-framework acceptance, include both design-readiness and execution/recovery results. For whole-cycle claims, also complete the research/grilling rehearsal and applicable questionnaire/language checks. A partial run can support feedback or a narrower recommendation, but cannot certify unperformed gates. Preserve artifacts before allowing cleanup; final archival policy improvements remain tracked in [Issue #3](https://github.com/netname/pi-adapted-mp-skills/issues/3).
 
+## Review a change to existing code
+
+After the original lab is integrated, use the [design change exercise](../examples/validation-lab/design-change-exercise/README.md) in a disposable branch/workspace. It supplies a bounded batch-quotation proposal, sequence model and deliberately differing implementations. Record which behavior checks ran and which fresh reviewer sessions actually ran. Do not transfer synthetic exercise decisions into real readiness or alter the original lab acceptance criteria. This checks whether a reviewer detects implementation behavior that broad output examples miss.

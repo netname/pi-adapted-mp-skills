@@ -26,9 +26,9 @@ For a local tracker, read its canonical absolute state root before publishing. I
 
 Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body and comments.
 
-### 2. Explore the codebase (optional)
+### 2. Establish the implementation context
 
-If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+Reuse the reviewed design preview and its inspected revision. Inspect affected code when that evidence is absent or stale; do not invent precise paths from an abstract spec. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
 
 Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change."
 
@@ -56,6 +56,8 @@ Present the proposed breakdown as a numbered list. For each ticket, show:
 - **Title**: short descriptive name
 - **Blocked by**: which other tickets (if any) must complete first
 - **What it delivers**: the end-to-end behaviour this ticket makes work
+- **Design changes and scenarios**: links to change references, accepted constraints and relevant sequence views
+- **Expected implementation areas**: inspected/proposed paths and interfaces; distinguish binding boundaries from estimates
 
 Ask the user:
 
@@ -84,6 +86,10 @@ Do NOT close or modify any parent issue.
 
 **Blocked by:** the numbers/titles of the tickets that gate this one, or "None (subject to readiness gates)".
 
+**Design changes / scenarios:** links to reviewed change references and applicable sequence views.
+
+**Expected implementation areas:** inspected/proposed paths or components; binding constraints versus estimates.
+
 **Status:** planning (ready-for-agent only after gates pass)
 
 - [ ] Acceptance criterion 1
@@ -101,6 +107,14 @@ A reference to the parent issue on the tracker (if the source was an existing is
 
 The end-to-end behaviour this ticket makes work, from the user's perspective, not layer-by-layer implementation.
 
+## Design changes and scenarios
+
+Links to reviewed change references, accepted constraints and applicable sequence views.
+
+## Expected implementation areas
+
+Inspected/proposed paths or components; identify estimates versus binding boundaries.
+
 ## Acceptance criteria
 
 - [ ] Criterion 1
@@ -112,7 +126,7 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 
 </issue-template>
 
-In either form, avoid specific file paths or code snippets: they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
+Link to the authoritative implementation preview instead of copying it into each ticket. Include inspected paths when they explain approved boundaries; label proposed locations as estimates. Small interface/schema examples belong in the design when they make an accepted decision precise. Do not invent implementation certainty or freeze internal file placement unnecessarily. Each ticket maps to a design change/scenario and observable check; tickets remain vertical outcomes rather than one ticket per diagram component.
 
 ## Project verification policy
 

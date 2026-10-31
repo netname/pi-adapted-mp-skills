@@ -21,19 +21,30 @@ views {
     include *
   }
   dynamic view quoteSuccess {
-    title 'Successful quotation'
+    title 'Proposed success: C1-C3 / R1-R4'
+    variant sequence
     operator -> cli 'Request PEN quantity 3'
-    cli -> catalog 'Load catalog'
-    catalog -> file 'Read JSON'
-    cli -> pricing '1250 cents times 3'
+    cli -> cli 'Validate arguments and quantity'
+    cli -> catalog 'Await catalog load'
+    catalog -> file 'Asynchronous file read; catalog remains unchanged'
+    file -> catalog 'JSON text'
+    catalog -> catalog 'Parse and validate entries and unique SKUs'
+    catalog -> cli 'Resolved products'
+    cli -> cli 'Find exact-case SKU'
+    cli -> pricing 'Synchronous calculation: 1250 cents times 3'
+    pricing -> cli '3750 cents'
     cli -> operator 'JSON totalCents 3750'
   }
   dynamic view quoteFailure {
-    title 'Invalid catalog'
+    title 'Proposed invalid catalog: C2-C3 / R2-R3'
+    variant sequence
     operator -> cli 'Request quotation'
-    cli -> catalog 'Load catalog'
-    catalog -> file 'Read malformed JSON'
-    catalog -> cli 'Reject load'
+    cli -> cli 'Validate arguments and quantity'
+    cli -> catalog 'Await catalog load'
+    catalog -> file 'Asynchronous file read; no writes'
+    file -> catalog 'Malformed JSON text'
+    catalog -> catalog 'Parsing fails'
+    catalog -> cli 'Rejected promise; no pricing call'
     cli -> operator 'Exit 1; stderr only'
   }
 }

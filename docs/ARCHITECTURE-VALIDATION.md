@@ -54,3 +54,15 @@ Preserve reports and findings, including failed/cancelled runs. Record exactly w
 - Proposed PR action: keep draft / request fixes / ready for maintainer decision
 
 Design acceptance is recorded separately against exact inputs. This report assesses the framework's observed behavior and does not authorize a merge.
+
+## Implementation preview and sequence validation
+
+For this extension, record current package SHA and actual results separately from the historical checks above:
+
+- Pinned LikeC4 validates the updated model and visibly renders `quoteSuccess` and `quoteFailure` as readable sequence views.
+- The human can describe C1-C3, success output and failure side effects from the preview without reading implementation code.
+- Tickets and worker reports refer to the same changes/scenarios; accepted file contracts and internal estimates are distinguished.
+- Run the [existing-code exercise](../examples/validation-lab/design-change-exercise/README.md): record whether independent review catches a semantic sequence deviation despite passing ordinary examples, and permits an internal helper rename.
+- A changed model/preview invalidates prior readiness; renders are regenerated from the reviewed inputs. Run the existing readiness tests for fingerprint checks.
+
+Automated scenario probes establish behavior of the examples, not live agent compliance or human acceptance. Record unperformed visual, reviewer and approval checks as NOT RUN.
