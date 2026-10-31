@@ -1,6 +1,6 @@
 # Understand and approve the design before building it
 
-This guide extends the [setup and SWE manual](MANUAL.md) with design explanation, visualization and independent review. It describes a local extension to Matt Pocock's adapted skills, not a feature attributed to upstream. The architecture branch depends on the workflow work in PR #1; validate these additions separately from live implementation orchestration. The older commit-linked edition remains historical; use the guide from the same package revision you are testing.
+This guide extends the [setup and SWE manual](MANUAL.md) with design explanation, visualization and independent review. **For a first read**, use the manual's [folder, effort and artifact guide](MANUAL.md#where-the-projects-and-artifacts-live), [nine lifecycle stages](MANUAL.md#why-each-stage-exists) and [script explanations](MANUAL.md#who-creates-and-handles-the-mjs-files) before following this guide's design operations. It describes a local extension to Matt Pocock's adapted skills, not a feature attributed to upstream. The architecture branch depends on the workflow work in PR #1; validate these additions separately from live implementation orchestration. The older commit-linked edition remains historical; use the guide from the same package revision you are testing.
 
 Start at the [repository README](../README.md#documentation-map). Within this guide: [purpose and solution overview](#1-the-purpose-and-overall-process) → [owners](#2-who-does-what) → [required design work and artifacts](#3-choose-an-appropriate-amount-of-design) → [artifact locations](#4-artifacts-and-their-relationships) → [operational route](#operational-route-and-completion-checks) → [worked example](#6-worked-example-understand-the-quotation-tool).
 
@@ -135,22 +135,27 @@ For brownfield, inspect code, configuration and tests at a named commit. Mark cl
 | --- | --- | --- |
 | Skills package checkout | `MP_SKILLS`, for example `$HOME/code/pi-skills-design-validation-01` | This guide, skill procedures, briefs, helper scripts and fixture templates |
 | Generated application repository | `MP_LAB`, for example `$HOME/code/quote-workflow-lab-01` | The application's spec, overview, design, tests, eventual source and project contracts |
-| Canonical tracker/evidence root | In this lab, `$MP_LAB/.scratch/quote-demo` | Authoritative ticket state, claims/events and execution evidence; all worktrees use this same absolute root |
+| Canonical tracker/evidence root | In this lab, `$MP_LAB/.scratch/quote-demo` | The **effort directory**: authoritative ticket state, claims/events and execution evidence; all worktrees use this same original absolute root |
 
 In prose, `docs/architecture/overview.md` below means the file inside **the application**. A Markdown link starting `../examples/validation-lab/template/…` opens the **package template** on GitHub. The generator copies and substitutes paths into the application version. Do not edit the template as a substitute for reviewing a generated application's design.
 
-`MP_SKILLS` and `MP_LAB` are shell variables you set; a fresh shell may not contain them. Agent prompts should receive their expanded absolute values, because a Paseo session does not automatically inherit every variable from your terminal. The coordinator supplies workers with explicit project and tracker paths. The ignored tracker/evidence directory needs separate retention; a source commit does not back it up.
+`MP_SKILLS` and `MP_LAB` are shell variables you set; a fresh shell may not contain them. Agent prompts should receive their expanded absolute values, because a Paseo session does not automatically inherit every variable from your terminal. The coordinator supplies workers with explicit project and tracker paths. The ignored tracker/evidence directory needs separate retention; a source commit does not back it up. [The manual](MANUAL.md#what-to-call-a-folder-under-scratch) defines an **effort directory** (`.scratch/<effort-slug>/`) and explains why the optional `quote-discovery` rehearsal has a separate folder. `quote-demo` is its slug, not a framework-required name.
 
 
-| Artifact | Purpose | Typical location in the application repository |
+| Artifact | Purpose | Lab location; general convention |
 | --- | --- | --- |
-| Spec | Authoritative behavior and exclusions, stable requirement IDs | docs/specs/feature.md or tracker |
-| Overview/model | System boundaries and shared views | docs/architecture/ |
-| Feature design | Proposed change, scenarios and tradeoffs | docs/designs/feature.md |
-| ADR | Significant decision, alternatives and consequences | docs/adr/ |
-| Traceability | Requirement → component → ticket → observable check | docs/designs/feature-traceability.md |
-| Readiness record | Exact files, completed reviews and human acceptance reference | docs/designs/feature-readiness.json |
-| Project contract | Paths, roles, tooling and readiness rules | docs/agents/architecture.md |
+| Decision map, decision tickets and research notes (optional) | Resolve questions **before** committing to a design; map points to answers, tickets hold the detail | Rehearsal: `.scratch/quote-discovery/map.md`, `issues/` and linked notes; another tracker can use issues instead |
+| Spec | Authoritative behavior and exclusions with stable requirement IDs | `docs/specs/quote.md`; in new work, `docs/specs/<feature>.md` or configured tracker |
+| Overview / optional model | Place components within the **whole application** and show interactions | `docs/architecture/overview.md`, `docs/architecture/model/quote.c4` |
+| Feature design | Explain **this change**, its scenarios and tradeoffs | `docs/designs/quote.md`; later, `docs/designs/<feature>.md` |
+| ADR | Record a significant choice, alternatives and consequences | `docs/adr/001-integer-cents.md` |
+| Implementation tickets and graph export | Separate buildable tasks and dependencies; graph is a derived input for the frontier helper | `.scratch/quote-demo/issues/`, `graph.json`; other trackers use their configured location |
+| Plan snapshot and traceability | Preserve proposed ticket scope and map requirement → component → ticket → observable check | `docs/designs/quote-plan.md` and `quote-traceability.md` |
+| Design review reports and readiness record | Capture real comprehension/challenge findings and exact inputs/acceptance | `docs/designs/reviews/`, `quote-readiness.json` |
+| Tests, source and run evidence | Check the implemented candidate at a named commit, record outcomes | `test/`, later `src/`, ignored `.scratch/quote-demo/evidence/` |
+| Project operating contracts | Point agents to paths, models, tracker rules, checks and design acceptance rules | `AGENTS.md`, `docs/agents/{issue-tracker,delegation,testing,architecture}.md` |
+
+`docs/agents/architecture.md` is a **process contract**. `docs/architecture/overview.md` is an **application architecture overview**. `docs/designs/quote.md` is the **feature proposal**. There is no `docs/architecture.md` in this lab. The manual's [full folder table and R1 example](MANUAL.md#where-the-projects-and-artifacts-live) show how these files are made, used and retained; this table highlights the subset needed for design review.
 
 The skills repository ships reusable procedures, templates and a teaching fixture. Each application owns its real architecture. Do not put every application's model into this skills package. Do not duplicate the requirements into each diagram or ticket; link IDs to the authoritative spec.
 
