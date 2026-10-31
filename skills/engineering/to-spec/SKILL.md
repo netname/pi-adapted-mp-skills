@@ -10,6 +10,8 @@ metadata:
   adapted-for: pi
 ---
 
+Read `../_shared/PLAIN-LANGUAGE.md` before writing human-facing questions or artifacts. Preserve exact requirements and decisions when simplifying language.
+
 This skill takes the current conversation context and codebase understanding and produces a spec. Do NOT interview the user; just synthesize what you already know.
 
 The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `/skill:setup-matt-pocock-skills`.
@@ -22,7 +24,7 @@ The issue tracker and triage label vocabulary should have been provided to you. 
 
 Check with the user that these seams match their expectations.
 
-3. Write the spec using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
+3. Write the spec using the template below, then publish it to the project issue tracker. Use the configured planning/needs-triage state until design and plan readiness are established. Publication is not implementation authorization. Read `../_shared/ARCHITECTURE.md`; assign stable requirement IDs and link accepted ADRs separately from proposed or unresolved decisions. Hand off to `/skill:design-solution` when design is needed.
 
 <spec-template>
 

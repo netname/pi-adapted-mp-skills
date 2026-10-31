@@ -10,6 +10,8 @@ metadata:
   adapted-for: pi
 ---
 
+Read `../_shared/PLAIN-LANGUAGE.md` before writing human-facing questions or artifacts. Preserve exact requirements and decisions when simplifying language.
+
 Read `../_shared/DELEGATION.md`. Launch one fresh background researcher through Paseo with the complete `agents/mp-researcher.md` brief from this package, the question, primary-source access and a unique absolute output path in its assigned workspace. Claim the ticket before dispatch.
 
 Keep the run ID and collect the cited note before treating the question as answered. Persist and link the result where the tracker can retrieve it; a temporary path on another host is not a durable context pointer. The coordinator serializes ticket/map writes and any commits. Research workers write only their allocated artifact.

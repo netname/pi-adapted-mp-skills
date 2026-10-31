@@ -26,17 +26,11 @@ The route most work travels. You have an idea and want it built.
    - **`/skill:handoff`** out, then open a fresh session against that file,
    - **`/skill:prototype`** to answer the question with throwaway code,
    - **`/skill:handoff`** back what you learned, and reference it from the original idea thread.
-3. **Branch: is this a multi-session build?**
-   - **Yes** → **`/skill:to-spec`** (turn the thread into a spec), then **`/skill:to-tickets`** to split it into tracer-bullet tickets, each declaring its **blocking edges**. On a local tracker that's one file per ticket under `.scratch/<feature>/issues/`, worked blockers-first by hand; on a real tracker the edges become native blocking links, so any ticket whose blockers are done can be grabbed: kick off **`/skill:implement`** per ticket, **`/new` between each one**. Each ticket is self-contained, so the last one's context is disposable.
-   - **No** → **`/skill:implement`** right here, in the same context window.
+3. **`/skill:to-spec`** records agreed behavior. Then use **`/skill:design-solution`** to explain components, workflows and tradeoffs, and **`/skill:review-design`** for fresh comprehension/challenge reviews. Use a lightweight note for small changes; full modeling is optional according to the project architecture contract.
+4. **`/skill:to-tickets`** breaks larger work into tracer-bullet tickets. Check requirement coverage, dependencies and current design/plan acceptance before launch. A ready label does not bypass these gates.
+5. **`/skill:implement-spec`** coordinates a graph automatically: fresh workers in separate worktrees, committed candidates, tests, independent review and serial verified integration. Use **`/skill:implement`** standalone for one scoped ticket with the same readiness requirements.
 
-   Either way, **`/skill:implement`** builds each issue by driving **`/skill:tdd`** internally (one red-green slice at a time), then closes out by running **`/skill:code-review`**, a two-axis review (Standards + Spec) of the diff, before committing. Reach for **`/skill:tdd`** on its own when you just want to build a concrete behaviour test-first without a full spec, and **`/skill:code-review`** on its own whenever you want to review a branch or PR against a fixed point.
-
-### Context hygiene
-
-Keep steps 1–3 in **one unbroken context window** (don't compact or start fresh until after `/skill:to-tickets`) so the grilling, spec, and tickets all build on the same thinking. Each `/skill:implement` then starts fresh, working from the ticket.
-
-The limit on this is the **[smart zone](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**: the window (~150k tokens on state-of-the-art models) within which the model still reasons sharply. If a session approaches it before `/skill:to-tickets`, don't push on degraded; `/compact` at the nearest phase boundary and carry on (see Phase boundaries).
+Implementation uses **`/skill:tdd`** where appropriate. Candidates are committed before **`/skill:code-review`** captures them. The coordinator owns review in coordinated mode; workers do not dispatch duplicates. Preserve explicit artifacts at phase boundaries so fresh sessions can resume without the entire conversation. Design reviewers must not inherit the drafting conversation.
 
 ## On-ramps
 
@@ -44,13 +38,13 @@ A starting situation that generates work, then merges onto the main flow.
 
 - **Bugs and requests piling up** → **`/skill:triage`**. It moves issues through triage roles and produces agent-ready issues, which **`/skill:implement`** later picks up.
 
-  Triage is only for issues **you didn't create**: bug reports, incoming feature requests, anything that arrives raw. Tickets that `/skill:to-tickets` produced are already agent-ready, so **don't triage them**.
+  Triage is only for issues **you didn't create**: bug reports, incoming feature requests, anything that arrives raw. Tickets that `/skill:to-tickets` produced already have an agreed scope; avoid redundant triage, but check design/plan readiness before dispatch.
 
 - **Something's broken** → **`/skill:diagnosing-bugs`**. For the hard ones: the bug that resists a first glance, the intermittent flake, the regression that crept in between two known-good states. It refuses to theorise until it has a **tight feedback loop** (one command that already goes red on *this* bug), then fixes with a regression test. Its post-mortem hands off to **`/skill:improve-codebase-architecture`** when the real finding is that there's no good seam to lock the bug down.
 
 - **A huge, foggy effort: a greenfield project or a huge feature build, too big for one session** → **`/skill:wayfinder`**, the most cognitively demanding flow here. When the way from here to the destination isn't visible yet, it charts a **shared map** of **decision tickets** on the issue tracker and resolves them one at a time, producing **decisions, not deliverables**, until the fog is pushed back and the way is clear. Where **`/skill:grill-with-docs`** sharpens an idea you can hold in one session, wayfinder is for the idea you can't, and it's slower and denser, so save it for exactly that, never a well-scoped feature.
 
-  When the map clears, **it hands off, it doesn't build**: merge onto the main flow at **`/skill:to-spec`**, which collapses the map's linked decisions into a buildable plan, then `/skill:to-tickets` and `/skill:implement` as usual. Looping the map straight into `/skill:implement` skips that collapse and throws the linked detail away, so go straight to `/skill:implement` only when the effort turned out genuinely small.
+  When the map clears, **it hands off, it doesn't build**: merge onto the main flow at **`/skill:to-spec`**, which collapses the map's linked decisions into a buildable plan, then design/review, `/skill:to-tickets` and `/skill:implement-spec` as above. Looping the map straight into `/skill:implement` skips that collapse and throws the linked detail away, so go straight to `/skill:implement` only when the effort turned out genuinely small.
 
 ## Codebase health
 

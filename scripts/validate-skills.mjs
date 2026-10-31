@@ -311,7 +311,7 @@ function checkDuplicateNames(skillFiles) {
 // Check 7 — inventory consistency
 // ---------------------------------------------------------------------------
 
-const PORTED_DISPOSITIONS = new Set(["port", "adapt", "rename"]);
+const PORTED_DISPOSITIONS = new Set(["port", "adapt", "rename", "local"]);
 
 function checkInventoryConsistency(inventory, skillFiles) {
   if (!inventory) return;
@@ -324,7 +324,10 @@ function checkInventoryConsistency(inventory, skillFiles) {
       continue;
     }
     if (!PORTED_DISPOSITIONS.has(row.disposition)) {
-      fail(file, 1, `inventory row \`${row.upstreamName}\` has disposition \`${row.disposition}\`; only port/adapt/rename may be shipped.`);
+      fail(file, 1, `inventory row \`${row.upstreamName}\` has disposition \`${row.disposition}\`; only port/adapt/rename/local may be shipped.`);
+    }
+    if (row.disposition === "local" && (!row.name || row.origin !== "local" || row.upstreamPath || row.upstreamName)) {
+      fail(file, 1, "local inventory rows require name, origin=local and no upstream identity.");
     }
     const name = frontmatterName(file);
     // D11 keeps names verbatim, with the single exception D3 and D11 both authorise:
@@ -334,12 +337,12 @@ function checkInventoryConsistency(inventory, skillFiles) {
     if (row.disposition === "rename" && !row.renameTarget) {
       fail(file, 1, `inventory row \`${row.upstreamName}\` has disposition \`rename\` but records no \`renameTarget\`.`);
     }
-    const expectedName = row.disposition === "rename" && row.renameTarget ? row.renameTarget : row.upstreamName;
+    const expectedName = row.disposition === "local" ? row.name : row.disposition === "rename" && row.renameTarget ? row.renameTarget : row.upstreamName;
     if (name && expectedName && name !== expectedName) {
       const rule =
         row.disposition === "rename"
           ? `D3 renames \`${row.upstreamName}\` to \`${row.renameTarget}\`, so the upstream name is not accepted here`
-          : `D11 keeps names verbatim (inventory upstreamName \`${row.upstreamName}\`)`;
+          : row.disposition === "local" ? `local inventory name is ${row.name}` : `D11 keeps names verbatim (inventory upstreamName \`${row.upstreamName}\`)`;
       fail(file, 1, `frontmatter name \`${name}\` differs from the expected name \`${expectedName}\`: ${rule}.`);
     }
     const bucket = rel.split("/")[1];

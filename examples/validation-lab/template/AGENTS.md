@@ -7,3 +7,5 @@ All worktrees use that absolute location; do not create private tracker copies.
 Use fresh workers and independent reviewers according to the package's shared policy.
 The coordinator is the only tracker/integration writer; implementation workers commit on their assigned branches.
 Do not change supplied acceptance tests to manufacture a pass. The exercise is a local JSON-file CLI; preserve that scope.
+
+Before implementation, read docs/agents/architecture.md. The supplied design is draft; dependency-ready tickets remain blocked until design/plan acceptance is recorded.

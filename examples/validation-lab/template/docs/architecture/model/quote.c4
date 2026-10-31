@@ -1,0 +1,39 @@
+// Intended architecture. No application implementation exists at scaffold time.
+specification {
+  element actor
+  element component
+  element storage
+}
+model {
+  operator = actor 'Shop operator'
+  cli = component 'Quote CLI'
+  catalog = component 'Catalog reader'
+  pricing = component 'Price calculation'
+  file = storage 'JSON catalog file'
+  operator -> cli 'Provides catalog path, SKU and quantity'
+  cli -> catalog 'Loads and validates products'
+  catalog -> file 'Reads without modifying'
+  cli -> pricing 'Calculates integer cents'
+}
+views {
+  view components {
+    title 'Proposed quotation components'
+    include *
+  }
+  dynamic view quoteSuccess {
+    title 'Successful quotation'
+    operator -> cli 'Request PEN quantity 3'
+    cli -> catalog 'Load catalog'
+    catalog -> file 'Read JSON'
+    cli -> pricing '1250 cents times 3'
+    cli -> operator 'JSON totalCents 3750'
+  }
+  dynamic view quoteFailure {
+    title 'Invalid catalog'
+    operator -> cli 'Request quotation'
+    cli -> catalog 'Load catalog'
+    catalog -> file 'Read malformed JSON'
+    catalog -> cli 'Reject load'
+    cli -> operator 'Exit 1; stderr only'
+  }
+}

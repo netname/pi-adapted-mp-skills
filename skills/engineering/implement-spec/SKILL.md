@@ -10,6 +10,8 @@ metadata:
   adapted-for: pi
 ---
 
+Read `../_shared/ARCHITECTURE.md`. Before the loop, after restart, before each dispatch and before accepting integration, check the current accepted design/plan and configured readiness record. Supply its constraints and identities to workers. Reopen affected design decisions for material deviations; at completion reconcile the model/design with implemented behavior. A ready tracker label alone is insufficient.
+
 The tracker stores durable tickets, dependencies, claims and evidence. The coordinator is the single active session that chooses ready work, owns Paseo workers, serializes integration and updates that tracker. Paseo supplies sessions/worktrees; it does not define completion or run the test policy for you.
 
 Read `../_shared/DELEGATION.md`, `../_shared/TESTING.md` and the project's tracker/delegation/testing configuration. Confirm the tracker includes the implementation state fields, ownership, evidence and closure rules from setup; missing execution conventions block dispatch. For a local tracker, resolve its canonical absolute root once and pass absolute inputs to every worker. Read the spec and approved tickets. Reuse existing user decisions. No implementation may start with unresolved requirements or missing required test commands.

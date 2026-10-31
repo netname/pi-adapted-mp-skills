@@ -11,6 +11,10 @@ metadata:
   adapted-for: pi
 ---
 
+Read `../../engineering/_shared/PLAIN-LANGUAGE.md` before interviewing or drafting. Reuse known recipient/context details and prior answers. Explain unfamiliar terms, preserve exact requirements and ask only for information needed for the stated decision.
+
+The short-round limit applies to the live interview, not the length of the asynchronous document. A questionnaire may contain all necessary questions, grouped by topic, with one idea per question and explicit “If yes…” branches. Explain meaningful options without implying an unapproved recommendation is already decided.
+
 Turn something the user can't answer alone into a **questionnaire**: a Markdown document they hand to one person to fill in async, or fill out together over a meeting. The recipient holds knowledge the user lacks; the questionnaire pulls it out of them.
 
 **Grill the send, not the subject.** Interview the user only about the _send_, which they can always answer: who it goes to, and what they need back. The questions in the document then target the **gap** between what the recipient knows and what the user needs.
@@ -59,3 +63,4 @@ _Why this matters: it decides whether we provision for burst traffic now or defe
 A closing catch-all: anything we didn't ask that we should know?
 
 </questionnaire-template>
+

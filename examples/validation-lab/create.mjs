@@ -21,6 +21,8 @@ function substitute(dir) {
 substitute(target);
 mkdirSync(state, { recursive: true });
 cpSync(join(here, 'tickets'), join(state, 'issues'), { recursive: true });
+const ticketFiles = readdirSync(join(here, 'tickets')).filter(name => name.endsWith('.md')).sort();
+writeFileSync(join(target, 'docs/designs/quote-plan.md'), '# Supplied ticket scope snapshot\n\nPlanning proposal; live claims/status belong in the tracker.\n\n' + ticketFiles.map(name => readFileSync(join(here, 'tickets', name), 'utf8')).join('\n\n'));
 writeFileSync(join(target, '.gitignore'), '.scratch/\nnode_modules/\n');
 writeFileSync(join(state, 'graph.json'), JSON.stringify({ tickets: [
   { id: 'A', status: 'ready', blockedBy: [] },
@@ -29,4 +31,4 @@ writeFileSync(join(state, 'graph.json'), JSON.stringify({ tickets: [
 ]}, null, 2) + '\n');
 cpSync(join(skills, 'skills/engineering/_shared/delegation.template.md'), join(target, 'docs/agents/delegation.md'));
 writeFileSync(join(state, 'events.md'), '# Events\n\nLab created; no implementation, verification or review has passed.\n');
-console.log(JSON.stringify({ target, skills, state, next: 'Configure delegation.md, initialize Git, then follow docs/MANUAL.md in the skills repository.' }, null, 2));
+console.log(JSON.stringify({ target, skills, state, next: 'Initialize Git, configure delegation.md, then follow docs/PR-VALIDATION.md in the skills repository.' }, null, 2));

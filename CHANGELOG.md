@@ -1,5 +1,29 @@
 # 0.2.0 (unreleased)
 
+- Explain the purpose, inputs, outputs and limits of each JavaScript helper in plain language, including the design-readiness helper and terminology used by the lab.
+
+- Remove the premature lab installation command and clarify when the generator creates the lab. Align coordinator and final-review prompts with the accepted execution baseline and actual human approval.
+
+- Put lab project setup in chronological order: open the correct host/project, choose Claude or Pi, follow complete prompts, inspect configuration and commit the initial baseline before review. Clarify the later approved execution baseline.
+
+- Make the manual the single entry route for first-time framework validation. Expand Paseo profile/delegation/session preflight, explain A/B/C and optional administrative terminals, link design handoffs and both live reports, and distinguish historical preparation results, feedback and acceptance decisions.
+
+- Replace ambiguous “useful minimum” wording with required design work/artifacts. Add explicit actions to the design-route table and separate owners, actions, locations and completion checks in the preparation table.
+
+- Expand the workflow introduction to define project contracts and their locations, explain research/grilling/prototypes/Wayfinder, and connect discovery to design acceptance and execution. Align the cooperation summary with the complete process.
+
+- Give the coordinator its own workflow component row and distinguish planning, worker and reviewer responsibilities. Clarify startup baselines, decision versus implementation readiness, verification profiles, review independence and local-state preservation.
+
+- Explain planning through delivery in the workflow, including stage owners, readiness, claims, independent review, serial integration and restart behavior. Add a README table distinguishing each document's purpose and links into the explanation.
+
+- Expand the architecture guide with solution/document boundaries, accountable owners, minimum artifact lifecycles and an explicit operational route. Add workflow/application component overviews and a README documentation map.
+
+- Connect the asynchronous questionnaire skill to the plain-language policy, with explicit conditional questions and reuse of known answers.
+- Add a shared plain-language policy for planning questions and artifacts; limit interview rounds, reuse decisions and check comprehension within existing design review. Add a language exercise without new skills, dependencies or gates.
+
+- Add local design-solution/review-design skills, architecture contracts, independent design-review brief and readiness fingerprint checks.
+- Connect design/plan acceptance to setup, specifications, tickets, dispatch, review and retrospective; extend the quotation lab with LikeC4 views and design failure exercises.
+
 - Keep the quotation lab independent of other applications; remove application-specific examples and adapter guidance.
 - Use explicit user-owned CLI prefixes, absolute sibling checkout/lab paths and chained setup commands; explain recovery from prefix/path errors. Align phase-boundary advice with fresh implementation workers and independent reviewers.
 

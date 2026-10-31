@@ -21,6 +21,9 @@ test('lab creation supplies a resolvable plan and refuses existing destinations'
   const graph = JSON.parse(readFileSync(join(repo, '.scratch/quote-demo/graph.json'), 'utf8'));
   assert.deepEqual(graph.tickets[2].blockedBy, ['A', 'B']);
   assert.throws(() => execFileSync(process.execPath, [create, repo], { stdio: 'pipe' }));
+  assert.equal(JSON.parse(readFileSync(join(repo, 'docs/designs/quote-readiness.json'), 'utf8')).status, 'draft');
+  assert.ok(readFileSync(join(repo, 'docs/designs/quote-plan.md'), 'utf8').includes('Design constraints:'));
+  assert.ok(readFileSync(join(repo, 'docs/agents/architecture.md'), 'utf8').includes('design-check.mjs'));
   init(repo);
   const evidence = join(dir, 'evidence');
   const run = spawnSync(process.execPath, [verify, repo, 'unit', evidence], { encoding: 'utf8' });
