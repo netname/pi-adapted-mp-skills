@@ -4,6 +4,32 @@ Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh
 
 **0.2.0, unreleased.** This is a selective upgrade to [upstream v1.3.1](https://github.com/mattpocock/skills/tree/v1.3.1), not a wholesale rebase. Source pins remain in each skill. See [migration](docs/MIGRATION-0.2.md), [workflow](docs/WORKFLOW.md) and [changelog](CHANGELOG.md).
 
+## SWE process at a glance
+
+This repository supplies **procedures and focused helpers** for taking a change from an uncertain need to a reviewed, verified result. The numbered stages describe work in a **software project that uses this package**, not steps for validating this repository's PRs. Planning settles what to build and how; execution builds only accepted work and checks the combined result.
+
+```mermaid
+flowchart TD
+    subgraph plan["Plan the change"]
+        D["1 Discover and clarify"] --> S["2 Specify"]
+        S --> A["3 Design and review"]
+        A --> P["4 Plan and authorize"]
+    end
+    P --> R["5 Check readiness"]
+    R -->|Ready| I
+    subgraph execute["Build and check"]
+        I["6 Implement"] --> V["7 Review and integrate"]
+        V -->|More ready tickets| I
+        V -->|All tickets integrated| F["8 Verify complete change"]
+        F --> H["9 Evaluate and decide"]
+    end
+    F -->|Material change| A
+```
+
+Research, grilling, prototypes and optional Wayfinder help resolve Stage 1 questions; a spec, design and implementation tickets make Stages 2–4 inspectable. At Stage 5 the coordinator checks that accepted inputs, models, tracker and test resources are ready. It uses Paseo to launch workers in separate Git worktrees; fresh reviewers examine committed candidates, and the coordinator integrates and verifies them **one at a time**. Only verified integration unblocks dependent tickets. The human owns consequential choices and the final delivery decision. If a check fails, return to the **affected stage**; the arrows show the common routes, not an automatic scheduler.
+
+See [stage owners, artifacts and completion checks](docs/WORKFLOW.md#stages-owners-and-completion-conditions) for the exact meaning of each stage. Use the [manual](docs/MANUAL.md) for setup and commands, or the [PR validation guide](docs/PR-VALIDATION.md) to test this package with the separate quotation lab.
+
 ## Documentation map
 
 Choose one route. **Using the skills in a software project?** Read [WORKFLOW](docs/WORKFLOW.md) for the lifecycle, [MANUAL](docs/MANUAL.md) for setup, project folders, artifacts, tools and day-to-day operation, and [ARCHITECTURE-GUIDE](docs/ARCHITECTURE-GUIDE.md) for design review and acceptance. Those guides describe normal project work; use your project's own requirements, design and tests.
