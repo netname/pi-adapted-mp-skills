@@ -281,6 +281,8 @@ pi install -l "$MP_SKILLS"
 
 Replace both paths with actual directories on that host. The project must already exist; `pi install -l` does not create it, configure its tracker or accept a design. In Pi, verify the package loads and invoke `/skill:setup-matt-pocock-skills` as described in [project setup](#configure-each-software-project). This package is Pi-native; Claude Code can read its procedure files by explicit path. Avoid duplicate installations with the same skill names. [Pi packages](https://pi.dev/docs/latest/packages) · [Pi skills](https://pi.dev/docs/latest/skills).
 
+**Why install into Pi but not Claude Code here?** The package's `package.json` registers its skills and `git-guardrails` extension with Pi, so Pi sessions can discover and invoke them. The current Claude Code instructions instead point to `SKILL.md` files in that **same checkout** by absolute path; there is no second copy to install or keep in sync. A Pi installation does not register Claude slash commands, and reading a skill file in Claude does not load the Pi extension. This is a choice in this repository's setup, not a Claude Code limitation: Claude Code also supports [native skills](https://code.claude.com/docs/en/skills#choose-where-skills-load), including links to skill folders, if we later add and verify a Claude-specific installation path. Paseo starts sessions but does not install skills into either agent. See [the Claude Code procedure](#use-the-same-procedure-from-claude-code) for the current invocation.
+
 
 ## Configure Paseo and profiles
 
