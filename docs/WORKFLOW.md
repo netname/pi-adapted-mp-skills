@@ -1,6 +1,6 @@
 # Current workflow
 
-This document explains the **normal project workflow** and why its gates exist. Read the [manual](MANUAL.md#stages-and-artifacts) for stages, folders, tools, setup and day-to-day operations, and the [architecture guide](ARCHITECTURE-GUIDE.md) for design. The disposable experiment that evaluates this package lives only in [PR-VALIDATION.md](PR-VALIDATION.md).
+This document explains the **normal project workflow** and why its gates exist. Start with the [SWE process diagram](../README.md#swe-process-at-a-glance), then read the [manual](MANUAL.md#stages-and-artifacts) for stages, folders, tools, setup and day-to-day operations, and the [architecture guide](ARCHITECTURE-GUIDE.md) for design. The disposable experiment that evaluates this package lives only in [PR-VALIDATION.md](PR-VALIDATION.md).
 
 Read by topic: [components](#components-and-responsibilities) · [planning and execution](#planning-and-execution) · [frontier input](#normalized-frontier-input) · [verification](#verification). Terms such as claim, base/head and candidate are defined in the [manual vocabulary](MANUAL.md#vocabulary).
 
