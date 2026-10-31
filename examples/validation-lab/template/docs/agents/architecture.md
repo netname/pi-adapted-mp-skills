@@ -7,7 +7,7 @@ Model: docs/architecture/model/quote.c4. ADR: docs/adr/001-integer-cents.md.
 Coverage: docs/designs/quote-traceability.md. Approved plan snapshot: docs/designs/quote-plan.md.
 Readiness record: docs/designs/quote-readiness.json (starts draft).
 
-Before dispatch, use the design/review exercise in the package's docs/ARCHITECTURE-GUIDE.md. Record actual design author families and two fresh independent review sessions in the configured Paseo profiles. Fill the readiness record only from real reports and an actual human decision. The A/B dependency frontier is not authorization to bypass this gate.
+Before dispatch, use the quotation design/review exercise in the package's docs/PR-VALIDATION.md. Record actual design author families and two fresh independent review sessions in the configured Paseo profiles. Fill the readiness record only from real reports and an actual human decision. The A/B dependency frontier is not authorization to bypass this gate.
 
 Run: node __SKILLS_ROOT__/scripts/design-check.mjs check REPO docs/designs/quote-readiness.json
 Replace REPO with this checkout's absolute path. Include spec, overview, design, ADR, model, coverage and stable plan snapshot in the input set. Keep two report files under docs/designs/reviews/ and hash them separately. Ticket scope changes must update the snapshot and refresh readiness; tracker status changes alone do not change scope.

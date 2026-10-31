@@ -21,7 +21,7 @@ The tests contain explicitly synthetic approval/reviewer records for helper vali
 
 ## Live validation report: fill for your run
 
-Procedure: [manual first-time route](MANUAL.md#validate-the-framework-for-the-first-time), with the design steps in [architecture guide §6](ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool). After copying this template into the lab, use your recorded skills path if relative links no longer resolve.
+Procedure: [PR validation route](PR-VALIDATION.md), with the [quotation design exercise](PR-VALIDATION.md#3-review-the-quotation-design). After copying this template into the lab, use your recorded skills path if relative links no longer resolve.
 
 Run ID/date/operator: ______. Skills checkout path: ______.
 Package commit: ______. Host/OS/Node: ______. Paseo version: ______.

@@ -1,14 +1,14 @@
 # Reproducible workflow-validation lab
 
-For the complete exercise, follow the [first-time validation route](../../docs/MANUAL.md#validate-the-framework-for-the-first-time). Use the manual as your main procedure and return to it after the linked design review.
+For the complete exercise, follow the [first-time validation route](../../docs/PR-VALIDATION.md). Use that guide as the only lab procedure; normal project setup is documented separately in the manual.
 
-Start with the [README documentation map](../../README.md#documentation-map), [application overview](template/docs/architecture/overview.md) and [design operational route](../../docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks). Read [the full manual](../../docs/MANUAL.md) for host setup and execution before running live agents. This is a teaching fixture for the orchestration workflow and its architecture/design extension. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
+Start with the [README documentation map](../../README.md#documentation-map), [application overview](template/docs/architecture/overview.md) and [design operational route](../../docs/PR-VALIDATION.md#3-review-the-quotation-design). Read [the validation guide](../../docs/PR-VALIDATION.md) for host setup and execution before running live agents. This is a teaching fixture for the orchestration workflow and its architecture/design extension. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
 
 ```bash
 node /absolute/skills/examples/validation-lab/create.mjs /new/absolute/lab-directory
 ```
 
-The destination's parent must exist. An existing destination is refused. No provider installs, model calls, Git initialization, remote writes or completed application source are performed. The generated project has an agreed spec, acceptance tests, local tracker and profile template. Fill the template, initialize/commit the project and follow the manual.
+The destination's parent must exist. An existing destination is refused. No provider installs, model calls, Git initialization, remote writes or completed application source are performed. The generated project has an agreed spec, acceptance tests, local tracker and profile template. Fill the template, initialize/commit the project and follow the PR validation guide.
 
 Tickets A (pricing) and B (catalog I/O) can run concurrently. C (CLI) depends on both being integrated and verified. The CLI journey exercises E2E without needing a browser or database.
 
@@ -29,4 +29,4 @@ Use [VALIDATION-REPORT.md](../../docs/VALIDATION-REPORT.md) for live results. `n
 
 ## Design validation extension
 
-The generated project now includes a draft architecture, LikeC4 views, proposed ADR, requirement coverage and an unaccepted readiness record. Follow [the architecture guide](../../docs/ARCHITECTURE-GUIDE.md) before worker dispatch. Dependency readiness and green application tests do not establish design acceptance. Record results separately in [ARCHITECTURE-VALIDATION.md](../../docs/ARCHITECTURE-VALIDATION.md).
+The generated project includes a draft architecture, LikeC4 views, proposed ADR, requirement coverage and an unaccepted readiness record. Follow [the design exercise](../../docs/PR-VALIDATION.md#3-review-the-quotation-design) before worker dispatch. Dependency readiness and green application tests do not establish design acceptance. Record results separately in [ARCHITECTURE-VALIDATION.md](../../docs/ARCHITECTURE-VALIDATION.md).

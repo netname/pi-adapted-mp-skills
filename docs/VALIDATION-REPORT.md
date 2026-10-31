@@ -1,8 +1,8 @@
 # Framework workflow validation report
 
-Copy this file into the lab's `.scratch/quote-demo/validation-report.md`. Fill observed results; never use the expected result as evidence that a test ran. The procedure is in [MANUAL.md](MANUAL.md) in the skills repository. After copying, that relative link may no longer resolve; keep the skills checkout path below.
+Copy this file into the lab's `.scratch/quote-demo/validation-report.md`. Fill observed results; never use the expected result as evidence that a test ran. The procedure is in [PR-VALIDATION.md](PR-VALIDATION.md) in the skills repository. After copying, that relative link may no longer resolve; keep the skills checkout path below.
 
-Use this report for orchestration behavior. For the combined framework also complete [the architecture report](ARCHITECTURE-VALIDATION.md). Follow [the first-time route](MANUAL.md#validate-the-framework-for-the-first-time) for instructions. Leave unperformed checks NOT RUN; a copied template is not evidence.
+Use this report for orchestration behavior. For the combined framework also complete [the architecture report](ARCHITECTURE-VALIDATION.md). Follow [the first-time route](PR-VALIDATION.md) for instructions. Leave unperformed checks NOT RUN; a copied template is not evidence.
 
 ## Run identity
 

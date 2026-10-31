@@ -31,4 +31,4 @@ writeFileSync(join(state, 'graph.json'), JSON.stringify({ tickets: [
 ]}, null, 2) + '\n');
 cpSync(join(skills, 'skills/engineering/_shared/delegation.template.md'), join(target, 'docs/agents/delegation.md'));
 writeFileSync(join(state, 'events.md'), '# Events\n\nLab created; no implementation, verification or review has passed.\n');
-console.log(JSON.stringify({ target, skills, state, next: 'Configure delegation.md, initialize Git, then follow docs/MANUAL.md in the skills repository.' }, null, 2));
+console.log(JSON.stringify({ target, skills, state, next: 'Initialize Git, configure delegation.md, then follow docs/PR-VALIDATION.md in the skills repository.' }, null, 2));

@@ -6,42 +6,18 @@ Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh
 
 ## Documentation map
 
-There are two things to understand: **this repository's development workflow** and **the independent quotation CLI built to validate it**. The workflow coordinates planning, implementation and review; the quotation application only reads local JSON and returns a quote. **Start here if you are new:** read the manual's [nine stages](docs/MANUAL.md#why-each-stage-exists), [project folders and artifact walk-through](docs/MANUAL.md#where-the-projects-and-artifacts-live), and [skills/scripts explanation](docs/MANUAL.md#written-procedures-and-executable-checks-how-they-work-together). Then follow its [first-time validation route](docs/MANUAL.md#validate-the-framework-for-the-first-time) in order.
+Choose one route. **Using the skills in a software project?** Read [WORKFLOW](docs/WORKFLOW.md) for the lifecycle, [MANUAL](docs/MANUAL.md) for setup, project folders, artifacts, tools and day-to-day operation, and [ARCHITECTURE-GUIDE](docs/ARCHITECTURE-GUIDE.md) for design review and acceptance. Those guides describe normal project work; use your project's own requirements, design and tests.
 
-### What each document is for
+**Evaluating these proposed package changes?** Follow [PR-VALIDATION](docs/PR-VALIDATION.md) from its first step. That separate guide owns the disposable quotation lab, its planning rehearsal, design exercise, commands, failure drills and evaluation. Record live results in [workflow validation](docs/VALIDATION-REPORT.md) and [architecture validation](docs/ARCHITECTURE-VALIDATION.md); these templates are only for assessing the PRs. The lab [fixture README](examples/validation-lab/README.md) describes its generated application.
 
-| Document | Purpose | Use it when you need to… |
+| Question | Project route | PR validation route |
 | --- | --- | --- |
-| **README** (this page) | Entry point and documentation map | Choose where to start and find the document that answers your question |
-| [WORKFLOW](docs/WORKFLOW.md) | Explain the overall process, responsibilities, handoffs, gates and their reasons | Understand **why** planning becomes verified software and what each owner does |
-| [ARCHITECTURE-GUIDE](docs/ARCHITECTURE-GUIDE.md) | Explain how to prepare, inspect, review and accept design artifacts | Carry out **Stages 3–5** and hand an accepted plan into implementation |
-| [MANUAL](docs/MANUAL.md) | Beginner's reference for stages, folders, artifacts and tools; installation and step-by-step validation | Learn the vocabulary, then **run** the complete worked example and assess the framework |
-| [Skills](skills/) and [shared policies](skills/engineering/_shared/) | Give agents precise role procedures and cross-cutting rules | Inspect the instructions that planners, coordinator, workers and reviewers must follow |
+| What are the lifecycle stages, owners and gates? | [Workflow stage map](docs/WORKFLOW.md#stages-owners-and-completion-conditions) | [Validation steps and checks](docs/PR-VALIDATION.md) |
+| What are `docs/agents`, specs, designs, ADRs, maps and `.scratch` efforts? | [Manual folders and artifacts](docs/MANUAL.md#project-folders-and-effort-directories) | [Lab setup](docs/PR-VALIDATION.md#2-create-and-configure-the-lab) |
+| How do design review and readiness work? | [Architecture guide](docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks) | [Quotation design exercise](docs/PR-VALIDATION.md#3-review-the-quotation-design) |
+| How do I run and inspect the agents? | [Manual setup and use](docs/MANUAL.md#prepare-the-execution-host) | [Lab execution](docs/PR-VALIDATION.md#4-execute-the-ticket-graph) |
 
-After the manual's beginner reference, read the [workflow overview](docs/WORKFLOW.md#solution-overview) and [planning/execution explanation](docs/WORKFLOW.md#planning-and-execution) for the reasons behind each handoff. Follow the manual's numbered route for actions and use the architecture guide for its design exercise. Skill procedures complement these human-facing explanations.
-
-**Shared lifecycle names:** 1 Discover and clarify → 2 Specify → 3 Design and review → 4 Plan and authorize → 5 Check readiness → 6 Implement → 7 Review and integrate (repeat 6–7 as needed) → 8 Verify complete change → 9 Evaluate and decide. The [manual's numbered diagram and artifact/action table](docs/MANUAL.md#the-process-has-two-connected-loops) and [workflow's owner/gate table](docs/WORKFLOW.md#stages-owners-and-completion-conditions) use these same names. The manual's ten validation steps and numbered sections are **instructions for the example**, not another lifecycle. Setup and report preparation come before the lifecycle exercise.
-
-**To run the worked example and review the framework, start at [First-time validation route](docs/MANUAL.md#validate-the-framework-for-the-first-time).** It takes you through setup, design review, execution and failure drills, and tells you when to fill the two reports. The manual is the procedure; the reports record your observations.
-
-### Find an answer or operation
-
-| Your question / task | Read here | Continue with |
-| --- | --- | --- |
-| What are we building, why, and how do the workflow components cooperate? | [Workflow solution overview](docs/WORKFLOW.md#solution-overview) | [Manual process overview](docs/MANUAL.md#overview-from-a-need-to-a-change-you-can-accept) |
-| How does planning become verified software, and why are the gates needed? | [Planning and execution](docs/WORKFLOW.md#planning-and-execution) | [Stage inputs, owners and completion conditions](docs/WORKFLOW.md#stages-owners-and-completion-conditions), then the linked operating instructions |
-| What are `.scratch/quote-demo`, the map, decision tickets and research notes? | [Effort directories](docs/MANUAL.md#what-to-call-a-folder-under-scratch) | [Artifact walk-through](docs/MANUAL.md#how-the-artifacts-answer-different-questions) and [Wayfinder's map](skills/engineering/wayfinder/SKILL.md#the-map) |
-| Why do `docs/agents/architecture.md`, `docs/architecture/overview.md` and `docs/designs/quote.md` differ? | [Project folder table](docs/MANUAL.md#where-the-projects-and-artifacts-live) | [Architecture artifact map](docs/ARCHITECTURE-GUIDE.md#4-artifacts-and-their-relationships) |
-| Which skills and `.mjs` scripts run at each stage? | [Script input/output and timing](docs/MANUAL.md#who-creates-and-handles-the-mjs-files) | [Skill-to-stage map](docs/MANUAL.md#match-each-skill-to-its-purpose) |
-| What is the quotation application, and what are its components responsible for? | [Application overview template](examples/validation-lab/template/docs/architecture/overview.md) | [Authoritative quote spec](examples/validation-lab/template/docs/specs/quote.md) and [worked design exercise](docs/ARCHITECTURE-GUIDE.md#6-worked-example-understand-the-quotation-tool) |
-| Who decides, drafts, reviews, records evidence and launches work? | [Owners and handoffs](docs/ARCHITECTURE-GUIDE.md#2-who-does-what) | Project `docs/agents/` contracts, configured during setup |
-| What design work is required, who performs it, and where do the results go? | [Required design work and artifacts](docs/ARCHITECTURE-GUIDE.md#3-choose-an-appropriate-amount-of-design) | [Path and artifact map](docs/ARCHITECTURE-GUIDE.md#4-artifacts-and-their-relationships) |
-| How do I install and configure the host/package? | [Manual host setup](docs/MANUAL.md#4-prepare-the-execution-host) | [Combined-framework checkout](docs/MANUAL.md#5-check-out-the-exact-pr-not-the-default-branch), then [project setup](docs/MANUAL.md#7-configure-each-software-project) |
-| In what order do I perform design review and start workers? | [Operational route and completion checks](docs/ARCHITECTURE-GUIDE.md#operational-route-and-completion-checks) | Its linked commands/prompts, then [coordinator execution](docs/MANUAL.md#12-execute-the-graph-and-observe-it) |
-| How do I validate, inspect failures and decide whether to accept the PRs? | [Lab introduction](examples/validation-lab/README.md), [final inspection](docs/MANUAL.md#13-inspect-the-final-result) and [failure drills](docs/MANUAL.md#14-negative-exercises-prove-failures-remain-failures) | [Workflow report](docs/VALIDATION-REPORT.md) and [architecture report](docs/ARCHITECTURE-VALIDATION.md) |
-| What changed from the previous package? | [Migration](docs/MIGRATION-0.2.md) and [changelog](CHANGELOG.md) | Historical documents only for provenance, not current operating instructions |
-
-The [lab generator](examples/validation-lab/README.md) creates a separate repository beside the skills checkout. Application paths in the guide refer to that generated repository; the links above open the source templates in this package. The lab requires no application runtime service or npm dependency. Its generated architecture is a proposal, and its readiness record starts as draft; creating files does not establish review or acceptance.
+The [skills](skills/) and [shared policies](skills/engineering/_shared/) give agents exact procedures. The [migration notes](docs/MIGRATION-0.2.md) and [changelog](CHANGELOG.md) describe package changes. Historical documents are provenance, not current operating instructions.
 
 ## Start
 

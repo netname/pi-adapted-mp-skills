@@ -1,437 +1,80 @@
-# Understand and approve the design before building it
+# Design and architecture in a software project
 
-This guide extends the [setup and SWE manual](MANUAL.md) with design explanation, visualization and independent review. **For a first read**, use the manual's [folder, effort and artifact guide](MANUAL.md#where-the-projects-and-artifacts-live), [nine lifecycle stages](MANUAL.md#why-each-stage-exists) and [script explanations](MANUAL.md#who-creates-and-handles-the-mjs-files) before following this guide's design operations. It describes a local extension to Matt Pocock's adapted skills, not a feature attributed to upstream. The architecture branch depends on the workflow work in PR #1; validate these additions separately from live implementation orchestration. The older commit-linked edition remains historical; use the guide from the same package revision you are testing.
+This guide explains **Stages 3–5** of the [shared development lifecycle](MANUAL.md#stages-and-artifacts). Use the [manual](MANUAL.md#project-folders-and-effort-directories) for project paths, terminology and setup, and [WORKFLOW.md](WORKFLOW.md#planning-and-execution) for the full planning and implementation loop. The separate [PR validation guide](PR-VALIDATION.md#3-review-the-quotation-design) contains the disposable quotation exercise.
 
-Start at the [repository README](../README.md#documentation-map). Within this guide: [purpose and solution overview](#1-the-purpose-and-overall-process) → [owners](#2-who-does-what) → [required design work and artifacts](#3-choose-an-appropriate-amount-of-design) → [artifact locations](#4-artifacts-and-their-relationships) → [operational route](#operational-route-and-completion-checks) → [worked example](#6-worked-example-understand-the-quotation-tool).
+## Purpose and boundaries
 
-## 1. The purpose and overall process
+A **spec** says what users need and how to recognize correct behavior. An **architecture overview** places the change among the application's components, data and boundaries. A **feature design** explains how the change will satisfy the spec and why this approach was selected. An **ADR** preserves a consequential choice, alternatives and consequences. A **model or diagram** helps inspect relationships or scenarios. Review and actual human acceptance must target specific, current artifacts; a diagram alone does not establish correctness.
 
-A spec tells you what users need and what counts as correct. A design explains how the proposed software will meet those requirements. It should let you answer: What components exist? Who owns each responsibility and each piece of data? What happens during success and failure? Why choose this structure over a simpler alternative? How will we know it works?
+For an existing application, inspect the source, tests and configuration at a named revision. Separate **observed current behavior**, **proposed target** and **transition**. Mark inferences and unknowns. In a new application, say the components are *intended*, because source may not exist yet. Reuse accepted documentation where it applies; do not create a diagram or ADR just to fill a directory.
 
-The process is: clarify requirements; propose a design; independently explain and challenge it; resolve choices with you; break it into tickets; check the plan's coverage; authorize execution. During implementation, reviews compare code with the accepted decisions. At delivery, the documentation is reconciled with what was actually built.
+The order is: agree on behavior (Stage 2) → explain a proposed design (3) → have fresh reviewers independently explain and challenge it (3) → resolve findings → make a ticket plan and verify requirement coverage (4) → obtain applicable human acceptance and check that the reviewed inputs are still current (5). During implementation, material deviations return for a decision; at completion, compare the overview and design with the integrated source. [Architecture policy](../skills/engineering/_shared/ARCHITECTURE.md).
 
-```mermaid
-flowchart TD
-  S["Agreed requirements"] --> D["Design proposal and views"]
-  D --> R["Independent design review"]
-  R -->|"Gaps or contradictions"| D
-  R -->|"Choices resolved"| P["Tickets and coverage check"]
-  P -->|"Design changes"| D
-  P -->|"Human accepts current scope"| E["Implementation and code review"]
-  E -->|"Material design deviation"| D
-  E --> F["Verified integration and reconciled docs"]
-```
+## Owners and decisions
 
-Design review occurs before significant decomposition, and the final readiness checkpoint occurs after decomposition. This prevents both planning the wrong system and starting with a plan that omits part of the accepted design. Earlier review can be reused when its scope remains valid; the final record must identify the current inputs and any targeted refresh.
-
-### Which solution are we explaining?
-
-There are two related subjects. Keeping them separate makes the goals, owners and file locations easier to understand:
-
-| Subject | Goal | Components | Where its overview belongs |
-| --- | --- | --- | --- |
-| This skills package | Turn an agreed change into inspectable decisions, scoped parallel work and a verified result without manually launching each ticket | Skills, role briefs, configured agent sessions, tracker conventions, Git worktrees and focused helper scripts | [WORKFLOW.md](WORKFLOW.md#solution-overview), with setup/operation in [MANUAL.md](MANUAL.md) |
-| The generated quotation application | Read a local product catalog and return a quote for one product and whole quantity | CLI, catalog reader, pricing function and read-only JSON input | The application's `docs/architecture/overview.md`; the package ships its [starting template](../examples/validation-lab/template/docs/architecture/overview.md) |
-
-The package's goals are to make the proposed behavior understandable before coding, permit parallel implementation when dependencies allow it, obtain independent feedback and retain enough evidence to resume or accept work. A correct application and a correctly followed development workflow are separate validation subjects.
-
-For the application, the operator supplies a catalog path, SKU and quantity. The CLI coordinates the catalog reader and pricing function, then presents either the quote or a user-facing error. The [application overview](../examples/validation-lab/template/docs/architecture/overview.md) explains each component's responsibility, goals and success/failure paths. Its [spec](../examples/validation-lab/template/docs/specs/quote.md) remains authoritative for exact behavior. The proposed `src/` modules are created during implementation; they are deliberately absent from the scaffold.
-
-### What belongs here and what belongs elsewhere?
-
-This guide explains **how to prepare, inspect, review and accept a design**, including a worked walkthrough. It provides enough solution context to orient you. It is not the authoritative architecture document for every application built with these skills.
-
-- Keep this package's component responsibilities and enforcement limits in [WORKFLOW.md](WORKFLOW.md#solution-overview).
-- Keep a particular application's goals, actors, component responsibilities and main scenarios in its `docs/architecture/overview.md`.
-- Keep the reasoning for one proposed change in `docs/designs/<feature>.md`, linked to the overview and authoritative spec. Significant accepted choices may have ADRs.
-- Keep commands, test resources and provider settings in `docs/agents/` contracts, so the design does not maintain another copy of those settings.
-
-The quotation overview is supplied as teaching material, then copied into your new application. In a normal project the planner creates or updates that overview while inspecting/designing the change. At delivery, the coordinator reconciles it with the integrated source and evidence. A proposed overview must not claim that its components already exist.
-
-## 2. Who does what?
-
-An **owner** is the person or session accountable for a decision or handoff. This differs from a component's responsibility: the pricing function owns arithmetic at runtime, while a human owns whether the proposed design is acceptable. Tools execute actions; they do not become the business decision owner.
-
-### Name the human and session owners
-
-For a solo project, you are usually the application owner and validation operator. Write your actual name or role in the project's architecture contract. In a team, identify the person authorized to resolve scope/tradeoffs and the person maintaining the workflow configuration. They may be the same person. Do not leave an unassigned “someone approves this” responsibility.
-
-| Owner / role | What they are accountable for | Actions and limits | Durable handoff |
-| --- | --- | --- | --- |
-| Human application owner | Goal, scope, consequential tradeoffs and final acceptance | Answers business questions and accepts/rejects the actual proposal; agents cannot invent this decision. Existing explicit authorization is reused when it covers the current scope | Decision reference linked to the exact accepted inputs in the readiness record |
-| Human validation operator | Running the experiment and judging observed workflow behavior | Inspects actual models, worktree placement and evidence; records PASS/FAIL/BLOCKED/NOT RUN rather than accepting an agent's assertion | [Workflow](VALIDATION-REPORT.md) and [architecture](ARCHITECTURE-VALIDATION.md) reports |
-| Package/project maintainer | Reusable policies and the target project's role/path/tool configuration | Fixes workflow defects in the skills repo and configures application contracts. An application worker does not silently change the skills package to bypass a gate | Package revision under test and application `docs/agents/` configuration |
-| Planner / design author | A proposal that explains the agreed behavior, feasible structure and alternatives | Reads source, asks necessary questions, drafts/updates the spec/design/overview and prepares coverage. Records unknowns and proposals; does not mark its own proposal accepted | Spec, design, overview, applicable ADRs and model, with author/source provenance |
-| Comprehension reviewer | An independent explanation of what is proposed | Uses a fresh session to reconstruct components/scenarios and trace requirements; reports unclear language or missing information without inheriting the drafting conversation | Its own report, run/model details and reviewed input identities |
-| Challenge reviewer | An independent assessment of omissions, alternatives and risks | Uses another fresh session to challenge concrete gaps; distinguishes blockers from preferences. Recommends readiness but cannot approve for the human | Separate report and evidence-based findings |
-| Coordinator | Correct execution of the approved scope, including readiness and recovery | Sole tracker/integration writer for the effort; launches workers, checks actual settings, preserves reports, controls repairs and serializes integration. Cannot override unresolved product decisions or turn failed evidence into a pass | Claims/run IDs, candidate SHAs, verification/review evidence and integrated revisions |
-| Implementation worker | One assigned ticket in its allocated worktree | Implements within approved constraints, runs applicable checks and commits its candidate. Does not update the shared tracker, integrate other work or launch duplicate reviews | Base/head, actual implementation family, commands/results and remaining issues |
-| Code reviewers | Whether the committed candidate meets the spec and documented standards | Separate fresh Spec and Standards sessions inspect exact candidate context; return reports while the coordinator owns their persistence. They do not edit the candidate or run tests | Findings tied to immutable base/head, with dispositions maintained by the coordinator |
-
-The planner and coordinator can use the same harness/model. The role change is explicit: after acceptance, the coordinator follows the approved artifacts and dispatches work instead of quietly making new product decisions. Implementation workers and reviewers are separate fresh sessions with the configured model-family independence.
-
-### Who writes and who accepts?
-
-The planner drafts decision-bearing artifacts. Reviewers own their findings. The coordinator preserves reports and records the human's actual decision; recording that decision is different from making it. The human accepts the proposal/plan and later decides whether the complete delivered result meets the goal.
-
-Two handoffs matter: review the design before substantial decomposition, then check the final tickets and coverage before dispatch. An earlier approval can cover the later handoff if scope and inputs remain applicable; otherwise refresh the affected review and obtain the needed decision. Do not ask the same business question again merely because a different agent started.
-
-### What Paseo, the tracker and profiles own
-
-Paseo launches and exposes agent sessions and workspaces. The tracker stores durable tickets, claims, transitions and evidence references. A profile saves launch settings for a role. The coordinator is the active agent responsible for using all three correctly. A profile named “review” and a ticket labelled “ready” do not themselves establish independent review or design acceptance. See [the package's component map](WORKFLOW.md#components-and-responsibilities).
-
-For the Claude-planning / Pi-implementation example, use two fresh Pi design-review sessions with an available DeepSeek model, or another verified family different from all design authors. Code review can use Claude when all implementation contributors used DeepSeek. If Claude contributes implementation code, it no longer meets that candidate's code-review independence rule. Record effective settings, not just profile names, in `docs/agents/delegation.md` and the run evidence. Exact model versions come from the host's available configuration.
-
-## 3. Choose an appropriate amount of design
-
-Required design work and artifacts are the **decisions, references, documents and reviews** needed for someone else to implement and review the change without guessing. Reuse existing material when it applies. Create or update only what the change needs, while resolving requirements and completing the applicable review and acceptance steps.
-
-### Choose the design work appropriate for the change
-
-| Situation | Action to take | Required information and artifacts | Add when relevant |
-| --- | --- | --- | --- |
-| Small fix inside accepted boundaries | Confirm existing requirements and decisions still apply; write a short change note and identify affected checks | Requirement/issue reference, scoped ticket, design note, reused decisions and applicable review/acceptance evidence | Diagram or ADR when existing material cannot explain the change |
-| Greenfield feature/application | Define intended responsibilities and interactions; explain success/failure paths and compare significant alternatives | Agreed requirements, intended actors/components/interfaces, proposed design and verification mapping | Shared LikeC4 model when several views need consistent component identities |
-| Brownfield feature | Inspect the current implementation at a named commit; describe proposed differences and the relevant alternatives | Agreed requirements, evidence-backed current state, proposed design and verification mapping | Transition, compatibility, migration and rollback plans when the change needs them |
-| Cross-cutting boundary/data change | Identify affected boundaries and owners; agree on contracts and record significant decisions | Full change design, explicit ownership/contracts, significant ADRs and verification for affected boundaries | Deployment/resource views and operational checks |
-
-Lightweight reduces the amount of prose and optional modeling. This package still expects applicable independent review and actual human acceptance. The configured readiness helper requires both recorded review axes; it does not automatically waive one for a small note. Reuse existing reports/authorization only when they genuinely cover unchanged inputs and scope. Missing evidence remains incomplete.
-
-### Prepare and review the design
-
-These are application-repository paths unless otherwise stated. Existing artifacts may be reused; “create” does not mean duplicate them for each change. Use the completion checks to decide whether a step is ready for handoff. For runnable commands and prompts, follow the [operational route](#operational-route-and-completion-checks).
-
-| When | Responsible role | Action to take | Artifact / location | Completion check |
-| --- | --- | --- | --- | --- |
-| Once per project, before execution | Maintainer/planner | Run setup, preserve current conventions and configure the project instructions | `AGENTS.md` plus `docs/agents/architecture.md`, `delegation.md`, `testing.md` and `issue-tracker.md` | Paths, actual role settings, commands and owners are usable; no blocking placeholders |
-| When behavior is clarified | Planner | Synthesize agreed requirements, normally with `to-spec` | `docs/specs/<feature>.md` or an authoritative tracker issue | Stable requirement references, examples/exclusions and observable acceptance; no unresolved product choice hidden as an implementation assumption |
-| Before design review | Planner | Create a scoped proposal with `design-solution`, linking applicable existing decisions | `docs/designs/<feature>.md`, starting from [the design template](../skills/engineering/_shared/design.template.md) | Explains what changes, responsibilities, success/failure paths, consequences and checks; a short note can link existing overview/ADRs |
-| When system context is missing or changes | Planner | Create/update the application overview; record a significant decision if needed | `docs/architecture/overview.md`; optional `docs/adr/<decision>.md`; optional model under `docs/architecture/model/` | The reader can place the change in the system. No new diagram or ADR is needed merely to fill a folder |
-| Before major decomposition | Coordinator arranges; fresh reviewers review; planner addresses findings; human decides unresolved choices | Run `review-design` for comprehension and challenge; record findings and resolve blockers | Reports in the configured evidence store; the lab uses `docs/designs/reviews/` | Both axes actually ran against identified inputs; blockers have dispositions; unresolved choices return to the human |
-| After the design is understood | Planner prepares; human authorizes scope/breakdown; coordinator checks consistency | Use `to-tickets`, map requirements to work/checks, and reconcile dependencies and resource assumptions | Tickets in the configured tracker and requirement → component → ticket → check mapping, normally `docs/designs/<feature>-traceability.md` | Every in-scope requirement has coverage; blockers and resource assumptions make execution feasible; actual scope/plan authorization covers these artifacts |
-| Before any affected worker is dispatched | Coordinator records/checks; human supplies applicable acceptance | Record final reviewed inputs and actual acceptance, then check readiness | `docs/designs/<feature>-readiness.json` when using the supplied helper; include a stable approved-ticket snapshot among its inputs | Files/reports match the accepted target, required reviews are complete, real acceptance is linked and the readiness command passes |
-
-For a lightweight change, the design note can contain the short coverage table and links to existing decisions. One ticket can be sufficient; the traceability table need not become a separate file. The machine record and evidence still identify the applicable files. For remote requirements/tickets, preserve an immutable export or revision reference; do not hash a URL string and imply its changing content was reviewed.
-
-### Example of a lightweight note
-
-For a later request to clarify the quotation CLI's existing error message, `docs/designs/quote-error-message.md` could link R3, explain the wording change, state that CLI ownership and exit/stdout/stderr behavior remain unchanged, identify the affected ticket and CLI assertions, and link existing decisions. That single note can carry the mapping and tradeoff explanation. A new component model or ADR adds little unless the request changes a boundary or contract. This is an example of a future scoped change, not an instruction to alter the supplied lab behavior now.
-
-### What the lab has already created for you
-
-The generator copies the spec, draft overview/design, proposed ADR, optional teaching model and coverage from [the fixture template](../examples/validation-lab/template/). It copies [the supplied tickets](../examples/validation-lab/tickets/) into the ignored local tracker, creates the derived graph, and assembles `docs/designs/quote-plan.md` as a stable ticket-scope snapshot. That plan file exists only after generation; there is no separate hand-maintained template copy to find.
-
-The full route is intentionally supplied for teaching. In real work the planner would prepare these artifacts; in the lab you inspect the supplied proposal instead of inventing another application. You still configure actual profiles, run independent reviews, resolve findings and make a real acceptance decision. The initial `quote-readiness.json` is draft. No generated file is evidence that a live review ran.
-
-Markdown carries explanation and decisions. Mermaid is convenient for a small diagram. LikeC4 is useful when multiple views share component identities. A model is an authored description; syntax validity alone cannot establish that it includes every requirement or matches source code.
-
-For brownfield, inspect code, configuration and tests at a named commit. Mark claims observed, inferred or unknown, and separate current, target and transition. In the greenfield quotation lab there is no existing application source to reverse-engineer before implementation.
-
-## 4. Artifacts and their relationships
-
-### Resolve the three locations first
-
-| Location | Variable / example | What belongs there |
+| Owner | Responsibility and limit | Durable result |
 | --- | --- | --- |
-| Skills package checkout | `MP_SKILLS`, for example `$HOME/code/pi-skills-design-validation-01` | This guide, skill procedures, briefs, helper scripts and fixture templates |
-| Generated application repository | `MP_LAB`, for example `$HOME/code/quote-workflow-lab-01` | The application's spec, overview, design, tests, eventual source and project contracts |
-| Canonical tracker/evidence root | In this lab, `$MP_LAB/.scratch/quote-demo` | The **effort directory**: authoritative ticket state, claims/events and execution evidence; all worktrees use this same original absolute root |
+| Human product owner | Supplies scope, settles consequential tradeoffs and accepts/rejects the current proposal. A session cannot make this decision for them | Actual decision reference linked to the accepted inputs |
+| Maintainer | Configures project operating contracts, paths, profiles and checks | `AGENTS.md` and `docs/agents/{architecture,delegation,testing,issue-tracker}.md` |
+| Planner / design author | Inspects context, drafts spec/design/overview, maps requirements to checks, revises proposal | Design and coverage artifacts with source/author provenance |
+| Fresh comprehension reviewer | Reconstructs components, scenarios and requirement links without the drafting conversation | Separate report targeting identified inputs |
+| Fresh challenge reviewer | Looks for omissions, weak assumptions, alternative designs and failure paths | Separate report and blocker recommendations |
+| Coordinator | Preserves findings and actual decision, checks readiness against current files, dispatches only authorized work | Review and readiness references, run IDs and evidence links |
+| Implementation worker | Builds within accepted scope and surfaces material deviations | Candidate commit and check evidence; no design acceptance authority |
 
-In prose, `docs/architecture/overview.md` below means the file inside **the application**. A Markdown link starting `../examples/validation-lab/template/…` opens the **package template** on GitHub. The generator copies and substitutes paths into the application version. Do not edit the template as a substitute for reviewing a generated application's design.
+Design reviewers use fresh sessions with a model family different from **every design author**. Code review later uses fresh Spec and Standards sessions from a family different from **every implementation contributor** to their target. A Paseo profile chooses launch settings; it does not enforce reviewer independence or create a human decision. Record actual launched provider/model, run ID and target. [Delegation policy](../skills/engineering/_shared/DELEGATION.md).
 
-`MP_SKILLS` and `MP_LAB` are shell variables you set; a fresh shell may not contain them. Agent prompts should receive their expanded absolute values, because a Paseo session does not automatically inherit every variable from your terminal. The coordinator supplies workers with explicit project and tracker paths. The ignored tracker/evidence directory needs separate retention; a source commit does not back it up. [The manual](MANUAL.md#what-to-call-a-folder-under-scratch) defines an **effort directory** (`.scratch/<effort-slug>/`) and explains why the optional `quote-discovery` rehearsal has a separate folder. `quote-demo` is its slug, not a framework-required name.
+## Artifacts and relationships
 
+Paths below are conventions **inside the target application**, unless its configured tracker uses different locations. Read the project-specific `AGENTS.md` and `docs/agents/architecture.md` first. `docs/agents/architecture.md` is a **process contract**, while `docs/architecture/overview.md` describes the **application**. There is no required `docs/architecture.md` file. For the broader folder map, decision map and effort directory naming, use [the manual](MANUAL.md#project-folders-and-effort-directories).
 
-| Artifact | Purpose | Lab location; general convention |
+| Artifact | Why it exists | Typical location / responsible role |
 | --- | --- | --- |
-| Decision map, decision tickets and research notes (optional) | Resolve questions **before** committing to a design; map points to answers, tickets hold the detail | Rehearsal: `.scratch/quote-discovery/map.md`, `issues/` and linked notes; another tracker can use issues instead |
-| Spec | Authoritative behavior and exclusions with stable requirement IDs | `docs/specs/quote.md`; in new work, `docs/specs/<feature>.md` or configured tracker |
-| Overview / optional model | Place components within the **whole application** and show interactions | `docs/architecture/overview.md`, `docs/architecture/model/quote.c4` |
-| Feature design | Explain **this change**, its scenarios and tradeoffs | `docs/designs/quote.md`; later, `docs/designs/<feature>.md` |
-| ADR | Record a significant choice, alternatives and consequences | `docs/adr/001-integer-cents.md` |
-| Implementation tickets and graph export | Separate buildable tasks and dependencies; graph is a derived input for the frontier helper | `.scratch/quote-demo/issues/`, `graph.json`; other trackers use their configured location |
-| Plan snapshot and traceability | Preserve proposed ticket scope and map requirement → component → ticket → observable check | `docs/designs/quote-plan.md` and `quote-traceability.md` |
-| Design review reports and readiness record | Capture real comprehension/challenge findings and exact inputs/acceptance | `docs/designs/reviews/`, `quote-readiness.json` |
-| Tests, source and run evidence | Check the implemented candidate at a named commit, record outcomes | `test/`, later `src/`, ignored `.scratch/quote-demo/evidence/` |
-| Project operating contracts | Point agents to paths, models, tracker rules, checks and design acceptance rules | `AGENTS.md`, `docs/agents/{issue-tracker,delegation,testing,architecture}.md` |
-
-`docs/agents/architecture.md` is a **process contract**. `docs/architecture/overview.md` is an **application architecture overview**. `docs/designs/quote.md` is the **feature proposal**. There is no `docs/architecture.md` in this lab. The manual's [full folder table and R1 example](MANUAL.md#where-the-projects-and-artifacts-live) show how these files are made, used and retained; this table highlights the subset needed for design review.
-
-The skills repository ships reusable procedures, templates and a teaching fixture. Each application owns its real architecture. Do not put every application's model into this skills package. Do not duplicate the requirements into each diagram or ticket; link IDs to the authoritative spec.
-
-An ADR is a short decision record, not a long design document. For example: integer cents were selected because exact cents are required, floating-point amounts would require additional rounding rules, and fractional quantities are excluded. Supersede an accepted decision when it changes; retain the history explaining why.
-
-### Operational route and completion checks
-
-Use this table as the execution order. Its **step numbers** locate instructions for the design exercise; its **lifecycle stages** use the [same nine names as the workflow](WORKFLOW.md#stages-owners-and-completion-conditions) and the [manual diagram](MANUAL.md#the-process-has-two-connected-loops). Preparation is required before Stage 3 in this supplied lab. Stages 1–2 are already represented by supplied decisions/spec, or can be exercised with the [optional planning rehearsal](MANUAL.md#optional-planning-rehearsal). The main manual owns host installation, worktree execution and delivery commands; this guide owns the design/review operations between setup and dispatch. Skill files are the agent's procedures. Neither document's prose automatically runs a command.
-
-| Route step | Lifecycle stage | Who acts and what to do | Named output / completion check | Exact instructions |
-| --- | --- | --- | --- | --- |
-| 1 | Preparation | Operator installs/verifies CLIs on one execution host and proves authentication | Working Pi and Claude sessions; actual host/tool versions | [Manual §4](MANUAL.md#4-prepare-the-execution-host) |
-| 2 | Preparation | Operator checks out the package branch and runs offline tests | Skills SHA and passing package checks | [This guide §5](#5-set-up-the-extension) |
-| 3 | Preparation | Operator generates a separate lab and installs its project-local package | Application repo, supplied `docs/specs/quote.md`, `docs/designs/quote.md`, `.scratch/quote-demo/issues/` and `graph.json` | [Manual §11](MANUAL.md#11-worked-example-create-the-quotation-lab), repeated bootstrap in [§6 below](#prepare-the-lab-before-review) |
-| 4 | Preparation | Operator configures profiles/contracts, commits initial baseline and opens both reports | Actual `docs/agents/` settings, initial lab SHA, two `.scratch/quote-demo/` report copies marked NOT RUN | [Manual §6](MANUAL.md#6-configure-paseo-and-profiles), [§7](MANUAL.md#7-configure-each-software-project), [lab setup and baseline](MANUAL.md#open-and-configure-the-lab) |
-| 5 | **3 Design and review** | Planner explains/updates the proposal; operator inspects views | `docs/designs/quote.md`, `docs/architecture/overview.md`, applicable model/ADR; understandable component choices | [Explain the proposal](#explain-the-proposal) and [visualize](#visualize-and-validate) |
-| 6 | **3 Design and review** | Coordinator arranges fresh comprehension/challenge sessions | Two real reports under `docs/designs/reviews/` with findings and dispositions | [Run independent review](#run-independent-review-and-check-the-plan) |
-| 7 | **4 Plan and authorize** | Planner/coordinator checks tickets and coverage; human resolves plan choices | `.scratch/quote-demo/issues/`, `docs/designs/quote-plan.md`, `quote-traceability.md` and actual scope decision; refresh affected review if proposal changes | [Same review/plan handoff](#run-independent-review-and-check-the-plan); general process: [to-tickets](../skills/engineering/to-tickets/SKILL.md) |
-| 8 | **5 Check readiness** | Coordinator records human acceptance of current target, checks fingerprints | `docs/designs/quote-readiness.json` with actual approval/reviews; `design-check.mjs check` passes | [Capture inputs](#capture-exact-inputs), [record acceptance](#record-acceptance-and-check-readiness) |
-| 9 | **5 Check readiness → 6 Implement** | Operator commits planning artifacts; coordinator records baseline and dispatches | Approved execution baseline SHA, then worker runs/claims; no dispatch before readiness | [Commit and hand off](#commit-and-hand-off-to-execution), then [manual §12](MANUAL.md#12-execute-the-graph-and-observe-it) |
-| 10 | **7 Review and integrate → 8 Verify complete change → 9 Evaluate and decide** | Coordinator reviews/integrates; operator inspects results and failure drills | Candidate and integrated SHAs, verification/review evidence, two completed reports and human recommendation | [Manual §13](MANUAL.md#13-inspect-the-final-result), [§14](MANUAL.md#14-negative-exercises-prove-failures-remain-failures), [§15](MANUAL.md#15-evaluate-the-framework-and-recommend-acceptance), and [this guide §7](#7-failure-exercises-and-acceptance-evidence) |
-
-Stop at the first incomplete prerequisite and record what is missing. Examples: no working independent profile means review is incomplete; a draft readiness record means workers must wait; a passing package test suite does not mean either live review or implementation was performed. Reuse established decisions rather than restarting the interview at each row.
-
-## 5. Set up the extension
-
-Use a separate checkout so you can compare this dependent PR with PR #1. Keep it and the generated application as sibling repositories under `$HOME/code`, outside existing application repositories:
-
-```bash
-export MP_SKILLS="$HOME/code/pi-skills-design-validation-01"
-mkdir -p "$HOME/code" &&
-git clone --branch improve/architecture-design-review --single-branch \
-  https://github.com/netname/pi-adapted-mp-skills.git \
-  "$MP_SKILLS" &&
-cd "$MP_SKILLS" &&
-git rev-parse --show-toplevel &&
-git rev-parse HEAD &&
-npm ci &&
-npm test
-```
-
-The explicit absolute destination makes the clone independent of your starting directory. The `&&` chain stops at the first failure, including a failed clone or `cd`; it cannot fall through to npm commands in another project. If the destination exists, inspect it or choose a new numbered name. Verify the printed root, record the new skills-under-test SHA and keep that revision fixed for the run. See the manual for [user-owned CLI installation and PATH](MANUAL.md#4-prepare-the-execution-host), including recovery from npm EACCES errors.
-
-These Bash commands work on Linux or a configured Windows Bash environment such as WSL. See the main manual for host/harness setup. The Node helpers use portable filesystem APIs; Windows behavior has not been exercised by this PR's Linux checks. `MP_SKILLS` identifies the package checkout; it is not your application directory. There are now 30 skills and 23 offline tests. `npm ci` installs the pinned development-only YAML parser; execution helpers and the generated application remain dependency-free.
-
-Install the complete checkout with the manual's Pi installation method. Avoid duplicate old/new skill registrations. Claude Code can read the explicit skill and project files as described in the manual; this does not automatically register Claude slash commands.
-
-At the end of this section only the skills checkout has been prepared. Create/open the application in section 6 before running project setup. Setup then preserves existing conventions and adds the architecture contract alongside delegation/testing. Configure the actual design-review profiles and named human owner. Templates are starting points, not accepted records.
-
-## 6. Worked example: understand the quotation tool
-
-This is the design-stage detour in the [manual's first-time validation route](MANUAL.md#validate-the-framework-for-the-first-time). Complete setup/lab creation there first. At the end of this section, return to manual §12 for execution; do not restart installation or generate a second lab.
-
-Create the disposable quotation lab using section 11 of the main manual, using the new `MP_SKILLS` path and `$HOME/code/quote-workflow-lab-01` as `MP_LAB`. The generated application is a standalone CLI that reads a local JSON catalog and uses Node's standard library; no external application or runtime service is assumed. Provider authentication and optional diagram downloads belong to validation tooling, not the application runtime. The generator now includes a **draft** design, LikeC4 model, proposed ADR, coverage table and ticket scope snapshot. It deliberately includes neither a completed application nor accepted design evidence.
-
-### Prepare the lab before review
-
-The complete host/provider setup is in [manual §4](MANUAL.md#4-prepare-the-execution-host); profile configuration is in [§6](MANUAL.md#6-configure-paseo-and-profiles). If you have already generated this lab, keep its actual `MP_LAB` path and existing evidence instead of running the generator over it. A package update does not update files already copied into a lab. To validate a changed fixture, generate a fresh numbered lab and record the new package SHA; do not copy new templates over accepted inputs and retain the old approval. For a fresh run, execute:
-
-```bash
-export MP_LAB="$HOME/code/quote-workflow-lab-01"
-mkdir -p "$HOME/code" &&
-node "$MP_SKILLS/examples/validation-lab/create.mjs" "$MP_LAB" &&
-cd "$MP_LAB" &&
-git init -b main &&
-pi install -l "$MP_SKILLS"
-```
-
-The destination must be new. The package and lab are separate sibling repositories. Open and configure the generated lab using the complete [manual lab setup sequence](MANUAL.md#open-and-configure-the-lab), preserving the supplied spec, tests and canonical tracker root. Record the operator/decision owner, both design-review profiles, code-review profiles and the actual model families. Do not launch implementation yet.
-
-After configuration, commit the initial lab baseline using [manual §11](MANUAL.md#generate-a-new-directory), and copy/fill the [workflow](VALIDATION-REPORT.md) and [architecture](ARCHITECTURE-VALIDATION.md) report templates in the canonical tracker directory. Keep the initial lab SHA separate from the skills-package SHA. The ignored tracker/evidence is not saved by that commit.
-
-The supplied overview describes proposed components. Read it first, then use the spec to check exact behavior. Runtime files such as `src/cli.mjs` are intentionally created later by workers; a missing `src/` before dispatch is expected.
-
-Before launching A/B workers, read these files in the generated application:
-
-1. `docs/specs/quote.md`: R1–R4 define behavior.
-2. `docs/architecture/overview.md`: responsibilities and intended state.
-3. `docs/designs/quote.md`: alternatives, consequences and scenarios.
-4. `docs/adr/001-integer-cents.md`: arithmetic decision.
-5. `docs/designs/quote-traceability.md` and `quote-plan.md`: coverage and proposed work.
-
-You should be able to explain why pricing knows nothing about files, why the catalog reader does not print errors, and why C must wait for A/B. For PEN at 1250 cents and quantity 3, the CLI loads products, finds PEN, calls pricing and prints totalCents 3750. For malformed JSON, loading fails and the CLI prints only a concise stderr error with exit 1. The full teaching route is intentionally more elaborate than this tiny program ordinarily needs.
-
-### Visualize and validate
-
-From the generated application's `docs/architecture/model` directory:
-
-```bash
-npx --yes --package=likec4@1.60.0 likec4 validate
-npx --yes --package=likec4@1.60.0 likec4 start
-```
-
-The first command checks model syntax/layout validity and exits. The second starts a local preview; use its printed URL and stop it with Ctrl+C when done. The package version is pinned for the exercise. This may download documentation tooling from npm; it does not add runtime dependencies to the quotation application. In a real project, pin tooling in the project's development dependencies and lockfile for CI reproducibility.
-
-Inspect the component, success and failure views. Rendering makes relationships easier to see; it does not review them. Official references: [LikeC4 tutorial](https://likec4.dev/tutorial/), [CLI](https://likec4.dev/tooling/cli/), [dynamic views](https://likec4.dev/dsl/views/dynamic/).
-
-### Explain the proposal
-
-Open a Claude planning session in Paseo for the lab. Expand the paths from your terminal and paste their actual values into the prompts:
-
-```bash
-printf 'Package path: %s\nApplication path: %s\n' "$MP_SKILLS" "$MP_LAB"
-```
-
-Replace `PACKAGE_PATH` and `APPLICATION_PATH` below with those absolute values; they are explanatory placeholders, not literal directories. Installing this package in Pi does not register its slash commands in Claude Code, so use the explicit file path.
-
-```text
-Read PACKAGE_PATH/skills/engineering/design-solution/SKILL.md and follow it
-for APPLICATION_PATH. Resolve relative references from the skill's directory.
-
-Read the application's architecture, delegation and testing contracts and R1–R4.
-Explain the supplied quotation proposal and its overview in plain language:
-components, responsibilities, data ownership, success/failure paths and tradeoffs.
-Preserve the supplied behavior, tests and exclusions. Identify assumptions and
-contradictions. Update the proposal if needed, keeping changes visible.
-Do not implement the application or record human acceptance.
-```
-
-Expected result: you can explain what will be built and why without needing the author's missing context. Ask “Which component rejects an unsafe product?”, “Who presents a missing-SKU error?” and “Which ticket/test covers accented names?” Review changes in Git before approving them. Actual implementation remains absent.
-
-### Run independent review and check the plan
-
-Use the planning/coordinator session to arrange review through the configured profiles:
-
-```text
-Read PACKAGE_PATH/skills/engineering/review-design/SKILL.md and follow it
-for APPLICATION_PATH, using the actual configured Paseo profiles.
-
-Freeze and identify the proposal inputs. Launch separate fresh comprehension
-and challenge sessions with the package brief and explicit project paths.
-Inspect their effective models and ensure independence from the design authors.
-Preserve their reports under docs/designs/reviews/ and record findings/dispositions.
-Do not change the frozen proposal while reviewers inspect it.
-
-Check R1–R4 coverage, the supplied A/B/C tickets, quote-plan.md and verification
-mapping. Do not generate duplicate tickets. Refresh affected review if the final
-plan changes the design. Present unresolved questions and the final proposal to me.
-Do not fabricate acceptance or start implementation workers.
-```
-
-Design review checks understanding before decomposition. The teaching fixture already supplies its proposed tickets, so the final plan check inspects those tickets and their scope snapshot rather than running a second breakdown. For a new feature, use `to-tickets` after the proposal review. Either way, record any changed scope in the snapshot and refresh affected review/acceptance; live claim/status changes alone do not alter ticket scope.
-
-Complete means two actual reports identify their input target and effective models, blockers are resolved or still visibly pending, and every in-scope requirement maps to planned work and an observable check. A finished session or a report filename alone does not establish a pass. Keep failed/cancelled sessions in the evidence history.
-
-### Capture exact inputs
-
-Use the same `MP_LAB` absolute path established above. This command can run from any directory and prints the current input fingerprints:
-
-```bash
-node "$MP_SKILLS/scripts/design-check.mjs" snapshot "$MP_LAB" \
-  docs/specs/quote.md \
-  docs/architecture/overview.md \
-  docs/architecture/model/quote.c4 \
-  docs/designs/quote.md \
-  docs/adr/001-integer-cents.md \
-  docs/designs/quote-traceability.md \
-  docs/designs/quote-plan.md
-```
-
-This prints a map of relative file paths to SHA-256 fingerprints. It writes nothing and approves nothing. A fingerprint changes when file bytes change. Do not include the readiness record itself or review reports in this input set; those refer to the inputs and would otherwise create circular identities.
-
-The coordinator records this map as `inputs` in `quote-readiness.json`, in both review entries and in the human approval entry. Each reviewer must actually have inspected that snapshot. If the final ticket breakdown changes the target, obtain a targeted refresh from each affected reviewer and record the final inputs; do not merely relabel the old report.
-
-### Record acceptance and check readiness
-
-After reviews and the final plan check, the human can accept or request changes to the exact current proposal. For example: “I accept the current quotation design and A/B/C plan for this disposable lab, preserving R1–R4 and the supplied exclusions.” This sentence is an example to use only if it reflects your decision. The coordinator preserves a durable reference to the actual message and records the current fingerprints; it does not decide on your behalf.
-
-Record shape (angle-bracket values below are explanatory placeholders, not usable approval):
-
-```json
-{
-  "schemaVersion": 1,
-  "route": "full",
-  "status": "accepted",
-  "authorFamilies": ["<actual design-author family>"],
-  "inputs": { "<each selected file>": "<its SHA-256>" },
-  "reviews": [
-    {
-      "axis": "comprehension",
-      "runId": "<actual fresh run>",
-      "model": "<effective model>",
-      "family": "<actual independent family>",
-      "status": "complete",
-      "blockingFindings": 0,
-      "inputs": { "<each selected file>": "<its SHA-256>" },
-      "report": "docs/designs/reviews/comprehension.md",
-      "reportSha256": "<hash of actual report>"
-    },
-    {
-      "axis": "challenge",
-      "runId": "<another actual fresh run>",
-      "model": "<effective model>",
-      "family": "<actual independent family>",
-      "status": "complete",
-      "blockingFindings": 0,
-      "inputs": { "<each selected file>": "<its SHA-256>" },
-      "report": "docs/designs/reviews/challenge.md",
-      "reportSha256": "<hash of actual report>"
-    }
-  ],
-  "approval": {
-    "by": "<actual human>",
-    "at": "<ISO timestamp>",
-    "reference": "<durable reference to actual acceptance>",
-    "inputs": { "<each selected file>": "<its SHA-256>" }
-  }
-}
-```
-
-Use the snapshot command on the two actual report files to calculate their hashes separately. Keep reports and approval references accessible after sessions end. `blockingFindings: 0` means no unresolved blocking findings after recorded dispositions, not that earlier findings disappeared. Freeze decision-bearing files before final review/acceptance; changing an ADR's status afterward also changes its hash. Record acceptance in the separate readiness record to avoid that cycle.
-
-After the human has accepted the actual current proposal and plan, the coordinator can check:
-
-```bash
-node "$MP_SKILLS/scripts/design-check.mjs" check "$MP_LAB" \
-  docs/designs/quote-readiness.json
-```
-
-On the initial scaffold this **must fail**, because it is draft. With complete current records it returns `ready: true`. That result means structural checks passed: selected files and reports match their hashes, the two recorded reviews are complete with no blockers, recorded families differ, and acceptance targets the same files. It cannot authenticate a human, verify Paseo settings, discover a missing requirement/file or judge whether a report is honest. Those are review/coordinator responsibilities; this is not a tamper-proof approval service.
-
-### Commit and hand off to execution
-
-Once the check passes and the source is ready to commit:
-
-```bash
-cd "$MP_LAB" &&
-git add docs &&
-git commit -m "Record reviewed quotation design and execution readiness" &&
-git rev-parse HEAD
-```
-
-Run that commit only when there are intended planning changes; if they are already committed, inspect status and record the existing HEAD instead of manufacturing a change. Preserve the earlier initial lab SHA for the run history, and record this latest approved committed revision as the **execution baseline**. Readiness is tied to file contents; committing the readiness record does not change those inputs. Do not edit accepted decision-bearing files afterward without following the refresh rules.
-
-Now follow [manual §12](MANUAL.md#12-execute-the-graph-and-observe-it) to start a fresh coordinator. Supply the execution baseline, spec, accepted design/readiness record, tracker root and project contracts. Include the actual existing authorization. It launches A/B in isolated worktrees and C only after verified A+B integration; it does not ask you to launch each ready ticket manually. Planning can keep its conversation, but workers and reviewers use fresh sessions.
-
-At the observation checkpoint verify actual run IDs, models and worktree paths before releasing A/B. The coordinator rechecks readiness before dispatch and integration. `frontier.mjs` checks dependencies only; it does not invoke the design check or launch a worker. Continue through [final inspection](MANUAL.md#13-inspect-the-final-result) and the failure exercises before deciding whether the workflow PRs are ready.
-
-
-## 7. Failure exercises and acceptance evidence
-
-Run destructive edits only in a disposable copy/branch and retain the failing outputs. Restore the original bytes afterward; never erase a real user's work to make a check pass.
-
-| Exercise | Action | Expected result |
+| Agreed spec | Single authority for behavior, requirement IDs and exclusions | `docs/specs/<feature>.md` or configured tracker; planner with human decisions |
+| System overview and optional model | Locate actors, components, boundaries and success/failure paths | `docs/architecture/overview.md`, optional `model/`; planner |
+| Feature design | Explain proposed responsibilities, alternatives, consequences and checks | `docs/designs/<feature>.md`; planner |
+| ADR | Explain one significant decision, alternatives and consequences | `docs/adr/<decision>.md`; planner records accepted choice |
+| Review reports | Preserve separate comprehension/challenge findings and the input versions inspected | `docs/designs/reviews/` or configured evidence store; reviewers report, coordinator persists |
+| Implementation tickets and dependencies | Allocate independently buildable work with explicit blockers | Configured issue tracker, perhaps `.scratch/<effort-slug>/issues/`; planner/coordinator |
+| Plan snapshot and coverage | Link requirement → component → ticket → observable check; preserve agreed scope | `docs/designs/<feature>-plan.md`, `-traceability.md` when warranted |
+| Readiness record | Bind actual reviews and human acceptance to current inputs | `docs/designs/<feature>-readiness.json` when using supplied helper; coordinator |
+
+A Wayfinder **decision ticket** answers a question before implementation; an **implementation ticket** produces scoped code. The Wayfinder map indexes decisions; an architecture model depicts software components. Neither substitutes for a spec. Local ignored `.scratch` state needs separate sharing/retention; the committed design documents remain versioned. See [local tracker convention](../skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md).
+
+## Choose the amount of design
+
+| Change | Required design work | Optional addition when useful |
 | --- | --- | --- |
-| Draft cannot dispatch | Check the scaffold readiness record | Nonzero; no workers launched |
-| Missing requirement | Remove R4 from the coverage table before review | Reviewer flags omission; syntax validation alone may still pass |
-| Contradictory responsibility | Propose that catalog prints JSON/errors directly | Reviewer challenges conflict with CLI ownership/output contract |
-| Stale decision | After a real acceptance, change design/model/spec | Helper rejects stale input; affected work pauses |
-| Failed reviewer | Cancel one design-review session | Record stays incomplete; no synthetic pass |
-| Same-family review | Configure author/reviewer with same family | Coordinator rejects effective settings; helper rejects matching recorded families |
-| Missing environment | Remove required model tooling/profile | Record limitation/incomplete gate; do not claim success |
-| Material implementation change | Worker proposes a remote price service | Return to design/human decision before affected work continues |
-| Routine internal change | Worker renames a private local variable | Normal code review; no new architecture decision |
-| Final reconciliation | Compare accepted design with final integrated source | Record observed state and any superseded decision; tests/reviews remain tied to source SHA |
+| Small change within accepted boundaries | Link the existing requirement/decision and test, write a short change note and identify the ticket | Diagram/ADR only if existing material cannot explain the change |
+| New application or feature | Explain intended actors/components, interfaces, normal/error paths, choices and verification | LikeC4 model when several views must share component identities |
+| Existing application's new feature | Describe inspected current state at a named commit, proposed change and affected seams | Transition/compatibility/migration plan for a changing contract |
+| Cross-cutting boundary or data change | Describe all affected owners/contracts, significant decisions and checks | Deployment/resource model and rollback plan when relevant |
 
-Final reconciliation can change overview text and hence its fingerprint. Preserve the pre-implementation acceptance record and its source revision as history; do not overwrite it as though it approved later text. If further work is dispatched, record acceptance/targeted review of the updated design first. Pure status documentation at delivery can be reviewed in the final PR without reopening an unchanged product decision.
+A lightweight note may include a small coverage table and link existing decisions. The amount of prose varies; applicable review and human acceptance still apply. Do not treat a missing contract as permission to bypass a gate. [Design template](../skills/engineering/_shared/design.template.md).
 
-Use [ARCHITECTURE-VALIDATION.md](ARCHITECTURE-VALIDATION.md) to record actual results. Separate package tests, model validation and live model/Paseo behavior. A green package test suite does not prove independent agents caught the deliberate omission.
+## Operational route and completion checks
 
-### Language exercise: understandable and still precise
+This table gives the **normal project route**, not the PR experiment's numbered steps. Use the linked skills for the agent procedures and [manual setup](MANUAL.md#configure-each-software-project) for host/project preparation. Existing documents can be reused when the scope and input identity still match.
 
-Use the [shared plain-language policy](../skills/engineering/_shared/PLAIN-LANGUAGE.md) in the existing planning and comprehension-review sessions. This adds no separate review stage or automated gate.
+| Stage | Action / owner | Output and completion check |
+| --- | --- | --- |
+| **2 Specify** | Planner runs `to-spec`, human decides product behavior | One authoritative spec with stable IDs, exclusions, observable acceptance; no hidden product choice |
+| **3 Design and review** | Planner runs `design-solution`; fresh sessions run `review-design` comprehension and challenge | Proposal/overview with clear responsibilities and alternatives; reports on identified inputs; blockers resolved |
+| **4 Plan and authorize** | Planner runs `to-tickets`; human accepts applicable design and ticket scope | Tickets/dependencies and requirement → component → ticket → check coverage; refresh affected review if design changed |
+| **5 Check readiness** | Coordinator captures input identity, preserves real human decision/reviews and checks project contracts | Readiness evidence matches current files and scope; required models/resources/tests configured; approved committed baseline before dispatch |
+| **6–8 Implement through verification** | Coordinator uses `implement-spec`, checks changes and reconciles docs with final source | Verified integrated SHA, actual code reviews and final design reconciliation; material changes return to the affected stage |
 
-1. Give the planner this deliberately unclear question: “Should the catalog adapter own error serialization at the process boundary?” Ask it to rewrite the question so a shop operator can understand the decision, with distinct options and their consequences. It must explain that the lab's spec already assigns output behavior; it must not ask the human to approve the same decision again or silently change it.
-2. Give it this sentence: “The CLI must emit diagnostics on stderr, suppress stdout, and terminate with status 1 on user/data errors.” Ask for a plain-language rewrite. Check that it retains **all three** outcomes and the condition under which they apply. Keep exact stream names and the exit code, explaining them if necessary.
-3. Ask the existing comprehension reviewer to explain the proposed responsibilities and one failure path without the author's conversation. Have it identify any wording that required guessing and any meaning lost during simplification.
-4. For `to-questionnaire`, request an asynchronous questionnaire from the same context. Check that known answers are reused, each question asks one thing and conditional questions are marked. The document can contain more than three questions; the short-round limit applies to live chat.
-5. Read the result yourself. Can you explain what will be built, why the main choices were made and what still needs your decision? Record unclear passages as feedback in the existing review report.
+For a project using the supplied structural helper, run it **from the skills checkout by absolute path**, with the target repository and its chosen relative files:
 
-Do this before freezing the final design inputs. Later wording changes still follow the existing fingerprint-refresh rules. A clear-sounding sentence is not proof that it preserves the requirement. Record this exercise as NOT RUN until you actually perform it; offline package tests cannot establish reader comprehension.
+```bash
+node /ABSOLUTE/SKILLS/scripts/design-check.mjs snapshot \
+  /ABSOLUTE/PROJECT docs/specs/feature.md docs/designs/feature.md
+node /ABSOLUTE/SKILLS/scripts/design-check.mjs check \
+  /ABSOLUTE/PROJECT docs/designs/feature-readiness.json
+```
 
-## 8. Adoption in a real repository
+These are illustrative paths: create a real record with the selected inputs, both real review reports and an actual human acceptance reference before the `check` command can pass. The initial command prints SHA-256 fingerprints; the second checks selected fields and current file contents. It **cannot** judge design quality, discover omitted inputs or authenticate consent. If an accepted file changes, review the affected scope and refresh the decision as needed; do not merely update hashes to bypass stale evidence. [Helper implementation](../scripts/design-check.mjs) · [Review design procedure](../skills/engineering/review-design/SKILL.md).
 
-Start with one feature and one owner. Reuse existing ADRs, diagrams, tests and tracker conventions. Introduce a minimal contract and scoped design note; do not model the entire brownfield system before making progress. Expand the model only where it helps explain a decision or prevent a recurring mistake.
+## Adoption and limits
 
-For CI, configure the project's actual model-validation and readiness commands and make them required through its normal review/branch protections. This package does not install those protections or a Paseo scheduler. Preserve actual human authorization through the project's trusted review process; a writable JSON file alone cannot establish consent.
-
-For another application, supply its own observed boundaries, data ownership, runtime resources and verification commands in that application's contract. The quotation CLI remains the independent worked example for this package; adopting it does not establish compatibility with any other system.
+Start with one bounded feature and a named owner. Reuse the project's existing ADRs, tests, diagrams and tracker. Configure actual verification resources and protect approvals through the project's review/branch rules. No file in this package installs a Paseo scheduler or CI protections. Brownfield work should model only the boundaries relevant to the change, expanding when that prevents a real misunderstanding. [Shared policy](../skills/engineering/_shared/ARCHITECTURE.md) · [testing policy](../skills/engineering/_shared/TESTING.md).

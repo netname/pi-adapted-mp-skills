@@ -29,7 +29,7 @@ The model identifiers in parentheses match [quote.c4](model/quote.c4). They are 
 5. Pricing validates inputs and the product's safe-integer range, then returns total cents.
 6. The CLI prints the spec's JSON result and exits successfully.
 
-For the supplied example, PEN at 1250 cents and quantity 3 yields 3750 cents while preserving the accented product name. `catalog.json` in sample commands is an operator input path; the manual's final inspection creates an example file. No pre-existing external catalog service is assumed.
+For the supplied example, PEN at 1250 cents and quantity 3 yields 3750 cents while preserving the accented product name. `catalog.json` in sample commands is an operator input path; the PR validation guide's final inspection creates an example file. No pre-existing external catalog service is assumed.
 
 ## Failure path and state changes
 
@@ -45,6 +45,6 @@ The choice of separate modules, integer cents and no external service is explain
 
 ## Views and lifecycle
 
-[The LikeC4 model](model/quote.c4) is the single source for component, successful-quotation and invalid-catalog views. Preview/validation instructions are in the skills package's architecture guide. Do not hand-maintain a competing component diagram in this overview.
+[The LikeC4 model](model/quote.c4) is the single source for component, successful-quotation and invalid-catalog views. Preview/validation instructions are in the skills package's PR validation guide. Do not hand-maintain a competing component diagram in this overview.
 
 In an ordinary project, the planner creates or updates this overview during design. Here the generator supplies a draft so you can validate the process. At delivery, the coordinator compares it with source/tests/review evidence at the final integration SHA and records observed behavior and any remaining differences. Preserve the reviewed proposal and decision history; do not relabel intended structure as implemented without inspection.
