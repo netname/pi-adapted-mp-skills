@@ -1,6 +1,6 @@
 # pi-adapted-mp-skills
 
-Matt Pocock's development workflow adapted for Pi, with Paseo coordinating fresh research, implementation and independent review sessions.
+Matt Pocock's development workflow adapted for Pi. A planner clarifies and designs changes; a coordinator uses Paseo to launch implementation and independent review sessions.
 
 **0.2.0, unreleased.** This is a selective upgrade to [upstream v1.3.1](https://github.com/mattpocock/skills/tree/v1.3.1), not a wholesale rebase. Source pins remain in each skill. See [migration](docs/MIGRATION-0.2.md), [workflow](docs/WORKFLOW.md) and [changelog](CHANGELOG.md).
 
@@ -26,7 +26,7 @@ flowchart TD
     F -->|Material change| A
 ```
 
-Research, grilling, prototypes and optional Wayfinder help resolve Stage 1 questions; a spec, design and implementation tickets make Stages 2–4 inspectable. At Stage 5 the coordinator checks that accepted inputs, models, tracker and test resources are ready. It uses Paseo to launch workers in separate Git worktrees; fresh reviewers examine committed candidates, and the coordinator integrates and verifies them **one at a time**. Only verified integration unblocks dependent tickets. The human owns consequential choices and the final delivery decision. If a check fails, return to the **affected stage**; the arrows show the common routes, not an automatic scheduler.
+Research, grilling, prototypes and optional Wayfinder help resolve Stage 1 questions; a spec, design and implementation tickets make Stages 2–4 inspectable. At Stage 5 the coordinator checks that accepted inputs, models, tracker and test resources are ready. The tracker holds tickets, claims and evidence links. Paseo launches workers in separate Git worktrees; fresh reviewers examine committed candidates, and the coordinator integrates and verifies them **one at a time**. Only verified integration unblocks dependent tickets. The human owns consequential choices and the final delivery decision. If a check fails, return to the **affected stage**; the arrows show the common routes, not an automatic scheduler.
 
 See [stage owners, artifacts and completion checks](docs/WORKFLOW.md#stages-owners-and-completion-conditions) for the exact meaning of each stage. Use the [manual](docs/MANUAL.md) for setup and commands, or the [PR validation guide](docs/PR-VALIDATION.md) to test this package with the separate quotation lab.
 
