@@ -1,6 +1,6 @@
 # Reproducible workflow-validation lab
 
-For the complete exercise, follow the [first-time validation route](../../docs/PR-VALIDATION.md). Use that guide as the only lab procedure; normal project setup is documented separately in the manual.
+New to Paseo or Claude Code? Follow the [beginner quotation walkthrough](../../docs/BEGINNER-VALIDATION.md) for a continuous Windows-to-Ubuntu first run, including role-profile setup. The [full validation reference](../../docs/PR-VALIDATION.md) adds failure/recovery exercises and evaluation. Use one route at a time and keep the same lab when switching; normal project setup is documented separately in the manual.
 
 Start with the [README documentation map](../../README.md#documentation-map), [application overview](template/docs/architecture/overview.md) and [design operational route](../../docs/PR-VALIDATION.md#3-review-the-quotation-design). Read [the validation guide](../../docs/PR-VALIDATION.md) for host setup and execution before running live agents. This is a teaching fixture for the orchestration workflow and its architecture/design extension. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
 

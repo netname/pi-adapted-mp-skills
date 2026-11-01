@@ -2,6 +2,8 @@
 
 This guide is **only for evaluating proposed changes to this skills package**. The quotation CLI is a disposable test project. For normal software projects, use [WORKFLOW.md](WORKFLOW.md) to understand the process, [ARCHITECTURE-GUIDE.md](ARCHITECTURE-GUIDE.md) for design work and [MANUAL.md](MANUAL.md) for setup and daily use. This guide records what the package does on your tested host and models; it does not grant PR merge authorization.
 
+**First time using Paseo or Claude Code?** Follow [First quotation lab](BEGINNER-VALIDATION.md) in order. It brings the necessary setup and first successful run into one route. Use this page afterward for reference and additional failure/recovery validation; do not repeat setup or generate a second lab just because you switch guides.
+
 The lab supplies a reference spec (R1–R4), draft design, A/B/C tickets and acceptance tests. Agents must inspect and review them; supplied files are **not** proof that live planning/review happened. A implements pricing, B reads a local catalog and C connects both into a CLI after verified integration. Runtime needs Node and local files only. Read the [fixture README](../examples/validation-lab/README.md) and [application overview](../examples/validation-lab/template/docs/architecture/overview.md) for the exercise itself.
 
 Use [the workflow report](VALIDATION-REPORT.md) for orchestration and [the architecture report](ARCHITECTURE-VALIDATION.md) for design/readiness. Copy them into the lab as instructed below and record PASS, FAIL, NOT RUN or BLOCKED with observed evidence. Historical preparation checks in the templates are not results from your run. Preserve the ignored `.scratch/` tracker separately from Git commits.
@@ -107,7 +109,7 @@ Record the SHA printed by Git, not a commit ID copied from an older conversation
 
 `npm test` is defined by this repository's [package.json](../package.json): skill validation followed by Node's test runner. A validation failure prevents the runner from starting. Run `npm ci` first; the checks themselves are offline and need no model authentication.
 
-This corrected architecture branch has 23 offline tests; PR #1 has 19. Judge success by the complete result and exit status, not by matching a fixed number. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
+The number of offline tests changes as the package evolves. Judge success by the complete result and exit status, not by matching a historical count. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
 
 Passing package checks does not establish that live Paseo sessions, model separation or the generated application pass. Those are later exercises. The generated application itself uses only local files and Node's standard library. Source: [npm test](https://docs.npmjs.com/cli/v11/commands/npm-test/).
 
@@ -414,6 +416,8 @@ The coordinator records this map as `inputs` in `quote-readiness.json`, in both 
 
 ### Record acceptance and check readiness
 
+**Who acts:** the coordinator gathers actual reports, computes fingerprints and prepares the JSON below. The human inspects the design, diagrams and scope, then accepts or requests changes. You do not need to hand-edit hashes or JSON to complete the beginner route. Missing evidence remains incomplete even if an agent can produce a structurally plausible record.
+
 After reviews and the final plan check, the human can accept or request changes to the exact current proposal. For example: “I accept the current quotation design and A/B/C plan for this disposable lab, preserving R1–R4 and the supplied exclusions.” This sentence is an example to use only if it reflects your decision. The coordinator preserves a durable reference to the actual message and records the current fingerprints; it does not decide on your behalf.
 
 Record shape (angle-bracket values below are explanatory placeholders, not usable approval):
@@ -641,6 +645,8 @@ After inspection, authorize cleanup of only clean, inactive lab worktrees whose 
 
 
 ## 6. Exercise failure paths
+
+For a first experience, finish the successful run and inspect its evidence before these drills. Record the drills as NOT RUN until performed; a first successful run alone does not complete full framework validation.
 
 The happy path is necessary but insufficient. Run these exercises in isolated probe worktrees or a fresh numbered lab. Never inject a fault into an active worker/reviewer checkout. Record the candidate SHA before each exercise and stop competing writers first.
 

@@ -1,5 +1,7 @@
 # Skills + Paseo: project setup and everyday use
 
+New to Paseo and evaluating this package? Start with the [beginner quotation walkthrough](BEGINNER-VALIDATION.md), which includes the first host checks, profiles and sessions in sequence.
+
 This manual is for using the skills in **your own software project**. It explains setup, the project folders and artifacts, roles, helper scripts, testing and the complete development lifecycle. For the disposable quotation exercise that evaluates the pending PRs, use the separate [PR validation guide](PR-VALIDATION.md); do not run its commands inside an existing project.
 
 Read in order: [workflow overview](WORKFLOW.md#solution-overview) → [stages and artifacts](#stages-and-artifacts) → [project folders](#project-folders-and-effort-directories) → [tools and scripts](#skills-sessions-and-scripts) → [host and project setup](#prepare-the-execution-host). [The architecture guide](ARCHITECTURE-GUIDE.md) expands design review and acceptance. These three guides describe normal work; the validation guide and its report templates describe the experiment.
@@ -322,6 +324,8 @@ You configure profiles in **Paseo**, not by typing a skill command into Pi/Claud
 | `mp-design-review` | Pi / DeepSeek | Independently reconstruct or challenge a Claude-authored design. Use separate fresh sessions for comprehension and challenge. |
 | `mp-code-review` | Claude Code / Claude | Review code implemented only by DeepSeek. Use separate fresh sessions for Spec and Standards; no edits or test execution. |
 
+For a first supervised lab, start `mp-plan` in Claude Always Ask mode and `mp-code-review` in Plan Mode; use the supported Default mode for the Pi profiles. Choose High thinking when the selected model offers it, otherwise retain and record its default. Always Ask can produce permission requests while the coordinator works. These are starting settings; role briefs still prohibit reviewer edits/tests, and mode labels alone do not prove isolation. The [beginner profile step](BEGINNER-VALIDATION.md#5-connect-paseo-desktop-and-save-four-profiles) includes model-selection examples and missing-control recovery.
+
 These four presets can cover common role rows in your project's `docs/agents/delegation.md`: Planning → `mp-plan`; Implementation → `mp-build`; Spec and Standards → `mp-code-review`; Design comprehension and challenge → `mp-design-review`; Research → a source-capable `mp-plan` session, or a separately configured research profile. Reusing settings never means reusing the author/implementer conversation as its reviewer. Check source access before selecting a research profile.
 
 Record **actual** profiles, harness/providers, exact model IDs and families in that file. Editing the file does not create a Paseo profile; saving a Paseo profile does not update the file. Reconcile both. Changing an implementation/design-author family can invalidate reviewer independence for the affected candidate. A profile label is not enforcement of read-only access or a guarantee of model identity.
@@ -350,7 +354,8 @@ For Paseo coordination, create the managed sessions **inside Paseo**. Running `p
 
 ```text
 This is a setup check, not an implementation assignment.
-Report the working directory and read README.md in this workspace.
+Report the working directory and read AGENTS.md in this workspace.
+For the quotation lab, also read docs/architecture/overview.md.
 Summarize the project's purpose. Do not edit files, run tests, create commits,
 or launch other agents. Report any missing file or capability honestly.
 ```
@@ -373,7 +378,8 @@ After discovery succeeds, test an actual launch:
 ```text
 Use the installed Paseo tool schemas or CLI help to launch exactly one fresh Pi
 child using the verified mp-build settings in this workspace. Its only task is
-to read README.md and return a short summary. No edits, tests, commits, further
+to read AGENTS.md (and docs/architecture/overview.md in the quotation lab)
+and return a short summary. No edits, tests, commits, further
 delegation or implementation. Record the child run ID, effective settings and
 workspace; observe its terminal status and collect its output. Do not launch
 replacement children if its status is unknown. Report any capability gap.

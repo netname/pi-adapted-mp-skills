@@ -34,7 +34,9 @@ See [stage owners, artifacts and completion checks](docs/WORKFLOW.md#stages-owne
 
 Choose one route. **Using the skills in a software project?** Read [WORKFLOW](docs/WORKFLOW.md) for the lifecycle, [MANUAL](docs/MANUAL.md) for setup, project folders, artifacts, tools and day-to-day operation, and [ARCHITECTURE-GUIDE](docs/ARCHITECTURE-GUIDE.md) for design review and acceptance. Those guides describe normal project work; use your project's own requirements, design and tests.
 
-**Evaluating these proposed package changes?** Follow [PR-VALIDATION](docs/PR-VALIDATION.md) from its first step. That separate guide owns the disposable quotation lab, its planning rehearsal, design exercise, commands, failure drills and evaluation. Record live results in [workflow validation](docs/VALIDATION-REPORT.md) and [architecture validation](docs/ARCHITECTURE-VALIDATION.md); these templates are only for assessing the PRs. The lab [fixture README](examples/validation-lab/README.md) describes its generated application.
+**New to Paseo or Claude Code?** Start with the [beginner quotation walkthrough](docs/BEGINNER-VALIDATION.md): one Windows-to-Ubuntu route, profile setup, copyable prompts, expected results and recovery steps. It takes you through one successful run before the failure exercises.
+
+**Evaluating these proposed package changes with an established setup?** Follow [PR-VALIDATION](docs/PR-VALIDATION.md) from its first step. That separate guide owns the disposable quotation lab, its planning rehearsal, design exercise, commands, failure drills and evaluation. Record live results in [workflow validation](docs/VALIDATION-REPORT.md) and [architecture validation](docs/ARCHITECTURE-VALIDATION.md); these templates are only for assessing the PRs. The lab [fixture README](examples/validation-lab/README.md) describes its generated application.
 
 | Question | Project route | PR validation route |
 | --- | --- | --- |
