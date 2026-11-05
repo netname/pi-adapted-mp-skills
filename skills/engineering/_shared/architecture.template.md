@@ -13,7 +13,7 @@ Readiness record: docs/designs/<feature>-readiness.json.
 Configure concrete paths per effort; angle-bracket placeholders are not runnable configuration.
 Choose the decision-bearing inputs explicitly: spec, design, applicable ADRs, model files, traceability and a stable snapshot of approved tickets. Keep approval records and review reports outside their own input hash set. Source implementation files belong to code-review evidence, not this design fingerprint set.
 
-Design reviewers: two fresh Paseo sessions, comprehension and challenge. Configure profiles in delegation.md; model family must differ from all design authors. They may share a family with one another. Code review has its separate implementation-family rule.
+Design reviewers: two fresh Herdr batch sessions, comprehension and challenge. Configure their harness, model and arguments in delegation.md; model family must differ from all design authors. They may share a family with one another. Code review has its separate implementation-family rule.
 Model validation: configure an installed, pinned LikeC4 command if using LikeC4; otherwise record not applicable. Syntax validation does not prove design quality.
 Gate: node PACKAGE/scripts/design-check.mjs check REPO RECORD
 

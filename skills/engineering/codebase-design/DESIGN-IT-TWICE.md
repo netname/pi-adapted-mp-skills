@@ -18,7 +18,7 @@ Show this to the user, then immediately proceed to Step 2. The user reads and th
 
 ### 2. Dispatch the design sub-agents
 
-Dispatch 3+ fresh design agents through Paseo following `../_shared/DELEGATION.md`, batching within the configured concurrency limit. Each must produce a **radically different** interface for the deepened module.
+Dispatch 3+ fresh design sessions through Herdr (batch mode, `--role exploration`) following `../_shared/DELEGATION.md`, batching within the configured concurrency limit. Each must produce a **radically different** interface for the deepened module.
 
 Prompt each sub-agent with a separate technical brief (file paths, coupling details, dependency category from [DEEPENING.md](DEEPENING.md), what sits behind the seam). The brief is independent of the user-facing problem-space explanation in Step 1. Give each agent a different design constraint:
 

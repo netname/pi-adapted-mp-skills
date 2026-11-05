@@ -10,7 +10,7 @@ This report separates checks run while preparing the PR from exercises requiring
 | LikeC4 1.60.0 `validate` in fixture model directory | PASS: 1 source file | Parses component/success/failure views; no semantic architecture approval |
 | Fixture creation | PASS in package tests | Draft readiness, ticket scope snapshot, substituted paths, existing-destination protection |
 | Application acceptance tests on scaffold | Expected failure tested | Implementation deliberately absent |
-| Live Paseo / actual model-family inspection | NOT RUN | Requires your configured host |
+| Live Herdr / actual model-family inspection | NOT RUN | Requires your configured host |
 | Human acceptance of lab design | NOT GIVEN | Must come from the actual review exercise |
 | Windows execution | NOT RUN | Linux checks do not certify Windows |
 | Other applications and shared-service environments | NOT RUN | Outside the self-contained quotation fixture |
@@ -24,7 +24,7 @@ The tests contain explicitly synthetic approval/reviewer records for helper vali
 Procedure: [PR validation route](PR-VALIDATION.md), with the [quotation design exercise](PR-VALIDATION.md#3-review-the-quotation-design). After copying this template into the lab, use your recorded skills path if relative links no longer resolve.
 
 Run ID/date/operator: ______. Skills checkout path: ______.
-Package commit: ______. Host/OS/Node: ______. Paseo version: ______.
+Package commit: ______. Host/OS/Node: ______. Herdr version: ______.
 Initial lab baseline / approved execution baseline / final integration SHAs: ______.
 Design author families: ______. Workflow report location: ______.
 

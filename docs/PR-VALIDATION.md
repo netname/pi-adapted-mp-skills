@@ -2,7 +2,7 @@
 
 This guide is **only for evaluating proposed changes to this skills package**. The quotation CLI is a disposable test project. For normal software projects, use [WORKFLOW.md](WORKFLOW.md) to understand the process, [ARCHITECTURE-GUIDE.md](ARCHITECTURE-GUIDE.md) for design work and [MANUAL.md](MANUAL.md) for setup and daily use. This guide records what the package does on your tested host and models; it does not grant PR merge authorization.
 
-**First time using Paseo or Claude Code?** Follow [First quotation lab](BEGINNER-VALIDATION.md) in order. It brings the necessary setup and first successful run into one route. Use this page afterward for reference and additional failure/recovery validation; do not repeat setup or generate a second lab just because you switch guides.
+**First time using Herdr or Claude Code?** Follow [First quotation lab](BEGINNER-VALIDATION.md) in order. It brings the necessary setup and first successful run into one route. Use this page afterward for reference and additional failure/recovery validation; do not repeat setup or generate a second lab just because you switch guides.
 
 The lab supplies a reference spec (R1–R4), draft design, A/B/C tickets and acceptance tests. Agents must inspect and review them; supplied files are **not** proof that live planning/review happened. A implements pricing, B reads a local catalog and C connects both into a CLI after verified integration. Runtime needs Node and local files only. Read the [fixture README](../examples/validation-lab/README.md) and [application overview](../examples/validation-lab/template/docs/architecture/overview.md) for the exercise itself.
 
@@ -10,8 +10,8 @@ Use [the workflow report](VALIDATION-REPORT.md) for orchestration and [the archi
 
 | Step | Action and prerequisite | Evidence before continuing |
 | --- | --- | --- |
-| 1 | [Prepare the execution host and profiles](MANUAL.md#prepare-the-execution-host), then [freeze the PR checkout](#1-freeze-the-package-under-test) | Pi/Claude/Paseo work on the selected host; package SHA and offline tests recorded |
-| 2 | [Create and configure the lab](#2-create-and-configure-the-lab) | Initial lab SHA, actual role profiles, canonical tracker path and report copies |
+| 1 | [Prepare the execution host and role rows](MANUAL.md#prepare-the-execution-host), then [freeze the PR checkout](#1-freeze-the-package-under-test) | Pi/Claude/Herdr work on the selected host; package SHA and offline tests recorded |
+| 2 | [Create and configure the lab](#2-create-and-configure-the-lab) | Initial lab SHA, actual role rows, canonical tracker path and report copies |
 | 3 | Optionally [rehearse discovery](#optional-planning-rehearsal); then [review the design](#3-review-the-quotation-design) | Real review reports, human acceptance of current scope, passing readiness and approved execution baseline |
 | 4 | [Run A/B and then C](#4-execute-the-ticket-graph) | Distinct worktrees and run IDs; independent reviews; serial verified integration |
 | 5 | [Inspect the result](#5-inspect-the-result) and [exercise failure paths](#6-exercise-failure-paths) | Final SHA, test/review evidence, failures and recovery observations |
@@ -21,7 +21,7 @@ The optional discovery rehearsal tests Stages 1–2 of the [normal lifecycle](WO
 
 ### What the live run must demonstrate
 
-Offline package tests cannot prove that your Paseo host, providers and worktrees follow the workflow. During this disposable run, observe actual provider/model IDs, cited research when rehearsed, two independent design review axes, two independent code review axes on exact committed targets, concurrent A/B worktrees, serial combined integration and C waiting for both verified dependencies. Exercise a failed test/reviewer, a changed or dirty candidate, a merge conflict and coordinator restart; retain the evidence and bounded retry history. The [workflow report](VALIDATION-REPORT.md#acceptance-matrix) and [architecture report](ARCHITECTURE-VALIDATION.md#live-validation-report-fill-for-your-run) enumerate the observations. A missing capability or unperformed exercise is NOT RUN or BLOCKED, not a pass.
+Offline package tests cannot prove that your Herdr host, harnesses and worktrees follow the workflow. During this disposable run, observe actual provider/model IDs, cited research when rehearsed, two independent design review axes, two independent code review axes on exact committed targets, concurrent A/B worktrees, serial combined integration and C waiting for both verified dependencies. Exercise a failed test/reviewer, a changed or dirty candidate, a merge conflict and coordinator restart; retain the evidence and bounded retry history. The [workflow report](VALIDATION-REPORT.md#acceptance-matrix) and [architecture report](ARCHITECTURE-VALIDATION.md#live-validation-report-fill-for-your-run) enumerate the observations. A missing capability or unperformed exercise is NOT RUN or BLOCKED, not a pass.
 
 ## 1. Freeze the package under test
 
@@ -32,12 +32,12 @@ A package install from the default branch does not validate an unmerged PR. Use 
 ~/code/quote-workflow-lab-01         separate application repository
 ```
 
-For a first validation of the current combined framework, use the architecture branch below; it includes the orchestration changes. Only when intentionally testing PR #1 alone, substitute `improve/paseo-testing-workflow` and record that narrower scope. These commands capture the branch at clone time: record the printed SHA and keep it fixed for the run.
+For a first validation of the current combined framework, use the Herdr delegation branch below; it includes the architecture and orchestration changes. These commands capture the branch at clone time: record the printed SHA and keep it fixed for the run.
 
 ```bash
 export MP_SKILLS="$HOME/code/pi-skills-validation-01"
 mkdir -p "$HOME/code" &&
-git clone --branch improve/architecture-design-review --single-branch \
+git clone --branch improve/herdr-delegation --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
   "$MP_SKILLS" &&
 cd "$MP_SKILLS" &&
@@ -67,12 +67,12 @@ The destination is an absolute path derived from `$HOME`, so the clone goes to t
 This is the complete clone command when `MP_SKILLS` has been set above:
 
 ```bash
-git clone --branch improve/architecture-design-review --single-branch \
+git clone --branch improve/herdr-delegation --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
   "$MP_SKILLS"
 ```
 
-- `--branch` selects the combined architecture/workflow PR branch; the slash in the name is not a filesystem path.
+- `--branch` selects the Herdr delegation branch (architecture, workflow and Herdr transport); the slash in the name is not a filesystem path.
 - `--single-branch` limits the fetched branch history, not the checkout to one commit.
 - `"$MP_SKILLS"` is the absolute local destination, kept identical to the path used by later commands.
 - A trailing `\` continues the same Bash command onto the next line; it must be the final character on that line.
@@ -81,7 +81,7 @@ The command does not merge the PR or update GitHub. It gets the branch state at 
 
 ### Understand paths and version identity
 
-`$HOME` is the home directory of the current execution-host user. Quotes preserve spaces while allowing variables to expand. `MP_SKILLS` and `MP_LAB` are names chosen for this guide; they are not built-in Git or Paseo settings. Keep them pointed at different sibling directories.
+`$HOME` is the home directory of the current execution-host user. Quotes preserve spaces while allowing variables to expand. `MP_SKILLS` and `MP_LAB` are names chosen for this guide; they are not built-in Git or Herdr settings. Keep them pointed at different sibling directories.
 
 Print the actual values when diagnosing a path problem:
 
@@ -111,13 +111,13 @@ Record the SHA printed by Git, not a commit ID copied from an older conversation
 
 The number of offline tests changes as the package evolves. Judge success by the complete result and exit status, not by matching a historical count. In Bash, `echo $?` immediately after `npm test` prints that command's exit status: `0` means success; a nonzero value means it failed. Run it immediately because another command replaces the status.
 
-Passing package checks does not establish that live Paseo sessions, model separation or the generated application pass. Those are later exercises. The generated application itself uses only local files and Node's standard library. Source: [npm test](https://docs.npmjs.com/cli/v11/commands/npm-test/).
+Passing package checks does not establish that live Herdr sessions, model separation or the generated application pass. Those are later exercises. The generated application itself uses only local files and Node's standard library. Source: [npm test](https://docs.npmjs.com/cli/v11/commands/npm-test/).
 
 ### Install the package into the lab project later
 
 Do not run a lab installation command yet: `$MP_LAB` may not exist. In [Generate a new directory](#generate-a-new-directory), the generator creates the application directory first. The same command block then enters it and runs `pi install -l "$MP_SKILLS"`. Follow that block once; there is no separate installation to repeat here.
 
-The `-l` option records a project-local installation. Pi loads the package from its existing checkout after project trust. Check startup diagnostics and avoid duplicate skill copies with shadowing names. Keep unrelated packages where needed, but verify the configured Paseo delegation path. See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
+The `-l` option records a project-local installation. Pi loads the package from its existing checkout after project trust. Check startup diagnostics and avoid duplicate skill copies with shadowing names. Keep unrelated packages where needed, but verify the configured Herdr delegation path (helper path and evidence directory in `delegation.md`). See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
 
 
 ## 2. Create and configure the lab
@@ -132,7 +132,7 @@ These letters identify three implementation tickets, not models, profiles or dif
 | B | `src/catalog.mjs`: read and validate a JSON catalog | Real filesystem integration tests | Can overlap A in a different worktree |
 | C | `src/cli.mjs`: parse input and combine catalog/pricing | Complete CLI process E2E | Waits for verified integration of A and B |
 
-A and B use separate fresh sessions with the same implementation profile. C uses another fresh session later. The coordinator creates these workers and their worktrees; you do not manually launch each ticket. The model/profile/run distinctions are explained in the [project manual](MANUAL.md#what-is-a-profile).
+A and B use separate fresh sessions with the same implementation role row. C uses another fresh session later. The coordinator creates these workers and their worktrees; you do not manually launch each ticket. The model/role-row/run distinctions are explained in the [project manual](MANUAL.md#what-is-a-role-row).
 
 ### What you will build
 
@@ -171,18 +171,17 @@ Generated artifacts include:
 - A glossary, standards, project instructions and testing/tracker configuration.
 - Acceptance tests for pricing, catalog I/O and CLI behavior.
 - Three Markdown tickets and a derived graph under `.scratch/quote-demo/`.
-- A delegation template requiring your real profile/model settings.
+- A delegation template requiring your real role rows (harness, arguments, model).
 
 ### Open and configure the lab
 
-**You act next.** Confirm Paseo Desktop is connected to the execution host where `MP_LAB` exists, such as `sen03`. Open that lab directory as a project in Paseo; alternatively, register it on that host from the lab terminal:
+**You act next.** Start (or attach to) the lab's Herdr session on the execution host where `MP_LAB` exists, such as `sen03`, and open a pane in the lab directory:
 
 ```bash
-cd "$MP_LAB" &&
-paseo project create
+herdr --session quote-lab
 ```
 
-Check the host and absolute path shown in Paseo before starting a session. Registration does not configure profiles or implement code. See [Paseo CLI projects](https://paseo.sh/docs/cli#projects).
+From Windows, `herdr --remote user@sen03 --session quote-lab` draws the same panes while the Ubuntu server owns them. Check the host and absolute path in the pane (`hostname; pwd`) before starting a session. A Herdr session does not configure role rows or implement code. See [Herdr persistence and remote](https://herdr.dev/tui/docs/persistence-remote/).
 
 Print both actual absolute paths from the same host shell:
 
@@ -192,15 +191,15 @@ printf 'Skills package: %s\nLab project: %s\n' "$MP_SKILLS" "$MP_LAB"
 
 If a value is empty, set it to the actual existing checkout/directory; do not create another lab merely to obtain a path. Variables are shell-specific and may need to be set again in a new terminal.
 
-#### Recommended: configure with Claude in Paseo
+#### Recommended: configure with Claude in Herdr
 
-In the lab project on the correct host, create a fresh Claude planning session using the profile you configured in [profile setup](MANUAL.md#create-role-profiles-on-the-execution-host). Replace both placeholders in the complete prompt below with the printed absolute paths before sending it to that session:
+In the lab pane on the correct host, start a fresh Claude planning session (`claude`), using the role rows you chose in [role-row setup](MANUAL.md#fill-the-role-rows-on-the-execution-host). Replace both placeholders in the complete prompt below with the printed absolute paths before sending it to that session:
 
 ```text
 Read PACKAGE_PATH/skills/engineering/setup-matt-pocock-skills/SKILL.md and
 follow that procedure for APPLICATION_PATH. Resolve references relative to
 the skill file. Treat Pi-specific installation checks as checks of the Pi
-worker environment. Use only actual discovered Paseo settings.
+worker environment. Use only harnesses and models actually available here.
 
 Inspect and preserve the supplied local tracker, quote specification, testing
 contract, acceptance tests and application scope. Use the canonical absolute
@@ -208,31 +207,31 @@ tracker path already recorded in the lab's AGENTS.md; do not create another
 tracker in a worktree. Inspect existing project instructions before changing
 anything, and complete them rather than replacing them unnecessarily.
 
-Help me populate docs/agents/delegation.md with the actual Paseo profiles,
-provider/model IDs and model families I provide or that can be independently
-verified. A profile must already exist in Paseo; do not invent one. Preserve
+Help me populate docs/agents/delegation.md with the role rows (harness, mode,
+arguments, exact model ID and family) I provide or that can be independently
+verified (pi --list-models, a signed-in claude). Do not invent a model. Preserve
 the configured worker and retry limits unless I decide to change them.
 
 Do not implement the application, accept the design on my behalf, alter the
 supplied acceptance tests, install or change global packages, create a remote
 repository, or launch implementation workers. Report missing settings and any
-conflict with the installed Pi/Paseo versions. Summarize files changed and
+conflict with the installed Pi/Herdr versions. Summarize files changed and
 questions that need my decision so I can inspect the result.
 ```
 
-`PACKAGE_PATH` is the skills checkout; `APPLICATION_PATH` is the generated lab. They are placeholders, not literal paths. Pi package installation does not create Claude slash commands. Respond to setup questions with existing verified decisions and settings; do not assume the agent can infer your actual model IDs from profile names.
+`PACKAGE_PATH` is the skills checkout; `APPLICATION_PATH` is the generated lab. They are placeholders, not literal paths. Pi package installation does not create Claude slash commands. Respond to setup questions with existing verified decisions and settings; do not assume the agent can infer your actual model IDs from role names.
 
 #### Alternative: configure with Pi
 
-Instead of the Claude route, create a Pi session in Paseo in the **same lab project**. Confirm Pi loaded the project-local package installed above. Send the following two messages in that session:
+Instead of the Claude route, start a Pi session (`pi`) in a Herdr pane in the **same lab project**. Confirm Pi loaded the project-local package installed above. Send the following two messages in that session:
 
 ```text
 /skill:setup-matt-pocock-skills
 ```
 
 ```text
-Configure this quotation lab using its existing instructions and actual Paseo
-profiles. Preserve the supplied spec, acceptance tests, testing contract, scope
+Configure this quotation lab using its existing instructions and the role
+rows I choose. Preserve the supplied spec, acceptance tests, testing contract, scope
 and canonical absolute tracker path in AGENTS.md. Inspect existing files before
 changing them; resolve all delegation.md placeholders using verified provider,
 model and family information, asking me when information is missing. Do not
@@ -260,9 +259,9 @@ cat docs/agents/architecture.md
 `git diff` shows tracked changes; new untracked files also appear in `git status`, so open any relevant new file separately. Check:
 
 - `AGENTS.md` points to the lab instructions and its canonical tracker root, `$MP_LAB/.scratch/quote-demo`. All worktrees must use that **original absolute path**.
-- `docs/agents/issue-tracker.md` describes ownership and tracker transitions. `delegation.md` contains real profile names, provider/model IDs and families, with no unresolved required `configure` placeholders.
+- `docs/agents/issue-tracker.md` describes ownership and tracker transitions. `delegation.md` contains real role rows (harness, mode, arguments, model IDs and families), the helper path and the evidence directory, with no unresolved required `configure` placeholders.
 - `testing.md` identifies usable lab commands and resources; `architecture.md` identifies required design review and acceptance. The supplied specification, tests and scope remain intact.
-- Profiles have actually been saved in Paseo; the Markdown file records them but does not create them. Design reviewers differ from design authors, and code reviewers differ from every implementation family contributing to their target.
+- Each row has been checked with one delegated run (`herdr-delegate.mjs inspect --expect-model` passes). Design reviewers differ from design authors, and code reviewers differ from every implementation family contributing to their target.
 - Any missing tools, model identity or unresolved decision is recorded as a blocker. Do not start implementation until the configuration and design-readiness gates are complete.
 
 #### Commit the initial lab baseline
@@ -293,7 +292,7 @@ cp "$MP_SKILLS/docs/ARCHITECTURE-VALIDATION.md" \
   "$MP_LAB/.scratch/quote-demo/architecture-validation.md"
 ```
 
-Fill run identity and actual Node/Git/Pi/Paseo/Claude versions/models in both. The workflow report covers execution/recovery; the architecture report covers design/review/readiness. Add evidence from the harmless session/delegation checks. Historical offline checks in the architecture template are reference information, not results from your run. After copying, relative documentation links may not resolve: use the recorded skills checkout or GitHub links. No secrets belong in reports. These copies are ignored by Git, so retain them separately.
+Fill run identity and actual Node/Git/Pi/Herdr/Claude versions/models in both. The workflow report covers execution/recovery; the architecture report covers design/review/readiness. Add evidence from the harmless session/delegation checks. Historical offline checks in the architecture template are reference information, not results from your run. After copying, relative documentation links may not resolve: use the recorded skills checkout or GitHub links. No secrets belong in reports. These copies are ignored by Git, so retain them separately.
 
 **Next:** do the planning rehearsal below for whole-cycle validation, then [step 3](#3-review-the-quotation-design). After its accepted readiness record is committed, return to [step 4](#4-execute-the-ticket-graph).
 
@@ -320,7 +319,7 @@ This is the lab's design and review exercise. Complete [lab setup](#2-create-and
 
 ### Prepare the lab before review
 
-The supplied design, LikeC4 model, proposed ADR, coverage and ticket scope snapshot start as **drafts**. The generator provides no completed application or live review evidence. Confirm the actual profiles, decision owner and canonical tracker root in the original lab. A package update does not retroactively change a generated lab: use a new numbered lab and package SHA for another run. See [normal host/profile setup](MANUAL.md#prepare-the-execution-host) for details.
+The supplied design, LikeC4 model, proposed ADR, coverage and ticket scope snapshot start as **drafts**. The generator provides no completed application or live review evidence. Confirm the actual role rows, decision owner and canonical tracker root in the original lab. A package update does not retroactively change a generated lab: use a new numbered lab and package SHA for another run. See [normal host and role-row setup](MANUAL.md#prepare-the-execution-host) for details.
 
 The supplied overview describes proposed components. Read it first, then use the spec to check exact behavior. Runtime files such as `src/cli.mjs` are intentionally created later by workers; a missing `src/` before dispatch is expected.
 
@@ -349,7 +348,7 @@ Inspect the component view and explicitly rendered success/failure sequence view
 
 ### Explain the proposal
 
-Open a Claude planning session in Paseo for the lab. Expand the paths from your terminal and paste their actual values into the prompts:
+Open a Claude planning session in a Herdr pane in the lab. Expand the paths from your terminal and paste their actual values into the prompts:
 
 ```bash
 printf 'Package path: %s\nApplication path: %s\n' "$MP_SKILLS" "$MP_LAB"
@@ -373,15 +372,16 @@ Expected result: you can explain what will be built and why without needing the 
 
 ### Run independent review and check the plan
 
-Use the planning/coordinator session to arrange review through the configured profiles:
+Use the planning/coordinator session to arrange review through the configured role rows:
 
 ```text
 Read PACKAGE_PATH/skills/engineering/review-design/SKILL.md and follow it
-for APPLICATION_PATH, using the actual configured Paseo profiles.
+for APPLICATION_PATH, launching through Herdr with the design-review role rows.
 
 Freeze and identify the proposal inputs. Launch separate fresh comprehension
 and challenge sessions with the package brief and explicit project paths.
-Inspect their effective models and ensure independence from the design authors.
+Verify each run with herdr-delegate.mjs inspect --expect-model and ensure
+independence from the design authors.
 Preserve their reports under docs/designs/reviews/ and record findings/dispositions.
 Do not change the frozen proposal while reviewers inspect it.
 
@@ -471,7 +471,7 @@ node "$MP_SKILLS/scripts/design-check.mjs" check "$MP_LAB" \
   docs/designs/quote-readiness.json
 ```
 
-On the initial scaffold this **must fail**, because it is draft. With complete current records it returns `ready: true`. That result means structural checks passed: selected files and reports match their hashes, the two recorded reviews are complete with no blockers, recorded families differ, and acceptance targets the same files. It cannot authenticate a human, verify Paseo settings, discover a missing requirement/file or judge whether a report is honest. Those are review/coordinator responsibilities; this is not a tamper-proof approval service.
+On the initial scaffold this **must fail**, because it is draft. With complete current records it returns `ready: true`. That result means structural checks passed: selected files and reports match their hashes, the two recorded reviews are complete with no blockers, recorded families differ, and acceptance targets the same files. It cannot authenticate a human, verify the launched models (use `herdr-delegate.mjs inspect`), discover a missing requirement/file or judge whether a report is honest. Those are review/coordinator responsibilities; this is not a tamper-proof approval service.
 
 ### Commit and hand off to execution
 
@@ -511,7 +511,7 @@ C must not be included. The graph is an export of ticket state. Have the coordin
 
 ### Start the coordinator
 
-Start one fresh Claude Code session inside Paseo for the lab, using your planning/coordinator profile. Continue only after the human has actually accepted the current design and plan and the readiness check passes. Supply this prompt with the two absolute paths and the approved execution baseline SHA filled in:
+Start one fresh Claude Code session in a Herdr pane in the lab, using your planning/coordinator role row. Continue only after the human has actually accepted the current design and plan and the readiness check passes. Supply this prompt with the two absolute paths and the approved execution baseline SHA filled in:
 
 ```text
 Read /ABSOLUTE/SKILLS/PATH/skills/engineering/implement-spec/SKILL.md and follow it
@@ -522,7 +522,8 @@ Read project tracker, delegation and testing configuration. Verify the recorded 
 acceptance of the current spec, design and three-ticket plan. Do not invent approval
 or reconfirm an existing decision that covers the current inputs.
 
-Use the configured Paseo implementation and independent review profiles.
+Launch through Herdr with the implementation and independent review role rows;
+give workers skill files by absolute path; verify each run with inspect --expect-model.
 Maximum two implementation workers. You are the sole tracker and integration writer.
 Do not implement code yourself. Never have a worker dispatch its own review.
 
@@ -543,7 +544,7 @@ If a capability cannot be verified or a required check fails, record the blocker
 
 ### At the observation checkpoint
 
-Inspect both workers in Paseo and run this in the original lab terminal:
+Inspect both workers (`herdr --session quote-lab agent list`, `agent attach <name>`) and run this in the original lab terminal:
 
 ```bash
 git -C "$MP_LAB" worktree list --porcelain
@@ -669,7 +670,7 @@ The automated package tests cover staged, unstaged and untracked cases too. This
 
 ### N2. Failing test gate
 
-In another disposable final-candidate worktree, ask the implementation profile to introduce an explicit temporary fault: calculate the three-pen example as 3751 instead of 3750. Commit that fault; do not alter the tests.
+In another disposable final-candidate worktree, ask an implementation worker to introduce an explicit temporary fault: calculate the three-pen example as 3751 instead of 3750. Commit that fault; do not alter the tests.
 
 Run profile `all`. Expected: exit nonzero, `passed: false`, failure logs retained. Give that candidate to the coordinator as a rejected probe, not as authorized production work. It must keep the ticket unresolved, arrange repair if asked and not unblock dependents from the failed revision. A later repair gets a new commit and new verification/review evidence.
 
@@ -677,15 +678,15 @@ This tests the difference between a test failure and an environment failure. Bot
 
 ### N3. Missing or cancelled review axis
 
-In a fresh supervised review, ask the Standards worker to pause before producing its report. Record its run ID, then stop that specific worker using the Paseo UI or documented CLI. Leave the Spec result available.
+In a fresh supervised review, ask the Standards worker to pause before producing its report. Record its run ID, then stop that specific session (`herdr workspace close <workspace id from its run record>`). Leave the Spec result available.
 
-Expected: the report says Standards incomplete/cancelled and does not synthesize an overall pass. A replacement worker must be fresh, use the independent profile and receive the same immutable target if it has not changed. If the original worker already completed, the cancellation drill was not executed; repeat with an observable checkpoint.
+Expected: the report says Standards incomplete/cancelled and does not synthesize an overall pass. A replacement worker must be fresh, use the independent role row and receive the same immutable target if it has not changed. If the original worker already completed, the cancellation drill was not executed; repeat with an observable checkpoint.
 
 ### N4. Wrong model family
 
-Create a temporary review profile using the same family as the implementation profile, and ask the coordinator to inspect it before launching the review. Do not overwrite your normal review profile.
+Ask the coordinator to launch one review run with the implementation row's model instead of the review row's, as a deliberate probe. Do not change your normal review row.
 
-Expected: the coordinator rejects that profile for this candidate, records why and selects a compliant configured alternative or pauses. The review must not pass merely because the profile's label says “review.” If a provider fallback occurs after launch, inspect the actual session again.
+Expected: `inspect --expect-model <review model>` fails, the coordinator rejects that run for this candidate, records why and relaunches with the compliant row or pauses. The review must not pass merely because its role says “review.” If a provider fallback occurs after launch, inspect the run again.
 
 ### N5. Dependency and claim checks
 
@@ -703,13 +704,13 @@ The helper validates structure, not the truth of a fabricated SHA. Verify real G
 
 ### N6. Restart the coordinator without duplicate work
 
-Use a new lab run. At the A/B observation checkpoint, ensure run IDs, ownership and branch paths are persisted. End or detach from the coordinator session while keeping the worker sessions observable. Do not restart the entire Paseo daemon for this exercise.
+Use a new lab run. At the A/B observation checkpoint, ensure run IDs, ownership and branch paths are persisted. End or detach from the coordinator session while keeping the worker sessions observable. Do not stop the Herdr server for this exercise.
 
 Start a fresh coordinator with the same skill and project pointers:
 
 ```text
 Resume this effort from the canonical tracker. Before launching anything, reconcile
-recorded worker IDs against Paseo and their branches against Git. Establish whether
+recorded worker run records against herdr agent list and their branches against Git. Establish whether
 the previous coordinator is still active. Do not steal ownership from a live or
 unknown coordinator and do not duplicate a claimed worker. Report your reconciliation.
 ```
@@ -745,14 +746,14 @@ Run destructive edits only in a disposable copy/branch and retain the failing ou
 | Stale decision | After a real acceptance, change design/model/spec | Helper rejects stale input; affected work pauses |
 | Failed reviewer | Cancel one design-review session | Record stays incomplete; no synthetic pass |
 | Same-family review | Configure author/reviewer with same family | Coordinator rejects effective settings; helper rejects matching recorded families |
-| Missing environment | Remove required model tooling/profile | Record limitation/incomplete gate; do not claim success |
+| Missing environment | Remove required model tooling or a role row | Record limitation/incomplete gate; do not claim success |
 | Material implementation change | Worker proposes a remote price service | Return to design/human decision before affected work continues |
 | Routine internal change | Worker renames a private local variable | Normal code review; no new architecture decision |
 | Final reconciliation | Compare accepted design with final integrated source | Record observed state and any superseded decision; tests/reviews remain tied to source SHA |
 
 Final reconciliation can change overview text and hence its fingerprint. Preserve the pre-implementation acceptance record and its source revision as history; do not overwrite it as though it approved later text. If further work is dispatched, record acceptance/targeted review of the updated design first. Pure status documentation at delivery can be reviewed in the final PR without reopening an unchanged product decision.
 
-Use [ARCHITECTURE-VALIDATION.md](ARCHITECTURE-VALIDATION.md) to record actual results. Separate package tests, model validation and live model/Paseo behavior. A green package test suite does not prove independent agents caught the deliberate omission.
+Use [ARCHITECTURE-VALIDATION.md](ARCHITECTURE-VALIDATION.md) to record actual results. Separate package tests, model validation and live model/Herdr behavior. A green package test suite does not prove independent agents caught the deliberate omission.
 
 ### Language exercise: understandable and still precise
 

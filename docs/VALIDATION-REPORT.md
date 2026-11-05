@@ -19,7 +19,7 @@ Use this report for orchestration behavior. For the combined framework also comp
 | Canonical tracker/evidence directory | |
 | OS / host | |
 | Node / npm / Git versions | |
-| Paseo host and client versions | |
+| Herdr version and session name | |
 | Pi / Claude Code versions | |
 | Coordinator run ID | |
 | Installation mode and package provenance | |
@@ -53,7 +53,7 @@ Use PASS, FAIL, NOT RUN or BLOCKED. Link artifacts/logs and state observations. 
 | --- | --- | --- | --- |
 | I1 | Exact PR installed without skill shadowing | NOT RUN | |
 | I2 | Pi and Claude work on the intended host | NOT RUN | |
-| I3 | Paseo coordinator has working delegation access | NOT RUN | |
+| I3 | Coordinator in a Herdr pane launches one batch run and `inspect --expect-model` passes | NOT RUN | |
 | I4 | Real profiles/model IDs populated; no placeholders | NOT RUN | |
 | P1 | Ready research only; cited artifacts collected | NOT RUN | Optional planning rehearsal |
 | P2 | Human decision pauses; agent does not impersonate human | NOT RUN | Optional planning rehearsal |

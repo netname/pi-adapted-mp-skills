@@ -29,7 +29,7 @@ Run these checks in order. **a** and **b** are capability-scoped: record the res
 because setup itself needs neither package. **c** is blocking: if it fails, stop, print its remedy, and write nothing.
 **d** is a nonblocking discoverability check.
 
-**a. Delegation capability (nonblocking for setup).** Read `../_shared/DELEGATION.md`. Discover Paseo availability and configured role profiles; report missing capabilities without installing packages. Planning does not require delegation.
+**a. Delegation capability (nonblocking for setup).** Read `../_shared/DELEGATION.md`. Discover Herdr availability (`herdr status server`, `herdr integration status`) and the harnesses and models each role row needs; report missing capabilities without installing packages or integrations. Planning does not require delegation.
 
 **b. Source capability (nonblocking for setup).** Check whether the selected researcher can retrieve primary sources. Do not require particular Pi tool names. A local-only investigation may use repository sources.
 
@@ -202,7 +202,7 @@ Tell the user setup is complete and which engineering skills will now read from 
 
 ## Shared execution configuration
 
-Create or update `docs/agents/delegation.md` from `../_shared/delegation.template.md` and `docs/agents/testing.md` from `../_shared/testing.template.md`. Populate commands from existing CI/scripts and profiles from the actual Paseo host. Preserve existing user choices. Link both documents from the project's agent instructions. Include the same pointers explicitly in Claude Code worker prompts; this Pi package does not install Claude Code skills automatically. Unresolved placeholders block execution of the affected gate, not planning.
+Create or update `docs/agents/delegation.md` from `../_shared/delegation.template.md` and `docs/agents/testing.md` from `../_shared/testing.template.md`. Populate commands from existing CI/scripts and role rows (harness, mode, arguments, exact model) from the harnesses and models actually available on this host. Preserve existing user choices. Link both documents from the project's agent instructions. Include the same pointers explicitly in Claude Code worker prompts; this Pi package does not install Claude Code skills automatically. Unresolved placeholders block execution of the affected gate, not planning.
 
 For existing projects, inspect legacy domain glossary files before adopting `GLOSSARY.md`; preserve content and update references together, never create competing glossaries. The domain context map remains `CONTEXT-MAP.md`.
 

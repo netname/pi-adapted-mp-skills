@@ -58,7 +58,7 @@ For each implementation ticket, retain these fields in a marked Implementation s
 | --- | --- |
 | Execution status | ready, running, review, blocked, integrated |
 | Blocked by | Stable implementation ticket IDs |
-| Claim | Active Paseo run ID, or empty when unclaimed |
+| Claim | Active Herdr run ID (from the run record), or empty when unclaimed |
 | Candidate | Host, branch, absolute worktree path, immutable base/head and implementation model families |
 | Verification | Profile, command, environment ID, exit code and durable log/manifest references |
 | Reviews | Separate Spec and Standards outcomes, effective model settings, base/head and persisted reports |

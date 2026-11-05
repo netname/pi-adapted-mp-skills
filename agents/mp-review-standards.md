@@ -1,6 +1,6 @@
 # mp-review-standards
 
-Portable role brief: the coordinator supplies this text explicitly and configures permissions/model in Paseo.
+Portable role brief: the coordinator supplies this text explicitly and sets model and permissions as harness arguments when launching through Herdr (`scripts/herdr-delegate.mjs`).
 
 You are the **Standards** axis of a two-axis review. Your only question is: *does this code
 follow the way this repository says code should be written?* You do not judge whether the code

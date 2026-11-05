@@ -1,5 +1,10 @@
 # 0.2.0 (unreleased)
 
+- Replace Paseo with Herdr TUI as the delegation transport. Earlier entries below that mention Paseo describe intermediate states of this branch.
+  - `scripts/herdr-delegate.mjs`: `launch` starts a fresh session in its own Herdr pane — interactive (`herdr agent start`) for implementation and research, batch (`pi -p --mode json`, `claude -p --output-format json`) for reviewers, with the harness's read-only tool flags — optionally in a new worktree and branch from an immutable base. It writes a run record outside the worktree. `inspect --expect-model` reads the effective model from the harness's own session file or output stream and fails on a mismatch or an unknown model, which is what the reviewer-independence gate needs. Batch reviews write the reviewer's final answer to the report file, so no report depends on reading the screen.
+  - `_shared/DELEGATION.md` and the delegation template use role rows (harness, mode, arguments, exact model, family) instead of Paseo profiles. Skills, briefs, tracker claim fields, the manual, workflow, beginner walkthrough, PR validation guide, lab templates and reports follow.
+  - Checked live against herdr 0.9.5 and pi 1.4.0 on Windows: a batch Pi reviewer (completed; effective model verified), an interactive Pi worker in a new worktree from a given SHA (committed on its branch), the early guards, and a batch Claude Code run that failed correctly when the CLI was not signed in. Claude Code's `modelUsage` parsing is covered by unit tests only.
+
 - Explain the purpose, inputs, outputs and limits of each JavaScript helper in plain language, including the design-readiness helper and terminology used by the lab.
 
 - Remove the premature lab installation command and clarify when the generator creates the lab. Align coordinator and final-review prompts with the accepted execution baseline and actual human approval.

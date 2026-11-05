@@ -28,13 +28,13 @@ It rejects dirty worktrees and a head that differs from the checkout, resolves i
 
 ## Dispatch
 
-Launch two fresh Paseo sessions concurrently with the complete role briefs from this package's `agents/mp-review-standards.md` and `agents/mp-review-spec.md`. Supply the manifest, diff, commit list, exact candidate source, relevant project standards and spec. Explicitly include project instructions; do not rely on harness auto-discovery. Copy artifacts and verify revisions if using another host.
+Launch two fresh **batch** sessions concurrently through Herdr (`scripts/herdr-delegate.mjs launch --mode batch`, one per axis) with the complete role briefs from this package's `agents/mp-review-standards.md` and `agents/mp-review-spec.md` as `--brief`. Put the manifest, diff, commit list, exact candidate source, relevant project standards and spec in the `--task` file. Explicitly include project instructions; do not rely on harness auto-discovery. Copy artifacts and verify revisions if using another host.
 
-Both reviewers must use a model family different from every implementing worker in this target. Verify effective session settings before accepting results. Configure read-only permissions where supported, and instruct reviewers not to edit or run tests. If the host cannot enforce read-only access, record that limitation and check the candidate for mutations before accepting findings.
+Both reviewers must use a model family different from every implementing worker in this target. Verify the effective model with `herdr-delegate.mjs inspect <record> --expect-model <provider/model>` before accepting results. Give the reviewers read-only tool flags after `--` (see `../_shared/DELEGATION.md`), and instruct reviewers not to edit or run tests. If the host cannot enforce read-only access, record that limitation and check the candidate for mutations before accepting findings.
 
 ## Collect and refresh
 
-Collect each reviewer's response and persist it, with run ID, effective model settings and target manifest, in the coordinator-owned evidence store outside the candidate worktree. Reviewers do not write report files. A missing response is incomplete.
+Collect each reviewer's report from its `--output` file and persist it, with the run record (run ID, effective model) and target manifest, in the coordinator-owned evidence store outside the candidate worktree. The helper writes that file from the reviewer's final answer; reviewers do not write report files themselves. A `failed` record or a missing report is incomplete.
 
 Report Standards and Spec separately, preserving each finding's evidence/severity without reranking across axes. Optional smell suggestions are nonblocking unless they expose a concrete defect or violate a documented requirement. Missing, failed or timed-out axes remain incomplete; never synthesize a pass over them.
 

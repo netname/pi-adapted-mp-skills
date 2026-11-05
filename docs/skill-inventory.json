@@ -2084,7 +2084,7 @@
       "sidecars": [
         "SKILL.md"
       ],
-      "notes": "Selective v1.3.1 port for Paseo workflow.",
+      "notes": "Selective v1.3.1 port for the coordinated workflow.",
       "sourceCommit": "24fe0ef7737efae15c87225755e9f6f5965e4888",
       "crossSkillLoads": [
         {
@@ -2113,7 +2113,7 @@
       "sidecars": [
         "SKILL.md"
       ],
-      "notes": "Selective v1.3.1 port for Paseo workflow.",
+      "notes": "Selective v1.3.1 port for the coordinated workflow.",
       "sourceCommit": "24fe0ef7737efae15c87225755e9f6f5965e4888",
       "crossSkillLoads": []
     },
@@ -2126,7 +2126,7 @@
       "sidecars": [
         "SKILL.md"
       ],
-      "notes": "Selective v1.3.1 port for Paseo workflow.",
+      "notes": "Selective v1.3.1 port for the coordinated workflow.",
       "sourceCommit": "24fe0ef7737efae15c87225755e9f6f5965e4888",
       "crossSkillLoads": [
         {

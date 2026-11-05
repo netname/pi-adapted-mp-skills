@@ -1,6 +1,6 @@
 # Reproducible workflow-validation lab
 
-New to Paseo or Claude Code? Follow the [beginner quotation walkthrough](../../docs/BEGINNER-VALIDATION.md) for a continuous Windows-to-Ubuntu first run, including role-profile setup. The [full validation reference](../../docs/PR-VALIDATION.md) adds failure/recovery exercises and evaluation. Use one route at a time and keep the same lab when switching; normal project setup is documented separately in the manual.
+New to Herdr or Claude Code? Follow the [beginner quotation walkthrough](../../docs/BEGINNER-VALIDATION.md) for a continuous Windows-to-Ubuntu first run, including role-row setup. The [full validation reference](../../docs/PR-VALIDATION.md) adds failure/recovery exercises and evaluation. Use one route at a time and keep the same lab when switching; normal project setup is documented separately in the manual.
 
 Start with the [README documentation map](../../README.md#documentation-map), [application overview](template/docs/architecture/overview.md) and [design operational route](../../docs/PR-VALIDATION.md#3-review-the-quotation-design). Read [the validation guide](../../docs/PR-VALIDATION.md) for host setup and execution before running live agents. This is a teaching fixture for the orchestration workflow and its architecture/design extension. The generated application is an independent quotation CLI using local JSON files and Node's standard library; agents implement it during validation.
 
@@ -25,7 +25,7 @@ Profiles: `unit`, `integration`, `e2e`, `combined-ab`, `all`.
 
 The candidate must be committed/clean. The runner executes the supplied acceptance suites with Node, records exact SHA, command, exit/status and logs, and checks HEAD/cleanliness afterward. A timeout, failure or mutation returns nonzero. Evidence must be outside tracked source or in an ignored directory. It does not dispatch agents, enforce tracker locks or verify reviewer independence.
 
-Use [VALIDATION-REPORT.md](../../docs/VALIDATION-REPORT.md) for live results. `npm test` in the skills repository tests the generator and evidence runner offline; it does not validate live Paseo/provider orchestration.
+Use [VALIDATION-REPORT.md](../../docs/VALIDATION-REPORT.md) for live results. `npm test` in the skills repository tests the generator and evidence runner offline; it does not validate live Herdr/harness orchestration.
 
 ## Design validation extension
 

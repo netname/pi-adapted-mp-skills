@@ -33,7 +33,7 @@ Present the rendered views and a plain-language walkthrough before applicable hu
 
 1. Clarify behavior and unresolved decisions. `to-spec` publishes requirements, not permission to implement.
 2. `design-solution` prepares an inspectable proposal. Review it before substantial ticket decomposition to avoid planning the wrong design.
-3. `review-design` uses fresh comprehension and challenge sessions through Paseo. Require both reports, resolve blockers and present tradeoffs to the human. A proposed decision is not accepted just because an agent wrote it.
+3. `review-design` uses fresh comprehension and challenge sessions launched through Herdr. Require both reports, resolve blockers and present tradeoffs to the human. A proposed decision is not accepted just because an agent wrote it.
 4. `to-tickets` produces the dependency plan and requirement → component → ticket → verification mapping. Recheck coverage, dependency ordering and shared-resource assumptions. The human's final scope/plan authorization covers the exact artifacts dispatched. Refresh affected review after changes; do not automatically repeat unrelated research.
 5. Before dispatch, the coordinator checks the accepted design and approved plan against the current files. For configured machine records, run `scripts/design-check.mjs check REPO RECORD`. Preserve its output with the tracker. Run again after restart, before new dispatch and before accepting integration. Each worker receives the same constraints and artifact identities.
 
@@ -47,4 +47,4 @@ During code review, check conformity with accepted decisions in the existing Sta
 
 ## Ownership
 
-Planner drafts; fresh reviewers explain and challenge; human owns consequential decisions and scope; coordinator checks readiness and preserves evidence; workers implement within constraints. Paseo transports sessions. The tracker stores links/status/claims. Neither is an architecture oracle or approval engine.
+Planner drafts; fresh reviewers explain and challenge; human owns consequential decisions and scope; coordinator checks readiness and preserves evidence; workers implement within constraints. Herdr transports sessions. The tracker stores links/status/claims. Neither is an architecture oracle or approval engine.

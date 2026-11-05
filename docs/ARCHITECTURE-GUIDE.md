@@ -22,7 +22,7 @@ The order is: agree on behavior (Stage 2) → explain a proposed design (3) → 
 | Coordinator | Preserves findings and actual decision, checks readiness against current files, dispatches only authorized work | Review and readiness references, run IDs and evidence links |
 | Implementation worker | Builds within accepted scope and surfaces material deviations | Candidate commit and check evidence; no design acceptance authority |
 
-Design reviewers use fresh sessions with a model family different from **every design author**. Code review later uses fresh Spec and Standards sessions from a family different from **every implementation contributor** to their target. A Paseo profile chooses launch settings; it does not enforce reviewer independence or create a human decision. Record actual launched provider/model, run ID and target. [Delegation policy](../skills/engineering/_shared/DELEGATION.md).
+Design reviewers use fresh sessions with a model family different from **every design author**. Code review later uses fresh Spec and Standards sessions from a family different from **every implementation contributor** to their target. A role row chooses launch settings; it does not enforce reviewer independence or create a human decision. Record actual launched provider/model, run ID and target. [Delegation policy](../skills/engineering/_shared/DELEGATION.md).
 
 ## Artifacts and relationships
 
@@ -87,4 +87,4 @@ These are illustrative paths: create a real record with the selected inputs, bot
 
 ## Adoption and limits
 
-Start with one bounded feature and a named owner. Reuse the project's existing ADRs, tests, diagrams and tracker. Configure actual verification resources and protect approvals through the project's review/branch rules. No file in this package installs a Paseo scheduler or CI protections. Brownfield work should model only the boundaries relevant to the change, expanding when that prevents a real misunderstanding. [Shared policy](../skills/engineering/_shared/ARCHITECTURE.md) · [testing policy](../skills/engineering/_shared/TESTING.md).
+Start with one bounded feature and a named owner. Reuse the project's existing ADRs, tests, diagrams and tracker. Configure actual verification resources and protect approvals through the project's review/branch rules. No file in this package installs a scheduler or CI protections. Brownfield work should model only the boundaries relevant to the change, expanding when that prevents a real misunderstanding. [Shared policy](../skills/engineering/_shared/ARCHITECTURE.md) · [testing policy](../skills/engineering/_shared/TESTING.md).

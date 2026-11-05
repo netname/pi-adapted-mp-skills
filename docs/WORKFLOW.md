@@ -4,7 +4,7 @@ This document explains the **normal project workflow** and why its gates exist. 
 
 Read by topic: [components](#components-and-responsibilities) · [planning and execution](#planning-and-execution) · [frontier input](#normalized-frontier-input) · [verification](#verification). Terms such as claim, base/head and candidate are defined in the [manual vocabulary](MANUAL.md#vocabulary).
 
-The tracker is the authoritative record of tickets, dependency edges, claims and evidence links. Its persistence and backup depend on the configured tracker; ignored local files need separate preservation. The coordinator is one active agent session that reads that state and controls the loop. Paseo launches and supervises sessions and workspaces. Git and project scripts/CI provide source isolation and verification. These responsibilities are separate.
+The tracker is the authoritative record of tickets, dependency edges, claims and evidence links. Its persistence and backup depend on the configured tracker; ignored local files need separate preservation. The coordinator is one active agent session that reads that state and controls the loop. Herdr runs the sessions and worktrees in persistent panes, through `scripts/herdr-delegate.mjs`. Git and project scripts/CI provide source isolation and verification. These responsibilities are separate.
 
 ## Solution overview
 
@@ -26,21 +26,21 @@ As decisions become clear, the planner consolidates agreed behavior into a speci
 | Skill procedures | Tell planners, coordinator, workers and reviewers how to perform their roles | [skills/](../skills/), especially [implement-spec](../skills/engineering/implement-spec/SKILL.md) and [architecture policy](../skills/engineering/_shared/ARCHITECTURE.md) | Written procedures must actually be followed; they are not a scheduler or enforced permissions |
 | Project contracts and artifacts | Identify requirements, accepted decisions, role settings, tracker location, test commands and resources | Target application's `AGENTS.md`, `docs/agents/`, spec/design/ADRs | Templates contain proposals/placeholders until the project configures and reviews them |
 | Planner and research sessions | Investigate open questions, draft requirements/design and prepare the dependency plan; bring consequential choices to the human | [Wayfinder](../skills/engineering/wayfinder/SKILL.md), [design-solution](../skills/engineering/design-solution/SKILL.md) and project contracts | Research findings and proposed decisions are not human acceptance or implementation authorization |
-| Coordinator | Checks accepted inputs, reads the tracker, claims eligible tickets, asks Paseo to launch workers/reviewers, collects evidence, integrates serially and reconciles runs after restart | [implement-spec](../skills/engineering/implement-spec/SKILL.md), project tracker/delegation/testing contracts | One active agent session, not a standalone durable scheduler; multiple coordinators require actual locking |
+| Coordinator | Checks accepted inputs, reads the tracker, claims eligible tickets, launches workers/reviewers through Herdr, collects evidence, integrates serially and reconciles runs after restart | [implement-spec](../skills/engineering/implement-spec/SKILL.md), project tracker/delegation/testing contracts | One active agent session, not a standalone durable scheduler; multiple coordinators require actual locking |
 | Implementation workers | Implement scoped tickets in assigned worktrees and return committed candidates with Verify change evidence | [implement](../skills/engineering/implement/SKILL.md), assigned ticket and project test contract | Do not own integration, tracker transitions or recursive review dispatch; source isolation does not isolate runtime services |
 | Fresh review sessions | Explain/challenge designs or review exact code candidates on the Spec and Standards axes; return findings for collection | [review-design](../skills/engineering/review-design/SKILL.md), [code-review](../skills/engineering/code-review/SKILL.md) and [role briefs](../agents/) | Cannot approve their own work; actual model families must satisfy independence rules. Code reviewers do not edit candidates or run tests |
-| Paseo | Launches and exposes sessions, profiles and workspaces for the coordinator to use | Installed host tools/API and project delegation settings; [delegation policy](../skills/engineering/_shared/DELEGATION.md) | Does not define correct requirements, review verdicts or completion policy |
+| Herdr | Runs sessions and worktrees in persistent panes; the helper records each run and its effective model | Installed host tools/API and project delegation settings; [delegation policy](../skills/engineering/_shared/DELEGATION.md) | Does not define correct requirements, review verdicts or completion policy |
 | Tracker | Stores authoritative tickets, dependencies, one coordinator's claims, run IDs, transitions and evidence links | Project tracker contract; a local tracker can use one canonical absolute `.scratch/<effort-slug>/` root | A derived graph export is not a second tracker; a record is not an atomic distributed lock |
 | Git and worktrees | Give workers separate source checkouts, identify candidates and retain integrated history | Coordinator/worker procedures and Git revisions | Worktrees do not isolate shared runtime services or establish test success |
 | Focused scripts and tests | Check selected structural conditions or execute application verification; record evidence for identified revisions | [frontier](../scripts/frontier.mjs), [design readiness](../scripts/design-check.mjs), [review target](../scripts/review-target.mjs), project test commands | Each command has a narrow scope; none alone proves overall design quality or correct orchestration |
 
-Roles are responsibilities, not separate installed products. A coordinator is itself a coding-agent session, usually run through a configured harness such as Pi or Claude Code. Paseo manages sessions; the coordinator decides the next workflow action. Profile names select settings, but actual launched provider/model identities must be checked. The human owns acceptance; the coordinator records and applies it.
+Roles are responsibilities, not separate installed products. A coordinator is itself a coding-agent session, usually run through a configured harness such as Pi or Claude Code. Herdr runs sessions; the coordinator decides the next workflow action. Role rows select settings, but the actual launched model must be checked (`herdr-delegate.mjs inspect --expect-model`). The human owns acceptance; the coordinator records and applies it.
 
 ### How the components cooperate
 
 The human brings a need or proposed change. The planner reads the project instructions described above and inspects available source/documentation. Research, grilling and prototypes resolve missing facts and choices, with Wayfinder organizing them when the effort needs a decision map. Consequential choices remain with the human; safely independent research can continue while a decision waits.
 
-The planner turns those answers into requirements and a design. Fresh design sessions explain and challenge it, findings are resolved, and the planner prepares scoped tickets and dependencies. The coordinator checks applicable human acceptance, current artifact identities, tracker ownership and test/resource readiness before asking Paseo to launch workers in separate Git worktrees. Planning and coordination are roles; a handoff preserves the agreed artifacts rather than relying on a previous conversation.
+The planner turns those answers into requirements and a design. Fresh design sessions explain and challenge it, findings are resolved, and the planner prepares scoped tickets and dependencies. The coordinator checks applicable human acceptance, current artifact identities, tracker ownership and test/resource readiness before launching workers through Herdr in separate Git worktrees. Planning and coordination are roles; a handoff preserves the agreed artifacts rather than relying on a previous conversation.
 
 Workers return committed candidates and verification evidence. The coordinator arranges fresh code review, integrates accepted candidates one at a time, runs the required combined checks and records resulting revisions. Verified integration can unblock more tickets. At completion the coordinator reconciles the design with implemented behavior and presents the result and evidence for human acceptance. A failure returns to bounded repair or a recorded blocker; a material requirement/design change returns affected work to planning.
 
@@ -145,7 +145,7 @@ Before the first worker starts, the coordinator records the agreed starting base
 | --- | --- | --- |
 | Select | Find eligible, unclaimed tickets | Work that can safely start |
 | Claim | Record ownership before launch | Duplicate dispatch is avoided under single coordination |
-| Dispatch | Ask Paseo to launch scoped workers in separate worktrees | Isolated implementation sessions |
+| Dispatch | Launch scoped workers through Herdr in separate worktrees | Isolated implementation sessions |
 | Collect | Obtain committed code and Verify change evidence | An identifiable candidate |
 | Review | Launch independent Spec and Standards code review | Findings tied to that candidate |
 | Integrate | Combine one accepted candidate with current integrated code | A new combined candidate when integration changes the revision |
@@ -153,7 +153,7 @@ Before the first worker starts, the coordinator records the agreed starting base
 
 A **claim** records that a particular worker/run owns a ticket, so another dispatch skips it. It does not mean completion. A **candidate** is committed code proposed for integration; its SHA identifies the exact version tested and reviewed. For other terms, see the [manual vocabulary](MANUAL.md#vocabulary).
 
-This is an agent-driven loop. Paseo provides sessions and workspaces; the coordinator applies requirements and procedures and updates the tracker. The [frontier helper](#normalized-frontier-input) calculates eligibility from exported implementation state. Planning tickets instead become ready when their decision prerequisites are resolved; do not apply implementation integration states to Wayfinder decisions. It does not launch agents, claim tasks or run as a standalone durable scheduler.
+This is an agent-driven loop. Herdr provides sessions and worktrees; the coordinator applies requirements and procedures and updates the tracker. The [frontier helper](#normalized-frontier-input) calculates eligibility from exported implementation state. Planning tickets instead become ready when their decision prerequisites are resolved; do not apply implementation integration states to Wayfinder decisions. It does not launch agents, claim tasks or run as a standalone durable scheduler.
 
 Setup supplies execution fields and closure rules in every [tracker template](../skills/engineering/setup-matt-pocock-skills/). Use one active coordinator for an effort. Multiple coordinators require a real lock/lease mechanism; assigning an issue or writing a Markdown claim is not an atomic distributed lock. This package supplies no distributed locking service.
 
@@ -228,7 +228,7 @@ The helper is read-only. Export tracker state to this shape; do not treat the ex
 
 This example is a two-ticket chain; substitute your project's actual graph.
 
-`node scripts/frontier.mjs graph.json` returns `["A"]`. Allowed states are `ready`, `running`, `review`, `blocked`, `integrated`. A nonempty `claim` prevents dispatch. Integrated tickets require `verified: true` and an `integratedSha`. The helper validates consistency of that representation; the coordinator must verify the SHA/evidence against Git/CI before exporting it. It detects missing blockers and cycles, but does not claim tasks or invoke Paseo.
+`node scripts/frontier.mjs graph.json` returns `["A"]`. Allowed states are `ready`, `running`, `review`, `blocked`, `integrated`. A nonempty `claim` prevents dispatch. Integrated tickets require `verified: true` and an `integratedSha`. The helper validates consistency of that representation; the coordinator must verify the SHA/evidence against Git/CI before exporting it. It detects missing blockers and cycles, but does not claim tasks or launch sessions.
 
 ## Verification
 
