@@ -7,6 +7,7 @@ metadata:
   upstream: mattpocock/skills
   upstream-commit: 24fe0ef7737efae15c87225755e9f6f5965e4888
   upstream-path: skills/engineering/implement-spec
+  invocation: user
   adapted-for: pi
 ---
 

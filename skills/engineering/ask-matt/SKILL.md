@@ -32,6 +32,10 @@ The route most work travels. You have an idea and want it built.
 
 Implementation uses **`/skill:tdd`** where appropriate. Candidates are committed before **`/skill:code-review`** captures them. The coordinator owns review in coordinated mode; workers do not dispatch duplicates. Preserve explicit artifacts at phase boundaries so fresh sessions can resume without the entire conversation. Design reviewers must not inherit the drafting conversation.
 
+When the work goes up as a pull request, **`/skill:pr`** shapes the body: the smallest visual that shows the change, before/after evidence that it works, and a one-way or two-way door call. It's model-invoked, so the agent reaches for it whenever it writes a PR; `/skill:implement-spec` uses it for the draft PR of an integration branch.
+
+6. **`/skill:retro`** closes the loop. After a build, and especially one that went sideways, it looks back over the session and suggests changes to the agent's **environment**, not the code: navigation pointers, automated checks, the coding standards `/skill:code-review` enforces, steering files, tooling, and the design-process evidence (missed requirements, stale approvals, late boundary changes). Mechanical mistakes become deterministic checks; judgement calls become coding standards. Run it in the session it's looking back on, before `/new`; afterwards, point it at that session's log instead.
+
 ## On-ramps
 
 A starting situation that generates work, then merges onto the main flow.
@@ -40,7 +44,7 @@ A starting situation that generates work, then merges onto the main flow.
 
   Triage is only for issues **you didn't create**: bug reports, incoming feature requests, anything that arrives raw. Tickets that `/skill:to-tickets` produced already have an agreed scope; avoid redundant triage, but check design/plan readiness before dispatch.
 
-- **Something's broken** → **`/skill:diagnosing-bugs`**. For the hard ones: the bug that resists a first glance, the intermittent flake, the regression that crept in between two known-good states. It refuses to theorise until it has a **tight feedback loop** (one command that already goes red on *this* bug), then fixes with a regression test. Its post-mortem hands off to **`/skill:improve-codebase-architecture`** when the real finding is that there's no good seam to lock the bug down.
+- **Something's broken** → **`/skill:diagnosing-bugs`**. For the hard ones: the bug that resists a first glance, the intermittent flake, the regression that crept in between two known-good states. It refuses to theorise until it has a **tight feedback loop** (one command that already goes red on *this* bug), then fixes with a regression test. Once the fix is in, run **`/skill:retro`** in the same session to ask what would have prevented the bug; its post-mortem hands off to **`/skill:improve-codebase-architecture`** when the real finding is that there's no good seam to lock the bug down.
 
 - **A huge, foggy effort: a greenfield project or a huge feature build, too big for one session** → **`/skill:wayfinder`**, the most cognitively demanding flow here. When the way from here to the destination isn't visible yet, it charts a **shared map** of **decision tickets** on the issue tracker and resolves them one at a time, producing **decisions, not deliverables**, until the fog is pushed back and the way is clear. Where **`/skill:grill-with-docs`** sharpens an idea you can hold in one session, wayfinder is for the idea you can't, and it's slower and denser, so save it for exactly that, never a well-scoped feature.
 
@@ -88,6 +92,3 @@ Off the main flow entirely.
 ## Precondition
 
 **`/skill:setup-matt-pocock-skills`**: run before your first engineering flow to configure the issue tracker, triage labels, and doc layout the other skills assume. Custom issue trackers also work.
-
-
-For an approved multi-ticket build, use `/skill:implement-spec` to coordinate worktrees and the ready frontier; `/skill:implement` works one ticket. Use `/skill:pr` for PR evidence and `/skill:retro` for a retrospective.

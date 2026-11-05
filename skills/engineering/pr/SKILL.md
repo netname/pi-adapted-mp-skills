@@ -1,6 +1,7 @@
 ---
 name: pr
 description: "Use when writing a PR body."
+license: MIT
 metadata:
   credits:
     skill: show-me
@@ -10,8 +11,8 @@ metadata:
   upstream: mattpocock/skills
   upstream-commit: 24fe0ef7737efae15c87225755e9f6f5965e4888
   upstream-path: skills/engineering/pr
+  invocation: model
   adapted-for: pi
-license: MIT
 ---
 
 Read `../_shared/PLAIN-LANGUAGE.md` before writing human-facing questions or artifacts. Preserve exact requirements and decisions when simplifying language.

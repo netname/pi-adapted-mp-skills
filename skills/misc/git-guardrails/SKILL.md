@@ -60,7 +60,7 @@ Ask if the user wants to change what is blocked.
 - **Add or remove patterns**: edit the `DANGEROUS_PATTERNS` array in [scripts/block-dangerous-git.sh](scripts/block-dangerous-git.sh) — that file is the single source of truth for the default list, and both the extension and the standalone check use it.
 - **Per-project override**: put a `patterns` array in that project's `.pi/git-guardrails.json`. When present it replaces the default list for that scope.
 
-Patterns are regular expressions matched anywhere in the command, the applied to both the raw command and its normalized Git options.
+Patterns are regular expressions matched anywhere in the command, and are applied to both the raw command and its normalized Git options.
 
 ### 4. Verify
 

@@ -44,6 +44,8 @@
 
 - Add a comprehensive setup/SWE-cycle manual, reproducible quotation lab, evidence runner and live validation report template.
 
+- Review all 79 drift regions against v1.3.1 (docs/NOTES.md, 0.2.0 drift review): fix a guardrail typo, move setup's execution and architecture configuration before Done, restore `/skill:pr` and `/skill:retro` in ask-matt's main flow, and add `metadata.invocation` to the v1.3.1-sourced skills.
+
 - Selectively port upstream v1.3.1: implement-spec, pr, retro, tdd, to-spec and to-tickets.
 - Replace pi-subagents registration and mandatory tool-name coupling with shared Herdr delegation and portable role briefs.
 - Add verified model-family separation, immutable committed review snapshots and tests for omitted dirty work.
