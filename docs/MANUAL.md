@@ -334,7 +334,7 @@ herdr integration install claude
 | Design comprehension, design challenge | Pi / DeepSeek | batch | `--model <provider/id> --tools read,grep,find,ls` |
 | Spec review, Standards review | Claude Code / Claude | batch | `--model <id> --tools Read,Grep,Glob --permission-mode dontAsk` |
 
-Batch mode runs the harness non-interactively (`pi -p --mode json`, `claude -p --output-format json`), so the read-only tool flags apply and the report comes from the harness's structured output, not from the screen. Interactive mode starts a normal session you can attach to.
+Batch mode runs the harness non-interactively (`pi -p --mode json`, `claude -p --output-format json`), so the read-only tool flags apply and the report comes from the harness's structured output, not from the screen. Every batch run has a time limit (`--timeout-ms`, default 30 minutes); record a different value in the row if a review needs it. Interactive mode starts a normal session you can attach to.
 
 > **Verification status.** The Pi rows (batch review and interactive worker) were checked live with herdr 0.9.5 and pi 1.4.0. The Claude Code batch row is not yet: confirm it with the one-child check below, using that row, before the first real review. The [delegation policy](../skills/engineering/_shared/DELEGATION.md#limits) keeps the current list.
 
@@ -448,7 +448,7 @@ This section maps the [nine lifecycle stages](#stages-and-artifacts) to specific
 | A broad goal with many unresolved decisions | `wayfinder`, research and human discussions | Enough decisions are resolved to specify a bounded deliverable |
 | A bounded feature whose behavior needs clarification | `grill-with-docs`, then `to-spec` and `to-tickets` where useful | Behavior, test seams and the proposed breakdown are agreed |
 | An already approved spec and task graph | `implement-spec` | Required project configuration and verification resources are available |
-| One clear small ticket | `implement` in standalone mode | Its scope and checks are understood; independent review is still required |
+| One clear small ticket | The [small-change route](SMALL-CHANGE.md), ending in `implement` in standalone mode | Its lightweight design is reviewed and accepted; independent code review is still required |
 | A bug whose cause is unknown | `diagnosing-bugs` | The failure is understood well enough to implement and verify a scoped fix |
 
 ### Hand off from planning to execution deliberately
@@ -596,8 +596,8 @@ Keep the roles, ticket relationships and review principles. Configure the applic
 1. Point the tracker instructions at your real issue service and closure rules.
 2. Specify the application's existing test, lint and typecheck commands as its acceptance checks.
 3. Classify expensive integration/E2E checks and map them to profiles by changed behavior/risk.
-4. Define how each worktree gets dependencies and safe configuration.
-5. Allocate real database/cache/queue/storage/port resources, or implement and test an exclusive lease.
+4. Define how each worktree gets dependencies and safe configuration: name a **worktree setup command** in `docs/agents/testing.md`. The coordinator passes it to `herdr-delegate.mjs launch --setup`, which runs it in the new checkout before the agent starts and stops the launch if it fails.
+5. Allocate real database/cache/queue/storage/port resources, or implement and test an exclusive lease. For ports, `launch --ports N` gives each run free ports as `MP_RUN_PORT…`; make tests and servers read them instead of a fixed port. Free at launch is not reserved, so other shared services still need a lease.
 6. Add migration, security, deployment, rollback and monitoring checks appropriate to the application.
 7. Verify the combined revision in CI before authorizing delivery.
 
@@ -616,6 +616,9 @@ For maintenance, reproduce a bug at an approved public seam, write a regression 
 | `herdr agent start` cannot find Pi/Claude | The Herdr server started before the PATH change | Stop the server and start it from a shell where `pi`/`claude` resolve; check authentication |
 | `inspect` reports no effective model | Session file or output stream lacks model data, or the integration is missing | Install the harness integration; treat independence as unverified until it is established |
 | `inspect --expect-model` fails | The harness chose a different model than the role row | Fix the `--model` argument; do not accept the run |
+| Batch record says `failed` with `timeout` | The run exceeded `--timeout-ms` (default 30 minutes); the helper killed it | Read `<record>.out.err`; narrow the task or raise the limit in the role row, then relaunch under a new name |
+| Record says `failed` with `setup` or `setup-timeout` | The worktree setup command failed or ran too long; the agent was not started | Read `<record>.setup.log`; fix the command in `testing.md`; close the workspace named in the error |
+| `inspect` shows `live.status: stale` | A batch run is still marked running past its limit, so its process was lost (for example in a server restart) | Treat it as failed; relaunch under a new name |
 | Research has plausible claims but no sources | Wrong brief or missing retrieval capability | Mark unresolved and collect a properly cited artifact |
 | Worker cannot see ticket files | `.scratch` did not appear in its worktree | Supply canonical absolute tracker path from original project |
 | Duplicate workers | Claim state ignored or multiple coordinators | Reconcile run IDs and establish one coordinator before more launches |

@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored } from '../scripts/herdr-delegate.mjs';
+import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored, batchOutcome, portCandidates, resourceEnv, batchStale, runLimited, DEFAULTS } from '../scripts/herdr-delegate.mjs';
 
 const lines = (...objs) => objs.map(o => JSON.stringify(o)).join('\n');
 
@@ -88,4 +88,64 @@ test('paths: record and read-only output inside the checkout only when Git-ignor
   assert.throws(() => checkPaths({ record: inScratch, output: join(repo, 'review.md'), role: 'spec-review' }, repo, ignored), /spec-review output/);
   // design-check reads design-review reports from inside the repository.
   assert.doesNotThrow(() => checkPaths({ record: inScratch, output: join(repo, 'docs', 'designs', 'reviews', 'challenge.md'), role: 'design-challenge' }, repo, ignored));
+});
+
+test('batch outcome: only a timely, settled, error-free, non-empty answer passes', () => {
+  const good = { finalText: 'REPORT', aborted: false, error: false };
+  assert.deepEqual(batchOutcome({ status: 0, timedOut: false }, good), { status: 'completed', failureReason: null });
+  assert.equal(batchOutcome({ status: null, timedOut: true }, good).failureReason, 'timeout');
+  assert.equal(batchOutcome({ status: 1, timedOut: false }, good).failureReason, 'exit');
+  assert.equal(batchOutcome({ status: 0, timedOut: false }, null).failureReason, 'unparsable');
+  assert.equal(batchOutcome({ status: 0, timedOut: false }, { ...good, aborted: true }).failureReason, 'aborted');
+  assert.equal(batchOutcome({ status: 0, timedOut: false }, { ...good, error: true }).failureReason, 'harness-error');
+  assert.equal(batchOutcome({ status: 0, timedOut: false }, { ...good, finalText: '' }).failureReason, 'empty');
+});
+
+test('run resources: deterministic ports in range, and the environment names', () => {
+  const a = portCandidates('s:w1:t1', 2), b = portCandidates('s:w2:t2', 2);
+  assert.deepEqual(a, portCandidates('s:w1:t1', 2));
+  assert.notEqual(a[0], b[0]);
+  assert.ok(a.every(p => p >= 20000 && p < 40000));
+  assert.deepEqual(resourceEnv('r', [21000, 21001]), { MP_RUN_ID: 'r', MP_RUN_PORT: '21000', MP_RUN_PORT_1: '21000', MP_RUN_PORT_2: '21001' });
+  assert.deepEqual(resourceEnv('r', []), { MP_RUN_ID: 'r' });
+});
+
+test('stale batch: running past its limit plus grace', () => {
+  const startedAt = '2026-01-01T00:00:00.000Z', t0 = Date.parse(startedAt);
+  const rec = { mode: 'batch', status: 'running', startedAt, timeoutMs: 60_000 };
+  assert.equal(batchStale(rec, t0 + 60_000 + 59_000), false);
+  assert.equal(batchStale(rec, t0 + 60_000 + 61_000), true);
+  assert.equal(batchStale({ ...rec, status: 'completed' }, t0 + 1e9), false);
+  assert.equal(batchStale({ ...rec, mode: 'interactive' }, t0 + 1e9), false);
+});
+
+test('launch options: timeout, setup and ports', t => {
+  const dir = files(t);
+  const o = parseLaunch(base(dir));
+  assert.equal(o.timeoutMs, DEFAULTS.timeoutMs); assert.equal(o.ports, 0);
+  assert.equal(parseLaunch([...base(dir), '--timeout-ms', '60000', '--setup', 'npm ci', '--ports', '2']).timeoutMs, 60000);
+  assert.throws(() => parseLaunch([...base(dir), '--timeout-ms', '5']), /timeout-ms must be an integer/);
+  assert.throws(() => parseLaunch([...base(dir), '--ports', '11']), /ports must be an integer/);
+  assert.throws(() => parseLaunch([...base(dir), '--setup-timeout-ms', '5000']), /needs --setup/);
+  assert.throws(() => parseLaunch([...base(dir), '--setup', ' ']), /needs a command/);
+  const interactive = base(dir).filter((_, i, a) => a[i] !== '--output' && a[i - 1] !== '--output');
+  interactive[interactive.indexOf('--mode') + 1] = 'interactive';
+  assert.equal(parseLaunch(interactive).timeoutMs, undefined);
+  assert.throws(() => parseLaunch([...interactive, '--timeout-ms', '60000']), /batch mode only/);
+});
+
+test('runLimited: kills the whole process tree on timeout', async t => {
+  const dir = files(t);
+  const marker = join(dir, 'grandchild-survived');
+  // The child starts a grandchild that would write the marker after 2 s; the limit is 500 ms.
+  const grandchild = `setTimeout(()=>require('fs').writeFileSync(${JSON.stringify(marker)},'x'),2000)`;
+  const child = `require('child_process').spawn(process.execPath,['-e',${JSON.stringify(grandchild)}],{stdio:'ignore'});setInterval(()=>{},1000)`;
+  const started = Date.now();
+  const r = await runLimited(process.execPath, ['-e', child], { timeoutMs: 500 });
+  assert.equal(r.timedOut, true); assert.equal(r.status, null);
+  assert.ok(Date.now() - started < 1900, 'returned promptly after the limit');
+  await new Promise(done => setTimeout(done, 2500));
+  assert.equal(existsSync(marker), false, 'grandchild was killed with the tree');
+  const ok = await runLimited(process.execPath, ['-e', 'process.stdout.write("hi")'], { timeoutMs: 5000 });
+  assert.deepEqual([ok.status, ok.timedOut, ok.stdout], [0, false, 'hi']);
 });

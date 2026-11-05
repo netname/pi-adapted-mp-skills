@@ -34,7 +34,7 @@ Both reviewers must use a model family different from every implementing worker 
 
 ## Collect and refresh
 
-Collect each reviewer's report from its `--output` file and persist it, with the run record (run ID, effective model) and target manifest, in the coordinator-owned evidence store outside the candidate worktree. The helper writes that file from the reviewer's final answer; reviewers do not write report files themselves. A `failed` record or a missing report is incomplete.
+Collect each reviewer's report from its `--output` file and persist it, with the run record (run ID, effective model) and target manifest, in the coordinator-owned evidence store outside the candidate worktree. The helper writes that file from the reviewer's final answer; reviewers do not write report files themselves. A `failed` record (including `failureReason: timeout`), a run `inspect` reports as `stale`, or a missing report is incomplete.
 
 Report Standards and Spec separately, preserving each finding's evidence/severity without reranking across axes. Optional smell suggestions are nonblocking unless they expose a concrete defect or violate a documented requirement. Missing, failed or timed-out axes remain incomplete; never synthesize a pass over them.
 

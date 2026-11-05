@@ -34,6 +34,7 @@ See [stage owners, artifacts and completion checks](docs/WORKFLOW.md#stages-owne
 
 Choose one route:
 
+- **Making one small change.** Follow [SMALL-CHANGE](docs/SMALL-CHANGE.md): the shortest route the gates allow, step by step.
 - **Using the skills in a software project.** Read [WORKFLOW](docs/WORKFLOW.md) for the lifecycle, [MANUAL](docs/MANUAL.md) for setup and day-to-day operation, and [ARCHITECTURE-GUIDE](docs/ARCHITECTURE-GUIDE.md) for design review and acceptance. Use your project's own requirements, design and tests.
 - **New to Herdr or Claude Code.** Start with the [beginner quotation walkthrough](docs/BEGINNER-VALIDATION.md) ([en español](docs/BEGINNER-VALIDATION.es.md)): one Windows-to-Ubuntu route with copyable prompts, expected results and recovery steps.
 - **Evaluating these package changes with an established setup.** Follow [PR-VALIDATION](docs/PR-VALIDATION.md) from its first step. It owns the disposable quotation lab, its exercises, failure drills and evaluation. Record live results in [workflow validation](docs/VALIDATION-REPORT.md) and [architecture validation](docs/ARCHITECTURE-VALIDATION.md). The [fixture README](examples/validation-lab/README.md) describes the generated application.
@@ -73,7 +74,7 @@ Run `/skill:setup-matt-pocock-skills` in the target project. It configures the t
 | Explain and independently review the design | `design-solution`, `review-design` |
 | Approve the dependency graph and requirement coverage | `to-tickets`, then final design/plan readiness check |
 | Execute the graph without launching tickets manually | `implement-spec` |
-| Implement one ticket | `implement` |
+| Implement one ticket | `implement` (route: [small change](docs/SMALL-CHANGE.md)) |
 | Independently review a committed candidate | `code-review` |
 | Write delivery evidence / improve the workflow | `pr` / `retro` |
 

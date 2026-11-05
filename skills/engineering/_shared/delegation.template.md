@@ -6,6 +6,7 @@ Run records and code-review reports: `<absolute, Git-ignored directory in the or
 Maximum implementation workers: 2.
 Maximum research workers: 3.
 Maximum repair attempts per failed ticket: 2; then pause and report.
+Batch run time limit (`--timeout-ms`): 30 minutes unless a row says otherwise. Interactive wait limit (`herdr agent wait --timeout`): configure.
 
 | Role | Harness | Mode | Harness arguments (after `--`) | Exact model | Family |
 | --- | --- | --- | --- | --- | --- |

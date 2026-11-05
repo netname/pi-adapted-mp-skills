@@ -16,7 +16,7 @@ Choose the cheapest boundary that proves the behavior. Prefer public interfaces 
 
 A worktree isolates source files only. Give concurrent runs separate databases/schemas, ports, cache/queue namespaces, workers, temporary files, storage and external test accounts as needed. Name resources by run ID. If isolation is unavailable, the coordinator acquires an exclusive environment lease and serializes affected verification. Record owner, resource, acquisition and release; no stealing a lease from a live or unknown run. A failed run's environment is inspected/reset before reuse.
 
-The project defines setup, seeding, cleanup and retry commands. Workers never assume an existing shared development database is disposable. Application-specific service and environment rules belong in the target project's contract.
+The project defines setup, seeding, cleanup and retry commands. A new worktree has no installed dependencies or local configuration: name the **worktree setup** command in the project testing contract, and the coordinator passes it to `herdr-delegate.mjs launch --setup`. A run that needs ports gets them with `--ports N`, as `MP_RUN_PORT…` named by its run ID; tests and servers must read those variables instead of a fixed port. A free port at launch is not a lease. Workers never assume an existing shared development database is disposable. Application-specific service and environment rules belong in the target project's contract.
 
 ## Evidence and gates
 

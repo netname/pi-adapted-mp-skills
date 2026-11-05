@@ -10,6 +10,8 @@ Approved seams: docs/specs/quote.md. Commands run from the candidate worktree.
 
 After integration run the union of tests for integrated tickets, not tests for unimplemented tickets. Final delivery always requires all three suites. E2E means the complete CLI process journey here, not browser automation. No lint/typecheck gate is configured in this deliberately dependency-free JS lab; do not claim one ran.
 
+Worktree setup command: none — the lab uses only Node's standard library, so a new worktree needs no install. Ports per run: 0 (no servers).
+
 No shared database/port/queue. Filesystem tests allocate a unique OS temporary directory per test and clean it up. Concurrent test runs must not share output directories. A killed process may leave its own temp directory; inspect ownership before cleanup. Catalog inputs are immutable per run.
 
 Use the package's examples/validation-lab/verify.mjs for committed Verify change/candidate evidence: profiles unit, integration, e2e, all or combined-ab. It records SHA, commands, exits, source cleanliness and logs in a unique run directory. Nonzero exit or source mutation blocks the gate. Fast checks can use npm directly while source is dirty.
