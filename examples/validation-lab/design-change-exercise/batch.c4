@@ -1,0 +1,38 @@
+specification {
+  element actor
+  element component
+}
+model {
+  caller = actor 'Caller'
+  batch = component 'Proposed batch coordinator'
+  catalog = component 'Existing catalog reader'
+  pricing = component 'Existing price calculator'
+  caller -> batch 'Ordered requests'
+  batch -> catalog 'Read each request separately'
+  batch -> pricing 'Calculate each quote'
+}
+views {
+  view components { include * }
+  dynamic view freshReads {
+    title 'Proposed C-B1 / R-B1: repeated path, fresh read'
+    variant sequence
+    caller -> batch 'Two PEN requests for the same path'
+    batch -> catalog 'Await read for request 1'
+    catalog -> batch 'Price 100'
+    batch -> pricing 'Calculate request 1'
+    pricing -> batch '100 cents'
+    batch -> catalog 'Await new read for request 2'
+    catalog -> batch 'Price 200 if changed externally'
+    batch -> pricing 'Calculate request 2'
+    pricing -> batch '200 cents'
+    batch -> caller 'Ordered results: 100, 200'
+  }
+  dynamic view firstError {
+    title 'Proposed C-B2 / R-B2: stop on first failure'
+    variant sequence
+    caller -> batch 'Two requests'
+    batch -> catalog 'Await read for request 1'
+    catalog -> batch 'Reject read'
+    batch -> caller 'Reject batch; no second read or partial result'
+  }
+}

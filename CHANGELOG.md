@@ -1,3 +1,57 @@
+# 0.2.0 (unreleased)
+
+- Use Herdr TUI as the delegation transport. (An intermediate state of this branch used Paseo; the entries below describe the result.)
+  - `scripts/herdr-delegate.mjs`: `launch` starts a fresh session in its own Herdr pane — interactive (`herdr agent start`) for implementation and research, batch (`pi -p --mode json`, `claude -p --output-format json`) for reviewers, with the harness's read-only tool flags — optionally in a new worktree and branch from an immutable base. It writes a run record outside the worktree. `inspect --expect-model` reads the effective model from the harness's own session file or output stream and fails on a mismatch or an unknown model, which is what the reviewer-independence gate needs. Batch reviews write the reviewer's final answer to the report file, so no report depends on reading the screen.
+  - `_shared/DELEGATION.md` and the delegation template use role rows (harness, mode, arguments, exact model, family) as the saved launch settings. Skills, briefs, tracker claim fields, the manual, workflow, beginner walkthrough, PR validation guide, lab templates and reports follow.
+  - Batch time limit (`--timeout-ms`, default 30 minutes) that kills the whole process tree and records `failureReason: timeout`; `inspect` reports a run lost past its limit as `stale`. Worktree setup (`--setup`, run in the new checkout before the agent starts, with its own time limit and log) and run resources (`--ports N` → `MP_RUN_ID`, `MP_RUN_PORT…`), documented in the delegation and testing contracts and templates.
+  - `docs/SMALL-CHANGE.md`: the shortest route the gates allow for one ticket, linked from the README, manual and workflow.
+  - Manual: a contents table; sections on updating, switching and removing the package, and on good practices; more troubleshooting rows for helper errors. The manual, delegation policy and template now state the `--expect-model` format (`anthropic/<id>` for Claude Code rows). The delegation limits record the unverified risk that a Claude run reports an auxiliary model as well.
+  - Path rules: run records and read-only review output may sit in a Git-ignored path inside the delegated checkout (for example `.scratch/`); design-review reports may be tracked files in the repository, where `design-check` reads them; an existing record or output is refused.
+  - Docs: user-scope install recommended for projects (it reaches Herdr worktrees), one canonical stage table in WORKFLOW, a complete `launch`/`inspect` example, unverified routes marked, and a Spanish beginner walkthrough (`docs/BEGINNER-VALIDATION.es.md`; English is authoritative).
+  - Checked live against herdr 0.9.5 and pi 1.4.0 on Windows: a batch Pi reviewer (completed; effective model verified), an interactive Pi worker in a new worktree from a given SHA (committed on its branch), the early guards, and a batch Claude Code run that failed correctly when the CLI was not signed in. Claude Code's `modelUsage` parsing is covered by unit tests only.
+
+- Explain the purpose, inputs, outputs and limits of each JavaScript helper in plain language, including the design-readiness helper and terminology used by the lab.
+
+- Remove the premature lab installation command and clarify when the generator creates the lab. Align coordinator and final-review prompts with the accepted execution baseline and actual human approval.
+
+- Put lab project setup in chronological order: open the correct host/project, choose Claude or Pi, follow complete prompts, inspect configuration and commit the initial baseline before review. Clarify the later approved execution baseline.
+
+- Make the manual the single entry route for first-time framework validation. Expand role-row, delegation and session preflight, explain A/B/C and optional administrative terminals, link design handoffs and both live reports, and distinguish historical preparation results, feedback and acceptance decisions.
+
+- Replace ambiguous “useful minimum” wording with required design work/artifacts. Add explicit actions to the design-route table and separate owners, actions, locations and completion checks in the preparation table.
+
+- Expand the workflow introduction to define project contracts and their locations, explain research/grilling/prototypes/Wayfinder, and connect discovery to design acceptance and execution. Align the cooperation summary with the complete process.
+
+- Give the coordinator its own workflow component row and distinguish planning, worker and reviewer responsibilities. Clarify startup baselines, decision versus implementation readiness, verification profiles, review independence and local-state preservation.
+
+- Explain planning through delivery in the workflow, including stage owners, readiness, claims, independent review, serial integration and restart behavior. Add a README table distinguishing each document's purpose and links into the explanation.
+
+- Expand the architecture guide with solution/document boundaries, accountable owners, minimum artifact lifecycles and an explicit operational route. Add workflow/application component overviews and a README documentation map.
+
+- Connect the asynchronous questionnaire skill to the plain-language policy, with explicit conditional questions and reuse of known answers.
+- Add a shared plain-language policy for planning questions and artifacts; limit interview rounds, reuse decisions and check comprehension within existing design review. Add a language exercise without new skills, dependencies or gates.
+
+- Add local design-solution/review-design skills, architecture contracts, independent design-review brief and readiness fingerprint checks.
+- Connect design/plan acceptance to setup, specifications, tickets, dispatch, review and retrospective; extend the quotation lab with LikeC4 views and design failure exercises.
+
+- Keep the quotation lab independent of other applications; remove application-specific examples and adapter guidance.
+- Use explicit user-owned CLI prefixes, absolute sibling checkout/lab paths and chained setup commands; explain recovery from prefix/path errors. Align phase-boundary advice with fresh implementation workers and independent reviewers.
+
+- Correct malformed PR-skill YAML and use a pinned development-only YAML parser with regression tests; run npm ci before package validation.
+- Test and correct Git guardrail opt-in and common global-option handling; document pattern-check limits.
+- Add shared-worktree tracker conventions, coordinator-owned review reports and production handoffs for diagnosis/prototypes. Correct the Pi command-visibility check.
+- Strengthen quotation acceptance assertions and prove missing-newline/input-mutation failures are detected.
+
+- Add a comprehensive setup/SWE-cycle manual, reproducible quotation lab, evidence runner and live validation report template.
+
+- Selectively port upstream v1.3.1: implement-spec, pr, retro, tdd, to-spec and to-tickets.
+- Replace pi-subagents registration and mandatory tool-name coupling with shared Herdr delegation and portable role briefs.
+- Add verified model-family separation, immutable committed review snapshots and tests for omitted dirty work.
+- Add a resumable worktree coordinator, deterministic frontier validation, serial integration and bounded retries.
+- Separate test categories from Fast / Verify change / Verify candidate profiles; document resource isolation and evidence.
+- Adopt GLOSSARY.md; retire resolving-merge-conflicts. Preserve historical records and individual source pins.
+- Replace the obsolete live pi-subagents smoke entry point with offline smoke checks and an explicit live Herdr acceptance checklist.
+
 # Changelog
 
 All notable changes to this project are documented in this file.

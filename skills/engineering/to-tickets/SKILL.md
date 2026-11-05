@@ -5,11 +5,12 @@ disable-model-invocation: true
 license: MIT
 metadata:
   upstream: mattpocock/skills
-  upstream-commit: c55ee46073ed923f86ce59a5eb3b6d895095d1b7
+  upstream-commit: 24fe0ef7737efae15c87225755e9f6f5965e4888
   upstream-path: skills/engineering/to-tickets
-  invocation: user
   adapted-for: pi
 ---
+
+Read `../_shared/PLAIN-LANGUAGE.md` before writing human-facing questions or artifacts. Preserve exact requirements and decisions when simplifying language.
 
 # To Tickets
 
@@ -17,15 +18,17 @@ Break a plan, spec, or conversation into a set of **tickets**: tracer-bullet ver
 
 The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `/skill:setup-matt-pocock-skills`.
 
+For a local tracker, read its canonical absolute state root before publishing. If setup has not established it, establish it in the original project; never derive a new tracker location from a worker worktree. Preserve prior decisions.
+
 ## Process
 
 ### 1. Gather context
 
 Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body and comments.
 
-### 2. Explore the codebase (optional)
+### 2. Establish the implementation context
 
-If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+Reuse the reviewed design preview and its inspected revision. Inspect affected code when that evidence is absent or stale; do not invent precise paths from an abstract spec. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
 
 Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change."
 
@@ -42,7 +45,7 @@ Break the work into **tracer bullet** tickets.
 
 </vertical-slice-rules>
 
-Give each ticket its **blocking edges**: the other tickets that must complete before it can start. A ticket with no blockers can start immediately.
+Give each ticket its **blocking edges**: the other tickets that must complete before it can start. A ticket with no blockers is dependency-ready; it can start only after the design/plan and verification gates pass.
 
 **Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket; green is promised only there.
 
@@ -53,6 +56,8 @@ Present the proposed breakdown as a numbered list. For each ticket, show:
 - **Title**: short descriptive name
 - **Blocked by**: which other tickets (if any) must complete first
 - **What it delivers**: the end-to-end behaviour this ticket makes work
+- **Design changes and scenarios**: links to change references, accepted constraints and relevant sequence views
+- **Expected implementation areas**: inspected/proposed paths and interfaces; distinguish binding boundaries from estimates
 
 Ask the user:
 
@@ -66,8 +71,8 @@ Iterate until the user approves the breakdown.
 
 Publish the approved tickets. **How** depends on the tracker `/skill:setup-matt-pocock-skills` configured; the tickets are the same either way, only the shape of the blocking edges changes:
 
-- **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
-- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
+- **Local files** → write one file per ticket under the configured canonical absolute state root at `<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
+- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply `ready-for-agent` only after design/plan readiness is established; otherwise preserve the configured planning state.
 
 Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
@@ -79,9 +84,13 @@ Do NOT close or modify any parent issue.
 
 **What to build:** the end-to-end behaviour this ticket makes work, from the user's perspective, not a layer-by-layer implementation list.
 
-**Blocked by:** the numbers/titles of the tickets that gate this one, or "None (can start immediately)".
+**Blocked by:** the numbers/titles of the tickets that gate this one, or "None (subject to readiness gates)".
 
-**Status:** ready-for-agent
+**Design changes / scenarios:** links to reviewed change references and applicable sequence views.
+
+**Expected implementation areas:** inspected/proposed paths or components; binding constraints versus estimates.
+
+**Status:** planning (ready-for-agent only after gates pass)
 
 - [ ] Acceptance criterion 1
 - [ ] Acceptance criterion 2
@@ -98,6 +107,14 @@ A reference to the parent issue on the tracker (if the source was an existing is
 
 The end-to-end behaviour this ticket makes work, from the user's perspective, not layer-by-layer implementation.
 
+## Design changes and scenarios
+
+Links to reviewed change references, accepted constraints and applicable sequence views.
+
+## Expected implementation areas
+
+Inspected/proposed paths or components; identify estimates versus binding boundaries.
+
 ## Acceptance criteria
 
 - [ ] Criterion 1
@@ -105,8 +122,18 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 
 ## Blocked by
 
-- A reference to each blocking ticket, or "None (can start immediately)".
+- A reference to each blocking ticket, or "None (subject to readiness gates)".
 
 </issue-template>
 
-In either form, avoid specific file paths or code snippets: they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
+Link to the authoritative implementation preview instead of copying it into each ticket. Include inspected paths when they explain approved boundaries; label proposed locations as estimates. Small interface/schema examples belong in the design when they make an accepted decision precise. Do not invent implementation certainty or freeze internal file placement unnecessarily. Each ticket maps to a design change/scenario and observable check; tickets remain vertical outcomes rather than one ticket per diagram component.
+
+## Project verification policy
+
+Read `../_shared/TESTING.md` and the project's `docs/agents/testing.md`. Record applicable profiles, commands, environments and acceptance evidence in the spec/tickets. Workers inherit approved decisions; missing required verification blocks completion.
+
+## Design and coverage handoff
+
+Read `../_shared/ARCHITECTURE.md`. Prefer reviewing the proposal before decomposition. Link each ticket to requirement IDs, affected components, accepted constraints and verification evidence. Keep a requirement → component → ticket → check table; every in-scope requirement needs coverage or an explicit human-approved exclusion. Stable artifact links are required here even though speculative implementation paths are discouraged above.
+
+After the user approves the breakdown, recheck the complete plan against the design, dependency graph and shared resources. Snapshot approved tickets for the readiness input set (remote tracker exports need immutable revision references). Refresh affected design review/acceptance before implementation if the plan changes a design decision. Publish tickets in planning state until these gates pass.

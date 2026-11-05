@@ -369,7 +369,7 @@ function main() {
 
   // Files that deliberately have no upstream counterpart, so drift reporting
   // cannot cover them: D16 contract-encoded agents and the D5-20 extension.
-  const packageOnly = [];
+  const packageOnly = (inventory.skills ?? []).filter(row => row.disposition === "local" && row.piPath).map(row => ({ path: row.piPath, note: "Local extension; no upstream counterpart" }));
   for (const [dir, note] of [
     ["agents", "D16 contract-encoded agent; no upstream counterpart"],
     ["extensions", "D5-20 substitution; new code, no upstream counterpart"],
@@ -440,3 +440,4 @@ function main() {
 }
 
 main();
+
