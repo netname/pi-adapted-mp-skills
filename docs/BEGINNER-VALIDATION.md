@@ -102,7 +102,7 @@ If the skills directory does not exist, run this block once:
 
 ```bash
 mkdir -p "$HOME/code" &&
-git clone --branch improve/herdr-delegation --single-branch \
+git clone --branch main --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git "$MP_SKILLS"
 ```
 
@@ -115,7 +115,7 @@ git -C "$MP_SKILLS" rev-parse HEAD
 cd "$MP_SKILLS" && npm ci && npm test
 ```
 
-**Expected:** branch `improve/herdr-delegation`, no uncommitted package changes, and all package tests pass. Record the actual skills SHA and tool versions in your run notes. The number of tests can change. These tests check the skills package; the quotation application has not been built yet.
+**Expected:** branch `main` (or the PR branch you chose to validate instead), no uncommitted package changes, and all package tests pass. Record the actual skills SHA and tool versions in your run notes. The number of tests can change. These tests check the skills package; the quotation application has not been built yet.
 
 **If different:** stop on a wrong branch, dirty package checkout or failing tests. Preserve local edits and get help reconciling the checkout; do not reset it. If you deliberately update the package, finish that before recording the run's SHA. Keep that revision fixed for this run. These instructions evaluate an unmerged branch, not the default branch or an npm release.
 

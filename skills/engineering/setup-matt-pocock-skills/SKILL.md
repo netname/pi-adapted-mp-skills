@@ -195,17 +195,16 @@ repo's `.gitignore` if they are not already covered, and record in `AGENTS.md` t
 ignored by default and that a repo may opt in to committing either. Do not create the directories
 themselves.
 
-### 7. Done
-
-Tell the user setup is complete and which engineering skills will now read from these files. Mention they can edit `docs/agents/*.md` directly later; re-running this skill is only necessary if they want to switch issue trackers or restart from scratch.
-
-
-## Shared execution configuration
+### 7. Shared execution configuration
 
 Create or update `docs/agents/delegation.md` from `../_shared/delegation.template.md` and `docs/agents/testing.md` from `../_shared/testing.template.md`. Populate commands from existing CI/scripts and role rows (harness, mode, arguments, exact model) from the harnesses and models actually available on this host. Preserve existing user choices. Link both documents from the project's agent instructions. Include the same pointers explicitly in Claude Code worker prompts; this Pi package does not install Claude Code skills automatically. Unresolved placeholders block execution of the affected gate, not planning.
 
 For existing projects, inspect legacy domain glossary files before adopting `GLOSSARY.md`; preserve content and update references together, never create competing glossaries. The domain context map remains `CONTEXT-MAP.md`.
 
-## Architecture configuration
+### 8. Architecture configuration
 
 Read `../_shared/ARCHITECTURE.md`. During exploration, find existing designs, ADRs and model tooling. In the normal setup proposal/write steps, create or update `docs/agents/architecture.md` from `../_shared/architecture.template.md`, preserving conventions. Configure lightweight/full criteria, artifact paths, readiness command, owner and actual independent design-review profiles. Link it from project instructions. LikeC4 is optional; do not install it without a project need. Missing architecture configuration blocks implementation readiness, not discovery or planning.
+
+### 9. Done
+
+Tell the user setup is complete and which engineering skills will now read from these files. Mention they can edit `docs/agents/*.md` directly later; re-running this skill is only necessary if they want to switch issue trackers or restart from scratch.

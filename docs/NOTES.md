@@ -2094,3 +2094,65 @@ because the release has not been tagged or published.
    the "no `/skill:` commands appear" troubleshooting entry, the removal/disable section, the "where
    to read more" pointer table, and a descriptive skill index — all listed as Tier 2 in this
    milestone's hand-off discussion.
+
+## 0.2.0 — Drift review against v1.3.1 (2026-11-05)
+
+A full human-style read of every REVIEW region `npm run drift` reports against the v1.3.1 pin
+(`24fe0ef7737efae15c87225755e9f6f5965e4888`), done after the 0.2.0 stack (Paseo coordination,
+architecture/design review, Herdr delegation) was merged into `main` at `8b5dd9e`.
+
+### 1. Method
+
+The drift reporter compares each port with **v1.3.1**, but 22 shipped rows still declare the
+original pin `c55ee46` as their `sourceCommit`. A two-way diff therefore cannot tell a local
+adaptation from an upstream change that was not adopted. Each region was read three ways — old pin
+(`../mp-upstream-c55ee46`), v1.3.1 (`../mp-upstream-v1.3.1`) and the port — and classified:
+
+- **Local** — v1.3.1's text already existed at the old pin; the difference is ours.
+- **Not adopted** — v1.3.1 changed the text and the port kept the old-pin wording.
+- **Both** — v1.3.1 changed the text and the port also carries a local edit.
+- **New** — the file does not exist at the old pin (v1.3.1-sourced rows).
+
+Report at review time: 33 files, **79 REVIEW regions**, 42 EXPECTED (the "81" quoted earlier counted
+the two footer lines that also contain the word REVIEW). Classification: 64 local, 7 both,
+6 new, 2 not adopted.
+
+### 2. Verdicts by group
+
+| Group | Files | Verdict |
+| --- | --- | --- |
+| License/metadata block plus the `PLAIN-LANGUAGE.md` preamble | domain-modeling, research, to-spec, to-tickets, wayfinder, grilling, handoff, to-questionnaire, wait-what, writing-for-agents, pr, retro, implement | Deliberate (D2 + plain-language policy). The reporter only treats a pure D2 block as EXPECTED. |
+| Sub-agent spawning replaced by Herdr sessions | code-review, research, codebase-design, DESIGN-IT-TWICE, improve-codebase-architecture | Deliberate; CHANGELOG 0.2.0 (Herdr transport) |
+| Design/plan readiness gates, coordinator, testing contract | to-spec, to-tickets, tdd, implement, implement-spec, diagnosing-bugs, prototype, the three tracker templates, setup | Deliberate; CHANGELOG 0.2.0 (design review, coordinator, test profiles, production handoffs) |
+| Pi-native adaptations: `/skill:`, `/new`, `AGENTS.md` only, Pi tools, guardrail as extension | ask-matt, PHASE-BOUNDARIES, setup, trackers, git-guardrails, block-dangerous-git.sh, retro, writing-for-agents | Deliberate (D3, D5, M5 §4–5) |
+| `.scratch/reports` and `.scratch/handoffs` instead of the OS temp dir | improve-codebase-architecture, HTML-REPORT, handoff | Deliberate (D5-14) |
+| `CONTEXT-MAP.md` kept although v1.3.1 renamed it `GLOSSARY-MAP.md` | domain-modeling, GLOSSARY-FORMAT, setup, domain.md, wait-what | Not adopted on purpose; documented in `docs/MIGRATION-0.2.md` step 4 and in setup. Consistent across every file. |
+| Main-flow rewrite | ask-matt | Deliberate, with a gap (finding 3) |
+
+No accidental regression and no silently lost upstream change was found.
+
+### 3. Findings and fixes (branch `fix/drift-review-0.2.0`)
+
+1. `git-guardrails/SKILL.md`: typo "the applied to both" → "and are applied to both".
+2. `setup-matt-pocock-skills/SKILL.md`: "Shared execution configuration" and "Architecture
+   configuration" sat **after** `### 7. Done`, although they write `delegation.md`, `testing.md`
+   and `architecture.md`, whose absence blocks implementation. An agent stopping at "Done" skipped
+   them. They are now steps 7 and 8, and Done is step 9.
+3. `ask-matt/SKILL.md`: v1.3.1 put `/pr` and `/retro` in the main flow; the port reduced them to a
+   trailing sentence that also repeated step 5. Restored the `/skill:pr` paragraph and
+   `/skill:retro` as step 6 (with the design-process evidence the ported `retro` adds), adopted
+   v1.3.1's "run `/retro` after a fix" in the diagnosing-bugs on-ramp, and removed the trailing line.
+4. The six v1.3.1-sourced skills lacked `metadata.invocation`, which the 22 other skills carry;
+   added (`user` where `disable-model-invocation: true`, otherwise `model`). In `pr`, `license` now
+   precedes `metadata` like everywhere else.
+
+After the fixes: `npm test` 38/38; drift still reports 79 REVIEW regions (43 EXPECTED). The count
+is unchanged by design — the reporter has no allowlist, so every deliberate adaptation keeps
+reporting; this section is the record a later reader compares against.
+
+### 4. Outside the drift report (not changed)
+
+- `CHANGELOG.md` places `# 0.2.0 (unreleased)` above the Keep-a-Changelog header, and the older
+  `[Unreleased]` section still describes unpinning `pi-subagents`, which 0.2.0 replaces with Herdr.
+  Reconcile before tagging `v0.2.0`.
+- Live Herdr acceptance (`docs/MANUAL.md`) has not been run for this state.

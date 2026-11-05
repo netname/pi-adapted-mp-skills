@@ -32,12 +32,12 @@ A package install from the default branch does not validate an unmerged PR. Use 
 ~/code/quote-workflow-lab-01         separate application repository
 ```
 
-For a first validation of the current combined framework, use the Herdr delegation branch below; it includes the architecture and orchestration changes. These commands capture the branch at clone time: record the printed SHA and keep it fixed for the run.
+For a validation of the current combined framework, clone `main`; it includes the architecture, orchestration and Herdr delegation changes. To validate an open PR instead, replace `main` with that PR's head branch (`gh pr view <number> --json headRefName`). These commands capture the branch at clone time: record the printed SHA and keep it fixed for the run.
 
 ```bash
 export MP_SKILLS="$HOME/code/pi-skills-validation-01"
 mkdir -p "$HOME/code" &&
-git clone --branch improve/herdr-delegation --single-branch \
+git clone --branch main --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
   "$MP_SKILLS" &&
 cd "$MP_SKILLS" &&
@@ -67,12 +67,12 @@ The destination is an absolute path derived from `$HOME`, so the clone goes to t
 This is the complete clone command when `MP_SKILLS` has been set above:
 
 ```bash
-git clone --branch improve/herdr-delegation --single-branch \
+git clone --branch main --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git \
   "$MP_SKILLS"
 ```
 
-- `--branch` selects the Herdr delegation branch (architecture, workflow and Herdr transport); the slash in the name is not a filesystem path.
+- `--branch` selects the branch under test: `main`, or an open PR's head branch. A slash in a branch name is not a filesystem path.
 - `--single-branch` limits the fetched branch history, not the checkout to one commit.
 - `"$MP_SKILLS"` is the absolute local destination, kept identical to the path used by later commands.
 - A trailing `\` continues the same Bash command onto the next line; it must be the final character on that line.

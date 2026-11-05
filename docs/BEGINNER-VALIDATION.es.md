@@ -102,7 +102,7 @@ Si el directorio de skills no existe, ejecuta este bloque una vez:
 
 ```bash
 mkdir -p "$HOME/code" &&
-git clone --branch improve/herdr-delegation --single-branch \
+git clone --branch main --single-branch \
   https://github.com/netname/pi-adapted-mp-skills.git "$MP_SKILLS"
 ```
 
@@ -115,7 +115,7 @@ git -C "$MP_SKILLS" rev-parse HEAD
 cd "$MP_SKILLS" && npm ci && npm test
 ```
 
-**Resultado esperado:** rama `improve/herdr-delegation`, sin cambios sin commitear en el paquete, y todos los tests del paquete pasan. Anota en tus notas el SHA real de los skills y las versiones de las herramientas. El número de tests puede cambiar. Estos tests comprueban el paquete de skills; la aplicación de presupuestos todavía no existe.
+**Resultado esperado:** rama `main` (o la rama del PR que hayas elegido validar), sin cambios sin commitear en el paquete, y todos los tests del paquete pasan. Anota en tus notas el SHA real de los skills y las versiones de las herramientas. El número de tests puede cambiar. Estos tests comprueban el paquete de skills; la aplicación de presupuestos todavía no existe.
 
 **Si no coincide:** para si la rama es otra, si el checkout tiene cambios o si fallan los tests. Conserva las ediciones locales y pide ayuda para reconciliar el checkout; no lo resetees. Si actualizas el paquete a propósito, termina antes de anotar el SHA de la ejecución. Mantén esa revisión fija durante esta ejecución. Estas instrucciones evalúan una rama sin fusionar, no la rama por defecto ni una versión publicada en npm.
 
