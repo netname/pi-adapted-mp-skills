@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- D18 — Herdr as an optional session runner (see `docs/ADAPTATION_PLAN.md`). No skill, agent, or
+  validator rule changes; in-session delegation stays `pi-subagents`.
+- `scripts/herdr-launch.mjs` (`npm run herdr`) — starts one Pi session per ticket in Herdr TUI and
+  submits `/skill:<skill> <ticket>` (default `implement`). `--worktree` gives each ticket its own
+  Git worktree and `ticket/<feature>-<slug>` branch and is required for more than one ticket;
+  `--dry-run` prints the `herdr` commands. Checks the server, the Pi integration, name and branch
+  clashes, and that worktree tickets are committed, before creating anything.
+- README "Running sessions in Herdr (optional)" section, and Herdr callouts in the guide's
+  Amazon Refund Import worked example (Sessions 2–3 side by side; Session 5 parallel tickets).
+
 - D17 — installation route and scope (see `docs/ADAPTATION_PLAN.md`): `pi install` is the only
   route for this package because it ships skills, subagent definitions, and an extension in one
   manifest; scope is chosen by flag (`pi install` vs `pi install -l`) and never prompted;

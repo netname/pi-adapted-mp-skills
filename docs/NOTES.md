@@ -2092,3 +2092,30 @@ because the release has not been tagged or published.
    the "no `/skill:` commands appear" troubleshooting entry, the removal/disable section, the "where
    to read more" pointer table, and a descriptive skill index — all listed as Tier 2 in this
    milestone's hand-off discussion.
+
+### 19. Herdr launcher (D18), 2026-11-05
+
+Optional, outside the package contract: no skill, agent, extension, validator rule, or smoke stage
+changed. The user moved from Paseo (never referenced in this repository or its history) to Herdr TUI
+for keeping sessions alive and running several side by side; D18 records why that stays a launcher
+script plus docs instead of a prerequisite.
+
+Checked by hand on Windows 11 with herdr 0.9.5 and pi 1.4.0 (Pi integration `current (v9)`), in a
+throwaway named session (`herdr --session mpprobe server`) and a scratch Git repository; the session,
+its worktrees, and branches were deleted afterwards.
+
+| Check | Result |
+|---|---|
+| `herdr workspace create --cwd … --no-focus` | JSON; pane id at `.result.root_pane.pane_id` (`w1:p1`). |
+| `herdr worktree create --cwd … --branch … --no-focus` | JSON; same pane path; checkout under `~/.herdr/worktrees/<repo>/<branch with / as ->`. |
+| `herdr agent start <name> --kind pi --pane <id>` | Returns once Pi is ready; reports the Pi session file (`agent_session`). |
+| Agent name rule | Must start with a lowercase letter, `[a-z0-9_-]`, 1–32 chars (`invalid_agent_name` for `01-first`); the launcher uses `t-<slug>`. |
+| `herdr agent prompt <name> "/session"` | Delivered literally; Pi ran its local command. With `--wait` it returns `agent_prompt_stalled` (no working state within 5 s), so the launcher does not wait. |
+| Git Bash path conversion | Calling `herdr agent prompt … "/session"` from Git Bash delivered `C:/Program Files/Git/session`. The launcher spawns `herdr` from Node, so it is unaffected; README tells hand users to set `MSYS_NO_PATHCONV=1`. |
+| Guards | Two tickets without `--worktree` → exit 1; untracked ticket with `--worktree` → exit 1; existing `t-<slug>` agent → exit 1; existing `ticket/…` branch → exit 1. Each stops before any workspace is created. |
+| `--dry-run` | Prints the three `herdr` commands per ticket. |
+| `--worktree` with two tickets | Two worktrees on `ticket/feat-04-fourth` and `ticket/feat-05-fifth`, two Pi agents `working` at the same time, each with its own cwd and branch. |
+| Project-scope install in a worktree | The scratch repository had no package install, and Pi in the worktree did not find the skill. Same mechanism as a `pi install -l` tree (`.pi/npm/`, untracked); the launcher now warns when it sees one. |
+
+Not exercised: a real `/skill:implement` run to completion under Herdr; Herdr Cloud; macOS/Linux;
+`herdr --remote`. Not added to `npm run smoke`, because the suite must not require Herdr.

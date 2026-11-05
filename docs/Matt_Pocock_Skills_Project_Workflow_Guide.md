@@ -1578,6 +1578,9 @@ Local output:
 
 Because ticket 02 is an initially visible research ticket, a harness with background-agent support launches it after the map is charted. Its cited note is produced independently while HITL sessions address the grilling and prototype frontier. A harness without background execution leaves it ready for a later dedicated research session.
 
+> [!tip] Recommended practice: keep sessions alive with Herdr (optional)
+> In Pi, the background research is a `pi-subagents` child launched from Session 1, and Session 1 is the one that collects its result. Running Pi inside [Herdr](https://herdr.dev) TUI keeps each session in a background server, so Session 1 can keep collecting the research note while you start Session 2 in another pane. Sessions 2 and 3 are both conversations with you, so open them side by side only if you will actually alternate between them; they edit the same `map.md`. See the package README, "Running sessions in Herdr (optional)".
+
 ##### Session 2: Advance a Grilling Ticket
 
 ```text
@@ -1676,6 +1679,21 @@ When it is complete, start a new session for the next unblocked ticket:
 ```text
 /implement .scratch/add-amazon-refund-import/issues/02-validate-source-invoice.md
 ```
+
+> [!tip] Recommended practice: launch tickets from Herdr (optional)
+> With Pi and [Herdr](https://herdr.dev) TUI, the package's launcher opens that fresh session for you and leaves it running after the terminal closes:
+>
+> ```text
+> node <package-dir>/scripts/herdr-launch.mjs .scratch/add-amazon-refund-import/issues/01-parse-and-preview-amazon-refund-report.md
+> ```
+>
+> Parallel tickets are only safe when none blocks another and each gets its own worktree and branch (`--worktree`, with the tickets committed and the package installed at user scope). Read each ticket's blockers before launching; the launcher does not. The parallel form is for genuinely independent slices:
+>
+> ```text
+> node <package-dir>/scripts/herdr-launch.mjs --worktree .scratch/<feature>/issues/03-<slug>.md .scratch/<feature>/issues/04-<slug>.md
+> ```
+>
+> Merging each `ticket/…` branch back is still your step.
 
 #### Skills Theory: Why the Workflow Branches
 

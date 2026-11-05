@@ -508,6 +508,29 @@ Getting one there today is the wrinkle. The `skills` CLI's `pi` target maps to `
 
 **Consequences.** The README must document both scopes (`pi install` vs `pi install -l`), state that `.agents/skills` is not where this package's skills live and why, and carry the "one route per skill set" warning. The setup skill's D11 collision preflight already scans all four skill roots, so it detects the mixed case. The route does not change the dependency policy: this package and both prerequisites are installed unpinned (D13 as amended).
 
+### D18 — Herdr as an optional session runner, outside the package contract
+
+**Context.** The workflow runs as a sequence of fresh Pi sessions (one per Wayfinder ticket, one per `/skill:implement <ticket>`). Keeping those sessions alive after the terminal closes, and running independent ones side by side, is a terminal-layer concern that neither Pi nor `pi-subagents` covers. The user replaced a separate orchestrator (Paseo, never referenced by this package) with [Herdr](https://herdr.dev) TUI for exactly that.
+
+**Options considered:**
+
+| Option | Mechanism | Cost |
+|---|---|---|
+| A — Make Herdr a prerequisite and teach it in the skills | Skills launch sessions through `herdr agent …` | Breaks D5's harness-agnostic bodies and D10's per-capability prerequisites for something no skill *needs*; adds a third floating dependency. |
+| B — Replace `pi-subagents` with Herdr panes | Delegate research/review to agents in other panes | Loses D16's contract agents, run identity, and in-process collection; Herdr panes are separate top-level sessions, not children. |
+| C — Optional launcher and docs, no skill changes (chosen) | `scripts/herdr-launch.mjs` + README section + guide callouts | One script to maintain against a fast-moving CLI. No effect on any skill, agent, or validator rule. |
+
+**Decision: Option C.**
+
+1. No skill, agent, extension, or validator rule mentions Herdr. In-session delegation stays `pi-subagents` (D10/D16).
+2. `scripts/herdr-launch.mjs` is the only Herdr-aware code. Per ticket it runs `herdr workspace create` (or `herdr worktree create` with `--worktree`), `herdr agent start <t-slug> --kind pi --pane <id>`, and `herdr agent prompt <t-slug> "/skill:<skill> <ticket>"`, reading IDs from Herdr's JSON responses.
+3. **One ticket per checkout.** More than one ticket requires `--worktree`; parallel `implement` sessions in one working tree would commit over each other. Worktree tickets must be committed, because a worktree only sees committed files.
+4. `agent prompt` is sent **without `--wait`**: Pi runs some slash commands locally without entering a working state, and Herdr then reports `agent_prompt_stalled` even though the text was delivered.
+5. A project-scope install (`pi install -l`) does not reach worktrees (its `.pi/npm/` tree is untracked); the launcher warns, and the README recommends user scope for parallel tickets. This does not amend D17 — it is a property of worktrees.
+6. Only `--kind pi`. Herdr also runs Claude Code, but this package's skills are Pi skills.
+
+**Consequences.** Herdr is unpinned and unvalidated like D13's prerequisites, but it is not in `npm run smoke`: the launcher was checked by hand (`docs/NOTES.md` §19). If Herdr's CLI changes, only the launcher and the README section move.
+
 ---
 
 ## 6. Work plan

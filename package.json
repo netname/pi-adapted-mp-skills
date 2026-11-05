@@ -11,7 +11,8 @@
     "validate": "node scripts/validate-skills.mjs",
     "drift": "node scripts/fetch-upstream.mjs",
     "drift:strict": "node scripts/fetch-upstream.mjs --strict",
-    "smoke": "bash scripts/smoke-test.sh"
+    "smoke": "bash scripts/smoke-test.sh",
+    "herdr": "node scripts/herdr-launch.mjs"
   },
   "pi": {
     "extensions": [

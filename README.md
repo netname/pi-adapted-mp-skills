@@ -263,6 +263,71 @@ lock you out of git.
 
 `/skill:git-guardrails` walks through choosing patterns and writing the opt-in file.
 
+## Running sessions in Herdr (optional)
+
+The workflow is a sequence of **fresh Pi sessions**: one per Wayfinder ticket, one per
+`/skill:implement <ticket>`. [Herdr](https://herdr.dev) (TUI) keeps those sessions running in a
+background server, so they survive closing the terminal, and lets several run side by side. This is
+**optional and outside the package contract** (D18): no skill depends on it, and delegation
+*inside* a session is still `pi-subagents`.
+
+### Set up once
+
+```bash
+herdr integration install pi     # Pi reports its state and its session resumes after a server restart
+herdr integration status         # expect: pi: current
+```
+
+Start (or attach to) the server in its own terminal with `herdr` (or `herdr --session <name>`);
+detach with `ctrl+b q`, reattach with `herdr`. The launcher below needs that server running.
+
+### Launch a ticket
+
+`scripts/herdr-launch.mjs` opens a Herdr workspace in the repository, starts Pi in it
+(`herdr agent start --kind pi`), and submits `/skill:<skill> <ticket>`. Run it from the target
+repository; the package directory is the one in the [scope table](#scope-user-or-project).
+
+```bash
+node <package-dir>/scripts/herdr-launch.mjs .scratch/<feature>/issues/01-<slug>.md
+```
+
+| Option | Effect |
+|---|---|
+| `--skill <name>` | Skill to invoke (default `implement`), e.g. `--skill wayfinder` |
+| `--session <name>` | Herdr named session (default `$HERDR_SESSION`, else Herdr's default) |
+| `--worktree` | One Git worktree and `ticket/<feature>-<slug>` branch per ticket; **required for more than one ticket** |
+| `--base <ref>` | Base for `--worktree` branches (default `HEAD`) |
+| `--dry-run` | Print the `herdr` commands without running them |
+
+Watch with `herdr agent list`, `herdr agent attach t-<slug>`, or the Herdr UI.
+
+### Rules the launcher enforces
+
+- **One ticket per checkout.** Two `implement` sessions in one working tree would edit and commit
+  over each other, so several tickets require `--worktree`. Pick only tickets whose blockers are
+  closed; the launcher does not read `Blocked by`.
+- **`--worktree` sees only committed files.** The ticket must be tracked and unmodified.
+- **A project-scope install does not reach worktrees.** `pi install -l` lives in the untracked
+  `.pi/npm/` tree, so a fresh worktree has no skills. For parallel tickets install at user scope
+  (`pi install <source>`, no `-l`); the launcher warns when it sees `.pi/npm/`.
+- **Merging is yours.** Each worktree commits on its own branch.
+- Names clash early: an existing `t-<slug>` agent or `ticket/…` branch stops the run before anything
+  is created.
+
+### Limits
+
+- After `herdr server stop` or a reboot, processes stop. The layout comes back, and the Pi
+  conversation resumes only if the integration is installed.
+- Windows (native TUI): `herdr terminal attach` and `--handoff` are not supported; the binary is
+  unsigned, so SmartScreen may warn.
+- From Git Bash, an argument that starts with `/` (such as `/skill:…`) is rewritten into a Windows
+  path when passed to a native program. The launcher builds the prompt itself, so it is unaffected;
+  if you type `herdr agent prompt <name> "/skill:…"` by hand in Git Bash, set `MSYS_NO_PATHCONV=1`.
+- Claude Code also runs in Herdr (`--kind claude`, `herdr integration install claude`), but this
+  package's skills are Pi skills; the launcher starts Pi only.
+
+Checked against herdr 0.9.5 and pi 1.4.0 on Windows; see `docs/NOTES.md` §19.
+
 ## Invocation model
 
 Skills come in two classes, and the difference is not cosmetic.
