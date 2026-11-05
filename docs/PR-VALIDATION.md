@@ -117,7 +117,7 @@ Passing package checks does not establish that live Herdr sessions, model separa
 
 Do not run a lab installation command yet: `$MP_LAB` may not exist. In [Generate a new directory](#generate-a-new-directory), the generator creates the application directory first. The same command block then enters it and runs `pi install -l "$MP_SKILLS"`. Follow that block once; there is no separate installation to repeat here.
 
-The `-l` option records a project-local installation. Pi loads the package from its existing checkout after project trust. Check startup diagnostics and avoid duplicate skill copies with shadowing names. Keep unrelated packages where needed, but verify the configured Herdr delegation path (helper path and evidence directory in `delegation.md`). See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
+The `-l` option records a project-local installation, so this unmerged branch does not replace the skills your other projects use. Pi loads the package from its existing checkout after project trust. That install does not resolve inside Herdr worker worktrees (under `~/.herdr/worktrees/`), so the coordinator gives workers skill files by absolute path, as the prompts in this guide do. For normal project work the [manual](MANUAL.md#install-the-skills-in-your-project) recommends a user-scope install instead. Check startup diagnostics and avoid duplicate skill copies with shadowing names. Keep unrelated packages where needed, but verify the configured Herdr delegation path (helper path and evidence directory in `delegation.md`). See [Pi packages](https://pi.dev/docs/latest/packages) and [Pi skills](https://pi.dev/docs/latest/skills).
 
 
 ## 2. Create and configure the lab

@@ -111,13 +111,32 @@ export function parseLaunch(argv) {
   return o;
 }
 
+// Roles whose output may be a tracked file inside the delegated checkout. Design reviews write the
+// report that design-check later reads from inside the repository; research and implementation
+// write their own artifacts. Code review and the other read-only roles must leave the checkout clean.
+const OUTPUT_IN_TREE = ['research', 'implementation', 'design-comprehension', 'design-challenge'];
+
+/**
+ * Where the record and the output may go, relative to the delegated checkout (pure; exported for
+ * tests). Inside the checkout is allowed only when Git ignores the path, so the checkout stays
+ * clean, except for an OUTPUT_IN_TREE role's output.
+ */
+export function checkPaths({ record, output, role }, cwd, isIgnored) {
+  const within = p => inside(resolve(p), resolve(cwd));
+  need(!within(record) || isIgnored(record), 'the record must live outside the delegated checkout or in a Git-ignored path inside it (for example .scratch/)');
+  if (output && !OUTPUT_IN_TREE.includes(role)) {
+    need(!within(output) || isIgnored(output), `${role} output must live outside the delegated checkout or in a Git-ignored path inside it`);
+  }
+}
+export function gitIgnored(cwd) {
+  return p => run('git', ['-C', cwd, 'check-ignore', '-q', '--no-index', '--', resolve(p)]).status === 0;
+}
+
 function launch(argv) {
   const o = parseLaunch(argv);
   need(!existsSync(o.record), `record already exists: ${o.record}; use a new run name`);
-  if (o.cwd) {
-    need(!inside(resolve(o.record), resolve(o.cwd)), 'the record must live outside the delegated worktree');
-    if (o.output && !['research', 'implementation'].includes(o.role)) need(!inside(resolve(o.output), resolve(o.cwd)), 'review output must live outside the reviewed worktree');
-  }
+  if (o.output) need(!existsSync(o.output), `output already exists: ${o.output}; use a new path for each run`);
+  if (o.cwd) checkPaths(o, o.cwd, gitIgnored(o.cwd));
   const status = run('herdr', ['status', 'server']).stdout;
   need(/status:\s*running/.test(status), 'the Herdr server is not running; start it with `herdr` (or `herdr --session NAME`) in its own terminal');
   if (o.mode === 'interactive') {
@@ -130,8 +149,7 @@ function launch(argv) {
   const pane = created?.root_pane;
   need(pane?.pane_id, 'herdr did not return a pane id');
   const cwd = o.worktree ? created.workspace?.worktree?.checkout_path ?? pane.cwd : o.cwd;
-  need(!inside(resolve(o.record), resolve(cwd)), 'the record must live outside the delegated worktree');
-  if (o.output && o.role !== 'research' && o.role !== 'implementation') need(!inside(resolve(o.output), resolve(cwd)), 'review output must live outside the reviewed worktree');
+  if (o.worktree) checkPaths(o, cwd, gitIgnored(cwd));
 
   const record = {
     schemaVersion: 1, runId: `${process.env.HERDR_SESSION || 'default'}:${o.name}:${pane.terminal_id}`, role: o.role,

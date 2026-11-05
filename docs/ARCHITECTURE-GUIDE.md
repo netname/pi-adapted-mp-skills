@@ -15,7 +15,7 @@ The order is: agree on behavior (Stage 2) → explain a proposed design (3) → 
 | Owner | Responsibility and limit | Durable result |
 | --- | --- | --- |
 | Human product owner | Supplies scope, settles consequential tradeoffs and accepts/rejects the current proposal. A session cannot make this decision for them | Actual decision reference linked to the accepted inputs |
-| Maintainer | Configures project operating contracts, paths, profiles and checks | `AGENTS.md` and `docs/agents/{architecture,delegation,testing,issue-tracker}.md` |
+| Maintainer | Configures project operating contracts, paths, delegation role rows and checks | `AGENTS.md` and `docs/agents/{architecture,delegation,testing,issue-tracker}.md` |
 | Planner / design author | Inspects context, drafts spec/design/overview, maps requirements to checks, revises proposal | Design and coverage artifacts with source/author provenance |
 | Fresh comprehension reviewer | Reconstructs components, scenarios and requirement links without the drafting conversation | Separate report targeting identified inputs |
 | Fresh challenge reviewer | Looks for omissions, weak assumptions, alternative designs and failure paths | Separate report and blocker recommendations |
@@ -64,7 +64,7 @@ Tickets link the change/scenario references and checks. Workers report planned v
 
 ## Operational route and completion checks
 
-This table gives the **normal project route**, not the PR experiment's numbered steps. Use the linked skills for the agent procedures and [manual setup](MANUAL.md#configure-each-software-project) for host/project preparation. Existing documents can be reused when the scope and input identity still match.
+This table is the design-focused view of Stages 2–8 from the [workflow stage table](WORKFLOW.md#stages-owners-and-completion-conditions), which stays the reference for owners and completion conditions. It gives the **normal project route**, not the PR experiment's numbered steps. Use the linked skills for the agent procedures and [manual setup](MANUAL.md#configure-each-software-project) for host/project preparation. Existing documents can be reused when the scope and input identity still match.
 
 | Stage | Action / owner | Output and completion check |
 | --- | --- | --- |

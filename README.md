@@ -32,11 +32,11 @@ See [stage owners, artifacts and completion checks](docs/WORKFLOW.md#stages-owne
 
 ## Documentation map
 
-Choose one route. **Using the skills in a software project?** Read [WORKFLOW](docs/WORKFLOW.md) for the lifecycle, [MANUAL](docs/MANUAL.md) for setup, project folders, artifacts, tools and day-to-day operation, and [ARCHITECTURE-GUIDE](docs/ARCHITECTURE-GUIDE.md) for design review and acceptance. Those guides describe normal project work; use your project's own requirements, design and tests.
+Choose one route:
 
-**New to Herdr or Claude Code?** Start with the [beginner quotation walkthrough](docs/BEGINNER-VALIDATION.md): one Windows-to-Ubuntu route, role-row setup, copyable prompts, expected results and recovery steps. It takes you through one successful run before the failure exercises.
-
-**Evaluating these proposed package changes with an established setup?** Follow [PR-VALIDATION](docs/PR-VALIDATION.md) from its first step. That separate guide owns the disposable quotation lab, its planning rehearsal, design exercise, commands, failure drills and evaluation. Record live results in [workflow validation](docs/VALIDATION-REPORT.md) and [architecture validation](docs/ARCHITECTURE-VALIDATION.md); these templates are only for assessing the PRs. The lab [fixture README](examples/validation-lab/README.md) describes its generated application.
+- **Using the skills in a software project.** Read [WORKFLOW](docs/WORKFLOW.md) for the lifecycle, [MANUAL](docs/MANUAL.md) for setup and day-to-day operation, and [ARCHITECTURE-GUIDE](docs/ARCHITECTURE-GUIDE.md) for design review and acceptance. Use your project's own requirements, design and tests.
+- **New to Herdr or Claude Code.** Start with the [beginner quotation walkthrough](docs/BEGINNER-VALIDATION.md) ([en español](docs/BEGINNER-VALIDATION.es.md)): one Windows-to-Ubuntu route with copyable prompts, expected results and recovery steps.
+- **Evaluating these package changes with an established setup.** Follow [PR-VALIDATION](docs/PR-VALIDATION.md) from its first step. It owns the disposable quotation lab, its exercises, failure drills and evaluation. Record live results in [workflow validation](docs/VALIDATION-REPORT.md) and [architecture validation](docs/ARCHITECTURE-VALIDATION.md). The [fixture README](examples/validation-lab/README.md) describes the generated application.
 
 | Question | Project route | PR validation route |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ The [skills](skills/) and [shared policies](skills/engineering/_shared/) give ag
 
 ## Start
 
-Install the complete package from a checked-out version you intend to use:
+Install the complete package, for your user, from a checked-out version you intend to use. User scope reaches Herdr's worker worktrees; see the [manual](docs/MANUAL.md#install-the-skills-in-your-project) for the project-scope alternative:
 
 ```bash
 pi install /absolute/path/to/pi-adapted-mp-skills
@@ -63,7 +63,7 @@ pi install git:github.com/netname/pi-adapted-mp-skills
 
 There is no claim that 0.2.0 is published to npm. Do not also install duplicate skill copies. The package includes role briefs, scripts and sidecars; copying SKILL.md alone is insufficient.
 
-Run `/skill:setup-matt-pocock-skills` in the target project. It configures the tracker, domain docs, delegation profiles and testing contract. `/skill:ask-matt` routes uncertain work.
+Run `/skill:setup-matt-pocock-skills` in the target project. It configures the tracker, domain docs, delegation role rows and testing contract. `/skill:ask-matt` routes uncertain work.
 
 | Need | Skill |
 | --- | --- |
@@ -97,9 +97,10 @@ npm test
 npm run smoke
 node scripts/frontier.mjs /path/to/graph.json
 node scripts/review-target.mjs --repo /absolute/worktree --base BASE --head HEAD
+node scripts/herdr-delegate.mjs inspect /absolute/run-record.json --expect-model PROVIDER/MODEL
 ```
 
-The frontier helper validates dependencies and prints ready IDs. The review helper rejects staged, unstaged and untracked work, pins commits, and writes a manifest/diff outside the worktree. Neither is a standalone background scheduler. `implement-spec` drives the loop through Herdr, with durable state in the tracker.
+The frontier helper validates dependencies and prints ready IDs. The review helper rejects staged, unstaged and untracked work, pins commits, and writes a manifest/diff outside the worktree. The delegation helper launches a fresh Herdr session per role (`launch`) and checks the model that actually ran (`inspect`); see the [delegation policy](skills/engineering/_shared/DELEGATION.md). None of them is a standalone background scheduler. `implement-spec` drives the loop through Herdr, with durable state in the tracker.
 
 `npm run drift` compares against the v1.3.1 baseline, including deliberate adaptations and skills still sourced from the original pin. It is a review aid, not proof that everything was upgraded. After `npm ci`, `npm test` is offline; live Herdr acceptance is documented separately.
 

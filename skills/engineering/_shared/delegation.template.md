@@ -2,7 +2,7 @@
 
 Transport: Herdr TUI, session `<name>` (or the default session). One coordinator per effort, running in a Herdr pane.
 Helper: `node <package>/scripts/herdr-delegate.mjs` (absolute path on this host).
-Run records and review reports: `<absolute evidence directory outside every worktree>`.
+Run records and code-review reports: `<absolute, Git-ignored directory in the original project, for example <project>/.scratch/<effort>/runs>` (outside every worker worktree). Design-review reports: `docs/designs/reviews/` in the project.
 Maximum implementation workers: 2.
 Maximum research workers: 3.
 Maximum repair attempts per failed ticket: 2; then pause and report.

@@ -10,17 +10,7 @@ Read in order: [workflow overview](WORKFLOW.md#solution-overview) → [stages an
 
 The stages name **work on one change**, not chapters in this manual. Reuse already accepted decisions/documents when they still apply; create only what the change needs. The human owns product decisions and final acceptance. One coordinator session owns the tracker and serial integration. Herdr runs the configured sessions; it does not decide whether the work is correct. The [workflow](WORKFLOW.md#planning-and-execution) explains gates and recovery in depth.
 
-| Stage | Main action and responsible role | Durable output or evidence | Gate before moving on |
-| --- | --- | --- | --- |
-| **1 Discover and clarify** | Planner investigates unknowns using research, grilling, prototypes and optional Wayfinder; human answers consequential choices | Decision map and decision tickets when needed, research notes and human answers | Needed product choices resolved or visibly open |
-| **2 Specify** | Planner uses `to-spec` to consolidate agreed behavior | Spec with requirement IDs, examples and exclusions | Observable acceptance criteria and testable seams |
-| **3 Design and review** | Planner uses `design-solution`; fresh reviewers use `review-design` for comprehension and challenge | Proposed overview/design, optional model and ADR, separate review findings | Blocking findings resolved; actual reviewer identities and target recorded |
-| **4 Plan and authorize** | Planner uses `to-tickets`, maps requirements to work; human accepts scope and plan | Implementation tickets/dependencies, plan snapshot, traceability and human decision | Coverage and dependency/resource assumptions checked |
-| **5 Check readiness** | Coordinator checks current inputs, profiles, tracker and test resources | Readiness record and committed execution baseline | Accepted files still match reviewed files; configured checks pass |
-| **6 Implement** | Coordinator uses `implement-spec` to claim and launch fresh workers in worktrees | Scoped code commits, claims/run IDs and focused test evidence | Clean committed candidate and required Verify change checks |
-| **7 Review and integrate** | Fresh `code-review` sessions assess Spec and Standards; coordinator integrates one candidate at a time | Exact base/head reviews, dispositions, combined verification and integrated SHA | Both axes and combined checks cover the accepted revision; repeat 6–7 for new ready tickets |
-| **8 Verify complete change** | Coordinator runs final required checks and full-change review | Final integrated SHA, full-diff reports, final test evidence and reconciled documentation | Complete agreed scope and no unresolved blockers |
-| **9 Evaluate and decide** | Human inspects delivery evidence and decides whether to accept/merge/release under project policy | PR or delivery record, known limitations and follow-ups | Repository/CI authorization is separate from a workflow report |
+The nine stages, their owners, outputs and completion conditions are defined once, in the [workflow stage table](WORKFLOW.md#stages-owners-and-completion-conditions). This manual maps them to skills in [Match each skill to its purpose](#match-each-skill-to-its-purpose).
 
 Example: a product owner chooses whether quantities can be fractional (Stage 1). The spec gives the chosen behavior a requirement ID (2). The design assigns calculation to a component and explains why (3). A ticket names the scoped implementation and a test (4). The coordinator confirms acceptance (5), a worker commits it (6), fresh reviewers and combined tests assess it (7), and a full-change review checks delivery (8). The owner then decides (9). An answer, ticket, code commit and review are **different kinds of artifact**; none proves the others occurred.
 
@@ -49,13 +39,14 @@ Call `.scratch/<effort-slug>/` an **effort directory**. Choose a short, stable, 
 
 ## Skills, sessions and scripts
 
-A **skill** is a written procedure (for example `wayfinder`, `to-spec`, `implement-spec`); a **role brief** under the package's `agents/` is context supplied to a worker or reviewer. Pi or Claude Code runs a **session** with a chosen model. A **role row** in `docs/agents/delegation.md` stores launch settings, while a **task prompt** gives that particular session its assignment. The coordinator uses these, checks real models and tracker state, and calls the scripts at the appropriate point. A script is code run by Node when invoked; neither a skill file nor a profile is an executable scheduling guarantee. [Coordinator procedure](../skills/engineering/implement-spec/SKILL.md).
+A **skill** is a written procedure (for example `wayfinder`, `to-spec`, `implement-spec`); a **role brief** under the package's `agents/` is context supplied to a worker or reviewer. Pi or Claude Code runs a **session** with a chosen model. A **role row** in `docs/agents/delegation.md` stores launch settings, while a **task prompt** gives that particular session its assignment. The coordinator uses these, checks real models and tracker state, and calls the scripts at the appropriate point. A script is code run by Node when invoked; neither a skill file nor a role row is an executable scheduling guarantee. [Coordinator procedure](../skills/engineering/implement-spec/SKILL.md).
 
 | Program in the skills checkout | Input → output | Stage and limit |
 | --- | --- | --- |
 | `scripts/frontier.mjs` | Exported JSON ticket graph → ready, unclaimed IDs | 5–7; does not claim, launch, or verify that tracker claims are true |
 | `scripts/design-check.mjs snapshot` / `check` | Selected files → fingerprints; readiness JSON + files → result | 3–5 and rechecks; cannot judge design quality or authenticate approval |
 | `scripts/review-target.mjs` | Clean candidate worktree + base/head Git refs → manifest, diff and commit list | 7–8; prepares review input, does not perform independent review |
+| `scripts/herdr-delegate.mjs launch` / `inspect` | Role row + brief + task → fresh Herdr session and run record; record → effective model check | 3–8; moves sessions and records what ran; does not choose work or judge results ([delegation policy](../skills/engineering/_shared/DELEGATION.md)) |
 | Project-specific test commands | Source/environment → observed test results | 6–8; choose the applicable suite and retain exact revision/exit/logs |
 | `scripts/validate-skills.mjs` (`npm test` in package) | Package files → structural test results | Package maintenance, not evidence that your application or live agents passed |
 
@@ -278,18 +269,18 @@ Before installing or updating over an existing setup, record versions and accoun
 
 Choose a checked-out package revision and record its Git SHA. The branch used for the separate PR experiment is specified **only** in [PR-VALIDATION.md](PR-VALIDATION.md#1-freeze-the-package-under-test). For normal project work, use a version you have chosen to adopt; do not infer that an unreleased PR is on the default branch.
 
-In Bash on the **execution host**, set paths to your existing directories, verify both Git roots and install the package into the target project's Pi environment:
+In Bash on the **execution host**, set paths to your existing directories, verify both Git roots and install the package for your user:
 
 ```bash
 export MP_SKILLS="$HOME/code/pi-adapted-mp-skills"
 export PROJECT_ROOT="$HOME/code/my-project"
 git -C "$MP_SKILLS" rev-parse HEAD &&
 git -C "$PROJECT_ROOT" rev-parse --show-toplevel &&
-cd "$PROJECT_ROOT" &&
-pi install -l "$MP_SKILLS"
+pi install "$MP_SKILLS" &&
+pi list
 ```
 
-Replace both paths with actual directories on that host. The project must already exist; `pi install -l` does not create it, configure its tracker or accept a design. In Pi, verify the package loads and invoke `/skill:setup-matt-pocock-skills` as described in [project setup](#configure-each-software-project). This package is Pi-native; Claude Code can read its procedure files by explicit path. Avoid duplicate installations with the same skill names. [Pi packages](https://pi.dev/docs/latest/packages) · [Pi skills](https://pi.dev/docs/latest/skills).
+Replace both paths with actual directories on that host. **Install at user scope (no `-l`).** Herdr puts workers in worktrees under `~/.herdr/worktrees/`, and a project-scope install does not resolve there (see [delegation limits](../skills/engineering/_shared/DELEGATION.md#limits)); a user-scope install gives every session the skills and the `git-guardrails` extension. Pi reads the package from that checkout, so the branch checked out in `$MP_SKILLS` is the version every session uses. A project-scope install (`cd "$PROJECT_ROOT" && pi install -l "$MP_SKILLS"`) is the alternative when other projects must not see this version; the coordinator then gives workers the skill files by absolute path. Do not install both for the same project. Installing does not create the project, configure its tracker or accept a design. In Pi, verify the package loads and invoke `/skill:setup-matt-pocock-skills` as described in [project setup](#configure-each-software-project). This package is Pi-native; Claude Code can read its procedure files by explicit path. Avoid duplicate installations with the same skill names. [Pi packages](https://pi.dev/docs/latest/packages) · [Pi skills](https://pi.dev/docs/latest/skills).
 
 **Why install into Pi but not Claude Code here?** The package's `package.json` registers its skills and `git-guardrails` extension with Pi, so Pi sessions can discover and invoke them. The current Claude Code instructions instead point to `SKILL.md` files in that **same checkout** by absolute path; there is no second copy to install or keep in sync. A Pi installation does not register Claude slash commands, and reading a skill file in Claude does not load the Pi extension. This is a choice in this repository's setup, not a Claude Code limitation: Claude Code also supports [native skills](https://code.claude.com/docs/en/skills#choose-where-skills-load), including links to skill folders, if we later add and verify a Claude-specific installation path. Herdr starts sessions but does not install skills into either agent. See [the Claude Code procedure](#use-the-same-procedure-from-claude-code) for the current invocation.
 
@@ -345,6 +336,10 @@ herdr integration install claude
 
 Batch mode runs the harness non-interactively (`pi -p --mode json`, `claude -p --output-format json`), so the read-only tool flags apply and the report comes from the harness's structured output, not from the screen. Interactive mode starts a normal session you can attach to.
 
+> **Verification status.** The Pi rows (batch review and interactive worker) were checked live with herdr 0.9.5 and pi 1.4.0. The Claude Code batch row is not yet: confirm it with the one-child check below, using that row, before the first real review. The [delegation policy](../skills/engineering/_shared/DELEGATION.md#limits) keeps the current list.
+
+The delegation policy shows a [complete `launch` and `inspect` command](../skills/engineering/_shared/DELEGATION.md#preflight-and-launch) for one review axis. Run records and code-review reports go in a Git-ignored directory of the original project, such as `.scratch/<effort>/runs/`; design-review reports go in `docs/designs/reviews/`.
+
 Record the **actual** harness, arguments, exact model IDs and families in `delegation.md`. Changing an implementation or design-author family can invalidate reviewer independence for the affected candidate. A row is not a guarantee of model identity: the coordinator checks the effective model of every run.
 
 ### Start the Herdr server and the coordinator
@@ -355,7 +350,7 @@ Delegated sessions live on a Herdr server. Start (or attach to) a named session 
 herdr --session my-project
 ```
 
-Detach with `Ctrl+B q`; reattach with the same command. Panes keep running while the server runs. After `herdr server stop` or a reboot the layout returns, and an interactive session resumes only if its integration is installed. From a Windows client, either SSH into the host and run that command there, or run `herdr --remote user@your-ubuntu-host --session my-project`: the remote server owns the panes and your terminal only draws them.
+Detach with `Ctrl+B q`; reattach with the same command. Panes keep running while the server runs. After `herdr server stop` or a reboot the layout returns, and an interactive session resumes only if its integration is installed. From a Windows client, either SSH into the host and run that command there, or run `herdr --remote user@your-ubuntu-host --session my-project`: the remote server owns the panes and your terminal only draws them. The `--remote` route follows Herdr's documentation and has not been checked with this package; the SSH route has no extra moving parts.
 
 Open a pane in the project directory and start the coordinator there (Claude Code or Pi). Inside a Herdr pane its `herdr` commands reach the same server. Running `pi` or `claude` in an unrelated terminal is fine for installation checks, but those sessions are not managed by Herdr.
 

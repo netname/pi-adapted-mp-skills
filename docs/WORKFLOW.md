@@ -8,15 +8,39 @@ The tracker is the authoritative record of tickets, dependency edges, claims and
 
 ## Solution overview
 
-This repository provides a reusable **development workflow** for taking a need or proposed change through discovery, agreed requirements, an inspectable design, scoped implementation, independent review and verified integration. Its goals are to make decisions understandable, run independent work safely in parallel, avoid reviewing code with its own implementation model family, and preserve enough coordination state to resume after a session ends. The human owns consequential choices and acceptance; agents prepare proposals, carry out authorized work and provide evidence.
+This repository provides a reusable **development workflow**. It takes a need or proposed change through discovery, agreed requirements, an inspectable design, scoped implementation, independent review and verified integration. Its goals:
+
+- make decisions understandable;
+- run independent work safely in parallel;
+- never review code with the model family that wrote it;
+- keep enough coordination state to resume after a session ends.
+
+The human owns consequential choices and acceptance. Agents prepare proposals, carry out authorized work and provide evidence.
 
 Work begins by understanding the need and the project's context. In an existing project, the planner inspects relevant source, tests and documentation to distinguish current behavior from proposed changes. In a new project, there may be no application source yet: the planner establishes context and describes the intended solution. Neither route assumes that requirements or architecture are already settled.
 
-**Project contracts** means the project's written operating instructions and agreed constraints. They are ordinary documents, not a special tool or automatic enforcement mechanism. In the target application, `AGENTS.md` points agents to the relevant instructions; `docs/agents/issue-tracker.md` defines the tracker and status/ownership rules; `delegation.md` defines role profiles, models and concurrency; `testing.md` defines verification commands and environment rules; and `architecture.md` defines design, review and acceptance requirements. These four files live under `docs/agents/` unless the project configures another location. `docs/agents/architecture.md` is **the design process contract**; the application's overall design is `docs/architecture/overview.md`. The [setup procedure](../skills/engineering/setup-matt-pocock-skills/SKILL.md) creates or adapts the contracts with the human. Requirements and design documents are related artifacts: the spec says what to build, the design explains how and why, and the operating instructions govern how work proceeds. See the [folder and artifact guide](MANUAL.md#project-folders-and-effort-directories) and [project setup walkthrough](MANUAL.md#configure-each-software-project).
+**Project contracts** are the project's written operating instructions and agreed constraints. They are ordinary documents, not a tool or an enforcement mechanism. In the target application:
+
+| File | What it defines |
+| --- | --- |
+| `AGENTS.md` | Pointers to the relevant instructions |
+| `docs/agents/issue-tracker.md` | The tracker, statuses and ownership rules |
+| `docs/agents/delegation.md` | Role rows (harness, mode, arguments, model, family) and concurrency |
+| `docs/agents/testing.md` | Verification commands and environment rules |
+| `docs/agents/architecture.md` | Design, review and acceptance requirements (the design *process* contract) |
+
+The four `docs/agents/` files can live elsewhere if the project configures it. The application's overall design is a different file, `docs/architecture/overview.md`. The [setup procedure](../skills/engineering/setup-matt-pocock-skills/SKILL.md) creates or adapts the contracts with the human. The spec says what to build, the design explains how and why, and the contracts govern how work proceeds. See the [folder and artifact guide](MANUAL.md#project-folders-and-effort-directories) and [project setup walkthrough](MANUAL.md#configure-each-software-project).
 
 Discovery resolves the uncertainty that matters. [Research](../skills/engineering/research/SKILL.md) establishes facts from documentation, inspected source or other evidence. [Grilling](../skills/productivity/grilling/SKILL.md) asks focused questions to expose assumptions and obtain human decisions. A [prototype](../skills/engineering/prototype/SKILL.md) gives the human a small concrete artifact to evaluate. For a large effort with connected questions, [Wayfinder](../skills/engineering/wayfinder/SKILL.md) organizes research, grilling, prototypes and prerequisite tasks into a shared map of decision tickets. Smaller changes can use the relevant activities directly. They are selected as needed and may recur; they are not a mandatory checklist of skills for every change. A decision ticket resolves a question, rather than necessarily delivering production code.
 
-As decisions become clear, the planner consolidates agreed behavior into a specification, explains the proposed architecture and obtains fresh comprehension/challenge review. The design preview makes expected code areas, concrete behavior and binding choices inspectable; rendered sequence diagrams explain consequential ordering, state or failure flows when relevant. The resulting implementation plan links requirements to design changes, components/scenarios, tickets and verification. After applicable human acceptance and a check that the reviewed inputs are still current, the coordinator launches eligible implementation work. Workers return committed candidates; fresh code reviewers inspect them; the coordinator integrates one at a time and verifies the combined result before unblocking dependents. The [planning and execution section](#planning-and-execution) explains each handoff and completion condition.
+As decisions become clear, the planner writes the agreed behavior into a specification, explains the proposed architecture and obtains fresh comprehension and challenge reviews. The design preview shows the expected code areas, concrete behavior and binding choices. Rendered sequence diagrams explain ordering, state or failure flows when they matter.
+
+The implementation plan links each requirement to design changes, components, tickets and checks. After the human accepts it, and the coordinator confirms the reviewed inputs have not changed, the coordinator launches eligible work:
+
+1. Workers return committed candidates.
+2. Fresh code reviewers inspect each candidate.
+3. The coordinator integrates candidates one at a time and verifies the combined result.
+4. Only then are dependent tickets unblocked. The [planning and execution section](#planning-and-execution) explains each handoff and completion condition.
 
 ### Components and responsibilities
 
@@ -32,7 +56,7 @@ As decisions become clear, the planner consolidates agreed behavior into a speci
 | Herdr | Runs sessions and worktrees in persistent panes; the helper records each run and its effective model | Installed host tools/API and project delegation settings; [delegation policy](../skills/engineering/_shared/DELEGATION.md) | Does not define correct requirements, review verdicts or completion policy |
 | Tracker | Stores authoritative tickets, dependencies, one coordinator's claims, run IDs, transitions and evidence links | Project tracker contract; a local tracker can use one canonical absolute `.scratch/<effort-slug>/` root | A derived graph export is not a second tracker; a record is not an atomic distributed lock |
 | Git and worktrees | Give workers separate source checkouts, identify candidates and retain integrated history | Coordinator/worker procedures and Git revisions | Worktrees do not isolate shared runtime services or establish test success |
-| Focused scripts and tests | Check selected structural conditions or execute application verification; record evidence for identified revisions | [frontier](../scripts/frontier.mjs), [design readiness](../scripts/design-check.mjs), [review target](../scripts/review-target.mjs), project test commands | Each command has a narrow scope; none alone proves overall design quality or correct orchestration |
+| Focused scripts and tests | Check selected structural conditions or execute application verification; record evidence for identified revisions | [frontier](../scripts/frontier.mjs), [design readiness](../scripts/design-check.mjs), [review target](../scripts/review-target.mjs), [Herdr delegation](../scripts/herdr-delegate.mjs), project test commands | Each command has a narrow scope; none alone proves overall design quality or correct orchestration |
 
 Roles are responsibilities, not separate installed products. A coordinator is itself a coding-agent session, usually run through a configured harness such as Pi or Claude Code. Herdr runs sessions; the coordinator decides the next workflow action. Role rows select settings, but the actual launched model must be checked (`herdr-delegate.mjs inspect --expect-model`). The human owns acceptance; the coordinator records and applies it.
 

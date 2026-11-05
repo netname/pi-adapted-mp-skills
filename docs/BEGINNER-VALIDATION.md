@@ -1,5 +1,7 @@
 # First quotation lab: Windows and an Ubuntu host
 
+> [Versión en español](BEGINNER-VALIDATION.es.md). This English version is authoritative; update the translation when you change it.
+
 Follow this page in order for your first run. You will use Herdr on Ubuntu, reached from Windows, to direct Claude Code and Pi on Ubuntu. The example host is `sen03`, the Ubuntu user is `netname`, and all project files live on Ubuntu. Substitute your own SSH destination and home directory if different. Commands labelled **Windows** are PowerShell; commands labelled **Ubuntu** run after SSH connects. Text labelled **coordinator chat** goes into the agent conversation in a Herdr pane, never into a shell prompt.
 
 The goal is a tiny quotation program: a catalog lists a PEN priced at 1250 cents; asking for three prints a quote totaling 3750 cents. You will first inspect the proposed design, then watch two independent tasks run before a third combines them. Model calls use your existing subscriptions or API accounts and may incur charges.
@@ -139,7 +141,7 @@ cat "$MP_LAB/docs/agents/architecture.md"
 
 **Expected:** Pi lists the intended skills checkout under project packages. `AGENTS.md` identifies this lab and one canonical tracker path, normally `$MP_LAB/.scratch/quote-demo`. The spec, design, model and tests exist. The new scaffold has no `src/` application implementation; this is intentional. If an older lab already contains implementation or evidence, retain it and resume its recorded stage. A fresh run of a changed fixture uses a new numbered lab, with matching path assignments throughout this page.
 
-The project-scope install serves sessions in the lab directory itself. Workers run in Herdr worktrees under `~/.herdr/worktrees/`, where that install does not resolve; the coordinator therefore gives them the skill files by absolute path, as the prompts below do.
+The project-scope install keeps this unmerged branch out of your other projects, and serves sessions in the lab directory itself. Workers run in Herdr worktrees under `~/.herdr/worktrees/`, where that install does not resolve; the coordinator therefore gives them the skill files by absolute path, as the prompts below do.
 
 In a fresh lab copy these report templates once, before recording results, and create the evidence directory for run records:
 
@@ -163,7 +165,7 @@ Start a named Herdr session for the lab. Either run it in your SSH terminal:
 herdr --session quote-lab
 ```
 
-or, from **Windows**, let the Ubuntu server own the panes while your terminal only draws them:
+or, from **Windows**, let the Ubuntu server own the panes while your terminal only draws them (this route follows Herdr's documentation and has not been checked with this package; use the SSH route if it misbehaves):
 
 ```powershell
 herdr --remote netname@sen03 --session quote-lab
@@ -219,7 +221,9 @@ Report the run ID, the effective model and the summary from --output.
 Do not replace a run whose state is unknown.
 ```
 
-**Expected:** the record shows `completed`, `inspect --expect-model` passes, and the coordinator reports the child's real summary. You can see the child's pane with `herdr agent list` / `herdr workspace list`. Exit the diagnostic sessions after completion; use a new planning session in step 7. **If different:** record a failed/incomplete preflight. A record without an effective model blocks the review gate. Never replace an unknown running child or proceed on assumed success.
+Repeat the same check with the Claude Code review row (`--harness claude` and its arguments), because that row has not been checked live with this package yet.
+
+**Expected:** each record shows `completed`, `inspect --expect-model` passes, and the coordinator reports the child's real summary. You can see the child's pane with `herdr agent list` / `herdr workspace list`. Exit the diagnostic sessions after completion; use a new planning session in step 7. **If different:** record a failed/incomplete preflight. A record without an effective model blocks the review gate. Never replace an unknown running child or proceed on assumed success.
 
 ## 7. Let a planning session finish the lab configuration
 

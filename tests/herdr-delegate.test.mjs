@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch } from '../scripts/herdr-delegate.mjs';
+import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored } from '../scripts/herdr-delegate.mjs';
 
 const lines = (...objs) => objs.map(o => JSON.stringify(o)).join('\n');
 
@@ -72,4 +73,19 @@ test('launch options: rejects what Herdr or the policy would reject', t => {
   assert.throws(() => parseLaunch(base(dir).filter((_, i, a) => a[i] !== '--output' && a[i - 1] !== '--output')), /needs --output/);
   assert.throws(() => parseLaunch([...base(dir), '--worktree', '--repo', dir, '--branch', 'b', '--base', 'x']), /no --cwd/);
   assert.throws(() => parseLaunch([...base(dir), '--name', 'again']), /repeated/);
+});
+
+test('paths: record and read-only output inside the checkout only when Git-ignored', t => {
+  const repo = files(t);
+  const git = (...a) => execFileSync('git', ['-C', repo, ...a], { stdio: 'ignore' });
+  git('init'); writeFileSync(join(repo, '.gitignore'), '.scratch/\n');
+  const ignored = gitIgnored(repo);
+  const inScratch = join(repo, '.scratch', 'runs', 'r.json'), tracked = join(repo, 'r.json'), outside = join(tmpdir(), 'elsewhere.json');
+  assert.equal(ignored(inScratch), true); assert.equal(ignored(tracked), false);
+  assert.doesNotThrow(() => checkPaths({ record: inScratch, output: join(repo, '.scratch', 'runs', 'o.md'), role: 'spec-review' }, repo, ignored));
+  assert.doesNotThrow(() => checkPaths({ record: outside, output: outside, role: 'standards-review' }, repo, ignored));
+  assert.throws(() => checkPaths({ record: tracked, role: 'research' }, repo, ignored), /record must live outside/);
+  assert.throws(() => checkPaths({ record: inScratch, output: join(repo, 'review.md'), role: 'spec-review' }, repo, ignored), /spec-review output/);
+  // design-check reads design-review reports from inside the repository.
+  assert.doesNotThrow(() => checkPaths({ record: inScratch, output: join(repo, 'docs', 'designs', 'reviews', 'challenge.md'), role: 'design-challenge' }, repo, ignored));
 });
