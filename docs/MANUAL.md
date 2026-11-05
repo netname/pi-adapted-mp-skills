@@ -6,6 +6,16 @@ This manual is for using the skills in **your own software project**. It explain
 
 Read in order: [workflow overview](WORKFLOW.md#solution-overview) → [stages and artifacts](#stages-and-artifacts) → [project folders](#project-folders-and-effort-directories) → [tools and scripts](#skills-sessions-and-scripts) → [host and project setup](#prepare-the-execution-host). [The architecture guide](ARCHITECTURE-GUIDE.md) expands design review and acceptance. These three guides describe normal work; the validation guide and its report templates describe the experiment.
 
+**Contents**
+
+| Part | Sections |
+| --- | --- |
+| Concepts | [Stages and artifacts](#stages-and-artifacts) · [Project folders](#project-folders-and-effort-directories) · [Skills, sessions and scripts](#skills-sessions-and-scripts) · [Vocabulary](#vocabulary) |
+| Installation | [Prepare the execution host](#prepare-the-execution-host) · [Install the skills](#install-the-skills-in-your-project) · [Update, switch or remove](#update-switch-or-remove-the-package) |
+| Configuration | [Herdr and role rows](#configure-herdr-and-role-rows) · [Each software project](#configure-each-software-project) · [Verification resources](#define-your-projects-verification-resources) |
+| Daily use | [Across the engineering cycle](#use-the-skills-across-the-software-engineering-cycle) · [Choose tests](#choose-tests-for-each-check) · [Integrate parallel work](#integrate-parallel-work) · [Daily checklist](#daily-checklist-and-retrospective) |
+| Practices and problems | [Good practices](#good-practices) · [Troubleshooting](#troubleshooting) · [Sources and versions](#sources-and-version-boundaries) |
+
 ## Stages and artifacts
 
 The stages name **work on one change**, not chapters in this manual. Reuse already accepted decisions/documents when they still apply; create only what the change needs. The human owns product decisions and final acceptance. One coordinator session owns the tracker and serial integration. Herdr runs the configured sessions; it does not decide whether the work is correct. The [workflow](WORKFLOW.md#planning-and-execution) explains gates and recovery in depth.
@@ -284,6 +294,31 @@ Replace both paths with actual directories on that host. **Install at user scope
 
 **Why install into Pi but not Claude Code here?** The package's `package.json` registers its skills and `git-guardrails` extension with Pi, so Pi sessions can discover and invoke them. The current Claude Code instructions instead point to `SKILL.md` files in that **same checkout** by absolute path; there is no second copy to install or keep in sync. A Pi installation does not register Claude slash commands, and reading a skill file in Claude does not load the Pi extension. This is a choice in this repository's setup, not a Claude Code limitation: Claude Code also supports [native skills](https://code.claude.com/docs/en/skills#choose-where-skills-load), including links to skill folders, if we later add and verify a Claude-specific installation path. Herdr starts sessions but does not install skills into either agent. See [the Claude Code procedure](#use-the-same-procedure-from-claude-code) for the current invocation.
 
+### Update, switch or remove the package
+
+**Choose when to update.** A path install has no copy of its own: every *new* Pi session, and every Claude Code prompt that reads a skill by path, uses whatever is checked out in `$MP_SKILLS` at that moment. Changing the checkout during an active effort therefore mixes versions within one effort, and evidence from before and after the change is no longer comparable. Update between efforts. If you must update during one, pause the coordinator first, record the old and new SHAs in the tracker, and repeat the readiness check before the next dispatch.
+
+**Update a path install.** Read the [changelog](../CHANGELOG.md) and the [migration notes](MIGRATION-0.2.md), then move the checkout to the version you have chosen:
+
+```bash
+git -C "$MP_SKILLS" fetch &&
+git -C "$MP_SKILLS" checkout <tag, branch or SHA> &&
+git -C "$MP_SKILLS" rev-parse HEAD
+```
+
+Run `npm ci && npm test` in the checkout if you want to confirm that the package is intact (the helpers need no dependencies). Then start new Pi sessions; sessions that are already running keep the skills they loaded at startup. Afterwards, check that each project's `docs/agents/` contracts still match the templates (see [Configure each software project](#configure-each-software-project)).
+
+**Update a git install.** `pi update git:github.com/netname/pi-adapted-mp-skills` updates that one package (`pi update --extensions` updates every installed package). Record the resulting SHA as you would for a path install.
+
+**Remove the package.** Use the same source you installed, at the same scope:
+
+```bash
+pi remove "$MP_SKILLS"
+pi list
+```
+
+For a project-scope install, run `pi remove -l "$MP_SKILLS"` from the project directory. Removing the package does not delete anything in your projects. Their `AGENTS.md`, `docs/agents/`, specs, designs and `.scratch/` state belong to the project; keep or delete them deliberately. Herdr integrations (`herdr integration status`) are separate and remain installed.
+
 
 ## Configure Herdr and role rows
 
@@ -367,10 +402,13 @@ using the design-review row's harness and arguments, a brief and task file you
 write in the evidence directory, and --output in that directory. Its only task
 is to read AGENTS.md (and docs/architecture/overview.md in the quotation lab)
 and return a short summary. Wait for the record's status, then run
-herdr-delegate.mjs inspect <record> --expect-model <the row's model>.
+herdr-delegate.mjs inspect <record> --expect-model <provider/model>,
+where <provider/model> is the row's model in the form inspect reports it.
 Report the run ID, the effective model and the summary. Do not launch
 replacements if the status is unknown. Report any capability gap.
 ```
+
+For a Claude Code row, `--expect-model` takes `anthropic/` in front of the ID that `--model` takes. With `--model claude-sonnet-5-5`, for example, you check `--expect-model anthropic/claude-sonnet-5-5`. A Pi row uses the same `provider/id` in both places. If you are unsure, run `inspect <record>` without `--expect-model`: it prints the effective model in exactly that form. Copy that value into the row's *Exact model* column.
 
 Success means the run record shows `completed`, `inspect --expect-model` passes, and the coordinator returns the child's actual summary from `--output`. A record without an effective model is a blocker: the independent-review gate stays unverified until you can establish the model; do not silently weaken the gate.
 
@@ -605,6 +643,25 @@ Keep application-specific decisions in the target application's testing and arch
 
 For maintenance, reproduce a bug at an approved public seam, write a regression test and route the fix through the same committed verification/review path. For a changed requirement, amend the spec/tickets first and invalidate approvals for affected candidates. For a broad refactor, preserve behavior and use compatible migration steps rather than parallel workers breaking each other's interfaces.
 
+## Good practices
+
+These are the rules that prevent most failures. Each one links to where it is explained in full.
+
+| Practice | Why | More |
+| --- | --- | --- |
+| Install once, at user scope, from a checkout whose SHA you record | Workers in Herdr worktrees see the same version; you can say which version produced the evidence | [Install](#install-the-skills-in-your-project) |
+| Keep the package version fixed during an effort | Mixed versions make evidence incomparable | [Update](#update-switch-or-remove-the-package) |
+| Review with a different model family from the author, and check it with `inspect --expect-model` | Same-family review repeats the same blind spots; a role name does not prove which model ran | [Delegation](../skills/engineering/_shared/DELEGATION.md#independence) |
+| Commit before every review; a fix is a new candidate | Reviews and tests describe an exact SHA, not a working tree | [Candidate](#candidate-a-specific-revision-proposed-for-acceptance) |
+| Run exactly one coordinator per effort | Tracker claims are not a distributed lock | [Workflow](WORKFLOW.md#stages-67-run-the-implementation-and-integration-loop) |
+| Pass every worker the same absolute tracker path | Ignored `.scratch/` files do not appear in other worktrees | [Tracker location](#two-setup-checks-command-visibility-and-shared-tracker-paths) |
+| Integrate one candidate at a time and verify the combined result | Two green branches do not prove a green combination | [Integrate](#integrate-parallel-work) |
+| Unblock dependents only after verified integration | "Done" from a worker is not integration | [Vocabulary](#integrated-accepted-into-the-shared-build-of-the-effort) |
+| Give shared runtime resources an owner (separate instances, `--ports`, or a lease) | Worktrees isolate source, not databases or ports | [Verification resources](#define-your-projects-verification-resources) |
+| Use new run names and new record/report paths for every launch, and never overwrite evidence | Old records explain what happened; reuse hides it | [Delegation](../skills/engineering/_shared/DELEGATION.md#preflight-and-launch) |
+| Stop and ask when a product decision is missing | An agent cannot authorize itself | [Workflow](WORKFLOW.md#stages-89-verify-the-complete-change-and-decide-what-to-do) |
+| Use the smallest route the gates allow, never one without gates | Small changes still break things | [Small change](SMALL-CHANGE.md) |
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Next action |
@@ -616,8 +673,14 @@ For maintenance, reproduce a bug at an approved public seam, write a regression 
 | `herdr agent start` cannot find Pi/Claude | The Herdr server started before the PATH change | Stop the server and start it from a shell where `pi`/`claude` resolve; check authentication |
 | `inspect` reports no effective model | Session file or output stream lacks model data, or the integration is missing | Install the harness integration; treat independence as unverified until it is established |
 | `inspect --expect-model` fails | The harness chose a different model than the role row | Fix the `--model` argument; do not accept the run |
-| Batch record says `failed` with `timeout` | The run exceeded `--timeout-ms` (default 30 minutes); the helper killed it | Read `<record>.out.err`; narrow the task or raise the limit in the role row, then relaunch under a new name |
-| Record says `failed` with `setup` or `setup-timeout` | The worktree setup command failed or ran too long; the agent was not started | Read `<record>.setup.log`; fix the command in `testing.md`; close the workspace named in the error |
+| `inspect --expect-model` fails for a Claude row although `--model` is right | The expected value lacks the `anthropic/` prefix | Use `anthropic/<id>`; run `inspect <record>` without `--expect-model` to see the reported value ([format](#test-one-delegated-child)) |
+| A Claude batch run reports two or more effective models | The CLI may have used an auxiliary model as well as the review model | Treat independence as unverified; record the models and report it ([limits](../skills/engineering/_shared/DELEGATION.md#limits)) |
+| `launch` says ``` `herdr` not found on PATH ``` or returns a Herdr server error | Herdr is not on this shell's PATH, or no server is running for the session | Check `command -v herdr` and `herdr status server`; run the coordinator inside a Herdr pane or set `HERDR_SESSION` |
+| `launch` says ``a Herdr agent named X already exists`` | The run name was used by an earlier launch | Use a new `--name` for every launch; stop the old session only after checking its record |
+| `launch` says `record already exists` or `output already exists` | Records and reports are never overwritten | Use new paths for each run; keep the old files as evidence |
+| `launch` refuses the record or output location | The path is inside the delegated checkout and not Git-ignored | Put records and code-review reports in the original project's ignored `.scratch/<effort>/runs/` ([where files go](../skills/engineering/_shared/DELEGATION.md#preflight-and-launch)) |
+| Batch record says `failed` with `timeout` | The run exceeded `--timeout-ms` (default 30 minutes); the helper killed it | Read the stderr log next to the record (`runs/spec-a2.json` → `runs/spec-a2.out.err`); narrow the task or raise the limit in the role row, then relaunch under a new name |
+| Record says `failed` with `setup` or `setup-timeout` | The worktree setup command failed or ran too long; the agent was not started | Read the setup log next to the record (`runs/a.json` → `runs/a.setup.log`); fix the command in `testing.md`; close the workspace named in the error |
 | `inspect` shows `live.status: stale` | A batch run is still marked running past its limit, so its process was lost (for example in a server restart) | Treat it as failed; relaunch under a new name |
 | Research has plausible claims but no sources | Wrong brief or missing retrieval capability | Mark unresolved and collect a properly cited artifact |
 | Worker cannot see ticket files | `.scratch` did not appear in its worktree | Supply canonical absolute tracker path from original project |
