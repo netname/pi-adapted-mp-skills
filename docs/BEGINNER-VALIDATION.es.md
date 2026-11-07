@@ -29,13 +29,13 @@ Si alguien ya preparó el host o el laboratorio, verifica ese trabajo en los pas
 | 10–11: implementación | Código integrado y verificado, revisiones y una demostración manual |
 | 12: valoración | Evidencias conservadas; comprobaciones hechas y no hechas bien separadas |
 
-Algunos fallos son esperables solo en una fase concreta:
+Algunos fallos son normales al principio y pasan a ser fallos reales más adelante. Usa esta tabla para distinguirlos:
 
-| Observación | Antes de implementar | En la entrega final |
+| Lo que ves | En los pasos 1–9 (antes de implementar) | En los pasos 10–12 (implementación y entrega) |
 | --- | --- | --- |
-| Faltan módulos en `src/` / fallan los tests de aceptación de la aplicación | Estado esperado del andamiaje; anota la fase en vez de "arreglarlo" cambiando tests | Fallo; hay que reparar la implementación o las comprobaciones |
-| Falla la comprobación de preparación del borrador | Esperado hasta que se registren la revisión y la aceptación reales | Debe haber pasado antes de lanzar el worker afectado |
-| Fallan los tests del paquete, el inicio de sesión del proveedor o el renderizado necesario | Bloqueo de preparación o de revisión | Sigue siendo un bloqueo; nunca supongas que pasa |
+| Faltan los módulos `src/` de la aplicación, o fallan sus tests de aceptación | **Normal.** El laboratorio trae tests pero no código de la aplicación. Anota en qué paso estás; nunca modifiques los tests para que pasen. | **Un fallo real.** Hay que reparar la implementación o sus comprobaciones. |
+| Falla la comprobación de preparación del diseño (el helper design-check del paso 9) | **Normal** hasta que se registren las revisiones independientes del diseño y tu aceptación. | **No se admite.** Debe pasar antes de que el coordinador lance cualquier worker de los tickets afectados. |
+| Fallan los tests del paquete de skills (`npm test`), un harness no puede iniciar sesión con su proveedor, o una vista de diagrama necesaria no se renderiza | **Bloqueo.** Detente y corrígelo antes de continuar. | **Sigue siendo un bloqueo.** Nunca lo des por superado. |
 
 ## 1. Conéctate a Ubuntu y comprueba las herramientas
 
@@ -171,16 +171,51 @@ o bien, desde **Windows**, deja que el servidor de Ubuntu sea dueño de los pane
 herdr --remote netname@sen03 --session quote-lab
 ```
 
-Abre un panel en el directorio del laboratorio (`cd "$MP_LAB"` dentro de él). Para desconectarte pulsa `Ctrl+B q`; para volver, el mismo comando; los paneles siguen en marcha. Ahí vivirán el coordinador y todas las sesiones delegadas.
+Abre un panel en el directorio del laboratorio (`cd "$MP_LAB"` dentro de él). En esta sesión de Herdr vivirán el coordinador y todas las sesiones delegadas.
 
-Estas son las filas de rol de este laboratorio. En el paso 7 la sesión de planificación las escribirá en `docs/agents/delegation.md`:
+**Salir y volver.** Pulsa `Ctrl+B q` para desconectarte: tu terminal vuelve al prompt normal del shell, mientras el servidor de Herdr en Ubuntu mantiene en marcha la sesión y todos sus paneles. Cerrar el terminal o perder la conexión SSH tiene el mismo efecto. Para volver, ejecuta el mismo comando con el que la iniciaste y el mismo nombre de sesión. Si la iniciaste desde el terminal SSH y sigue abierto, ejecuta ahí:
 
-| Fila de rol | Harness / familia de modelo | Modo | Argumentos tras `--` |
-| --- | --- | --- | --- |
-| Planificación / coordinación | Claude Code / Claude | la propia sesión del coordinador | — |
-| Implementación | Pi / DeepSeek | interactive | `--model deepseek/deepseek-flash` |
-| Comprensión y desafío del diseño | Pi / DeepSeek | batch | `--model deepseek/deepseek-flash --tools read,grep,find,ls` |
-| Revisión de Spec y de Standards | Claude Code / Claude | batch | `--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk` |
+```bash
+herdr --session quote-lab
+```
+
+Si se cerró la conexión SSH, vuelve a conectarte primero desde **Windows** con `ssh sen03` y después ejecuta en Ubuntu el mismo `herdr --session quote-lab`. Si usaste la vía de Windows, vuelve a ejecutar su comando desde PowerShell:
+
+```powershell
+herdr --remote netname@sen03 --session quote-lab
+```
+
+**Esperado:** reaparecen los mismos paneles, con los agentes todavía en marcha o ya terminados. No se reinician. Con otro nombre de sesión se abre una sesión nueva y vacía, así que mantén el nombre `quote-lab`.
+
+Estas son las filas de rol de este laboratorio. Una fila de rol es una receta guardada para un tipo de sesión de agente: qué programa ejecutar, en qué modo, con qué modelo y con qué permisos. Escribir una fila no arranca nada. En el paso 7 la sesión de planificación copia estas filas en el `docs/agents/delegation.md` del laboratorio. A partir de ahí, cada vez que el coordinador necesita una sesión para ese rol, lee la fila y la convierte en un comando `herdr-delegate.mjs launch`. Tú eliges las filas; no escribes los comandos de lanzamiento.
+
+| Fila de rol | Quién la arranca y cuándo | Harness / familia de modelo | Modo | Argumentos tras `--` |
+| --- | --- | --- | --- | --- |
+| Planificación / coordinación | Tú, ejecutando `claude` en un panel de Herdr (pasos 6, 7 y 10). El helper nunca la lanza. | Claude Code / Claude | la propia sesión del coordinador | — |
+| Implementación | El coordinador en el paso 10: un worker por ticket (A, B y después C), cada uno en su propio worktree | Pi / DeepSeek | interactive | `--model deepseek/deepseek-flash` |
+| Comprensión y desafío del diseño | El coordinador en el paso 9: dos revisiones separadas, de solo lectura, del diseño (el diagnóstico del paso 6 usa los mismos argumentos) | Pi / DeepSeek | batch | `--model deepseek/deepseek-flash --tools read,grep,find,ls` |
+| Revisión de Spec y de Standards | El coordinador en el paso 10: dos revisiones separadas, de solo lectura, del código de cada ticket (el segundo diagnóstico del paso 6 usa los mismos argumentos) | Claude Code / Claude | batch | `--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk` |
+
+Qué significa cada columna:
+
+- **Harness** es el programa de agente que ejecuta la sesión: `pi` o `claude`. Se convierte en el `--harness pi` o `--harness claude` del helper. La **familia de modelo** es la familia del proveedor que hay detrás del modelo. Los revisores deben usar una familia distinta de la de los autores que revisan: DeepSeek revisa el diseño de Claude y Claude revisa el código de DeepSeek.
+- **Modo** indica cómo se ejecuta la sesión. Una sesión **interactive** permanece abierta en un panel de Herdr. Edita archivos en su propio worktree, y puedes conectarte para observarla. Una sesión **batch** se ejecuta una sola vez sin ninguna persona (`pi -p` o `claude -p`). El helper guarda su respuesta final en un archivo de informe, y después la sesión termina. Las revisiones son batch, así que su informe nunca depende de lo que se viera en pantalla.
+- **Argumentos tras `--`** se pasan sin cambios al harness. El helper no los interpreta. `--model` elige el modelo. `--tools` limita la sesión a herramientas de lectura de archivos, de modo que un revisor no puede editar, ejecutar tests ni acceder a la red. (Pi y Claude Code escriben los nombres de las herramientas de forma distinta.) `--permission-mode dontAsk` hace que Claude Code rechace cualquier acción no permitida en vez de esperar una aprobación que nadie va a dar. La implementación no tiene límite de herramientas porque los workers tienen que editar y ejecutar tests.
+
+Por ejemplo, una revisión de Spec del ticket A se convierte en un lanzamiento como este (el coordinador elige los nombres y las rutas):
+
+```bash
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" launch \
+  --role spec-review --name spec-a1 --harness claude --mode batch \
+  --brief "$MP_SKILLS/agents/mp-review-spec.md" \
+  --task "$MP_LAB/.scratch/quote-demo/runs/spec-a1.task.md" \
+  --record "$MP_LAB/.scratch/quote-demo/runs/spec-a1.json" \
+  --output "$MP_LAB/.scratch/quote-demo/runs/spec-a1.report.md" \
+  --cwd /ruta/al/worktree/del/ticket-a \
+  -- --model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk
+```
+
+Todo lo que va antes de `--` sale de la propia ejecución: el rol, un nombre de ejecución, el brief, la tarea y la ubicación de los archivos. Todo lo que va después de `--` son los argumentos de la fila de rol. El registro de la ejecución (`spec-a1.json`) guarda esos argumentos como `harnessArgs`. Al ejecutar `herdr-delegate.mjs inspect` sobre el registro se ve qué modelo respondió de verdad. La evidencia es ese modelo, no la fila.
 
 Los IDs de modelo son ejemplos que `sen03` ofrecía durante la preparación. Úsalos solo si `pi --list-models` y tu cuenta de Claude los ofrecen; si no, elige un modelo disponible de la misma familia y anota su ID exacto. No son promesas de acceso ni de mejor rendimiento.
 

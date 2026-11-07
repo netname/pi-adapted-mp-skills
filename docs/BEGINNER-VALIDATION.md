@@ -29,13 +29,13 @@ If someone already prepared the host or lab, verify that work in steps 1–4 and
 | 10–11: implementation | Verified integrated code, reviews and a manual demonstration |
 | 12: assessment | Evidence retained; performed and unperformed checks distinguished |
 
-Some failures are intentional only at a particular stage:
+Some failures are normal early in the run and become real failures later. Use this table to tell which is which:
 
-| Observation | Before implementation | At final delivery |
+| What you see | In steps 1–9 (before implementation) | In steps 10–12 (implementation and delivery) |
 | --- | --- | --- |
-| Missing `src/` modules / failing application acceptance tests | Expected scaffold state; record stage rather than repairing by changing tests | Failure; implementation/checks need repair |
-| Draft readiness check fails | Expected until real review and acceptance are recorded | Must have passed before affected worker dispatch |
-| Package tests, provider sign-in or required rendering fail | Setup/review blocker | Still a blocker; never assume a pass |
+| The application's `src/` modules are missing, or its acceptance tests fail | **Normal.** The lab ships with tests but no application code. Note which step you are at; never edit the tests to make them pass. | **A real failure.** The implementation or its checks must be fixed. |
+| The design readiness check (step 9's design-check helper) fails | **Normal** until the independent design reviews and your acceptance have been recorded. | **Not allowed.** It must pass before the coordinator launches any worker for the affected tickets. |
+| The skills package tests (`npm test`) fail, a harness cannot sign in to its provider, or a required diagram view does not render | **Blocker.** Stop and fix it before continuing. | **Still a blocker.** Never treat it as passed. |
 
 ## 1. Connect to Ubuntu and check the tools
 
@@ -171,16 +171,51 @@ or, from **Windows**, let the Ubuntu server own the panes while your terminal on
 herdr --remote netname@sen03 --session quote-lab
 ```
 
-Open a pane in the lab directory (`cd "$MP_LAB"` inside it). Detach with `Ctrl+B q` and reattach with the same command; the panes keep running. This is where the coordinator and every delegated session will live.
+Open a pane in the lab directory (`cd "$MP_LAB"` inside it). This Herdr session is where the coordinator and every delegated session will live.
 
-These are the role rows for this lab. You will have the planning session write them into `docs/agents/delegation.md` in step 7:
+**Leaving and returning.** Press `Ctrl+B q` to detach: your terminal goes back to the normal shell prompt, while the Herdr server on Ubuntu keeps the session and all its panes running. Closing the terminal or losing the SSH connection has the same effect. To return, run the same command you used to start it, with the same session name. If you started from the SSH terminal and it is still open, run this there:
 
-| Role row | Harness / model family | Mode | Arguments after `--` |
-| --- | --- | --- | --- |
-| Planning / coordination | Claude Code / Claude | the coordinator's own session | — |
-| Implementation | Pi / DeepSeek | interactive | `--model deepseek/deepseek-flash` |
-| Design comprehension, design challenge | Pi / DeepSeek | batch | `--model deepseek/deepseek-flash --tools read,grep,find,ls` |
-| Spec review, Standards review | Claude Code / Claude | batch | `--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk` |
+```bash
+herdr --session quote-lab
+```
+
+If the SSH connection was closed, first reconnect from **Windows** with `ssh sen03`, then run the same `herdr --session quote-lab` command on Ubuntu. If you used the Windows route, run its command again from PowerShell:
+
+```powershell
+herdr --remote netname@sen03 --session quote-lab
+```
+
+**Expected:** the same panes reappear, with agents still running or finished. They do not restart. A different session name opens a new, empty session instead, so keep the name `quote-lab`.
+
+These are the role rows for this lab. A role row is a saved recipe for one kind of agent session: which program to run, in which mode, with which model and which permissions. Writing a row down starts nothing. In step 7 the planning session copies these rows into the lab's `docs/agents/delegation.md`. From then on, each time the coordinator needs a session for that role, it reads the row and turns it into a `herdr-delegate.mjs launch` command. You choose the rows; you do not type the launch commands.
+
+| Role row | Who starts it, and when | Harness / model family | Mode | Arguments after `--` |
+| --- | --- | --- | --- | --- |
+| Planning / coordination | You, by running `claude` in a Herdr pane (steps 6, 7 and 10). The helper never launches it. | Claude Code / Claude | the coordinator's own session | — |
+| Implementation | The coordinator in step 10: one worker per ticket (A, B, then C), each in its own worktree | Pi / DeepSeek | interactive | `--model deepseek/deepseek-flash` |
+| Design comprehension, design challenge | The coordinator in step 9: two separate read-only reviews of the design (step 6 uses the same arguments for its diagnostic) | Pi / DeepSeek | batch | `--model deepseek/deepseek-flash --tools read,grep,find,ls` |
+| Spec review, Standards review | The coordinator in step 10: two separate read-only reviews of each ticket's code (step 6 uses the same arguments for its second diagnostic) | Claude Code / Claude | batch | `--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk` |
+
+What the columns mean:
+
+- **Harness** is the agent program that runs the session: `pi` or `claude`. It becomes the helper's `--harness pi` or `--harness claude`. The **model family** is the vendor family behind the model. Reviewers must use a different family from the authors they review: DeepSeek reviews Claude's design, and Claude reviews DeepSeek's code.
+- **Mode** says how the session runs. An **interactive** session stays open in a Herdr pane. It edits files in its own worktree, and you can attach to watch it. A **batch** session runs once without a human (`pi -p` or `claude -p`). The helper saves its final answer to a report file, and then the session exits. Reviews are batch, so their report never depends on what was on screen.
+- **Arguments after `--`** are passed unchanged to the harness. The helper does not read them. `--model` selects the model. `--tools` limits the session to file-reading tools, so a reviewer cannot edit, run tests or reach the network. (The tool names are written differently in Pi and in Claude Code.) `--permission-mode dontAsk` makes Claude Code refuse any action it was not allowed, instead of waiting for an approval that nobody will give. Implementation has no tool limit because workers must edit and test.
+
+For example, a Spec review of ticket A becomes a launch like this (the coordinator chooses the names and paths):
+
+```bash
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" launch \
+  --role spec-review --name spec-a1 --harness claude --mode batch \
+  --brief "$MP_SKILLS/agents/mp-review-spec.md" \
+  --task "$MP_LAB/.scratch/quote-demo/runs/spec-a1.task.md" \
+  --record "$MP_LAB/.scratch/quote-demo/runs/spec-a1.json" \
+  --output "$MP_LAB/.scratch/quote-demo/runs/spec-a1.report.md" \
+  --cwd /path/to/ticket-a/worktree \
+  -- --model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk
+```
+
+Everything before `--` comes from the run itself: the role, a run name, the brief, the task and the file locations. Everything after `--` is the role row's arguments. The run record (`spec-a1.json`) keeps these arguments as `harnessArgs`. Running `herdr-delegate.mjs inspect` on the record then shows which model actually answered. That model, not the row, is the evidence.
 
 The model IDs are examples that `sen03` offered during preparation. Choose them only if `pi --list-models` and your Claude account offer them; otherwise choose an available model in the same family and record its exact ID. They are not promises of access or benchmark superiority.
 
