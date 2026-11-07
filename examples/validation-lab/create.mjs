@@ -30,5 +30,7 @@ writeFileSync(join(state, 'graph.json'), JSON.stringify({ tickets: [
   { id: 'C', status: 'ready', blockedBy: ['A', 'B'] }
 ]}, null, 2) + '\n');
 cpSync(join(skills, 'skills/engineering/_shared/delegation.template.md'), join(target, 'docs/agents/delegation.md'));
+// Left identical to the template so `mp-setup.mjs init --role ...` may generate over it.
+cpSync(join(skills, 'skills/engineering/_shared/delegation.template.json'), join(target, 'docs/agents/delegation.json'));
 writeFileSync(join(state, 'events.md'), '# Events\n\nLab created; no implementation, verification or review has passed.\n');
-console.log(JSON.stringify({ target, skills, state, next: 'Initialize Git, configure delegation.md, then follow docs/PR-VALIDATION.md in the skills repository.' }, null, 2));
+console.log(JSON.stringify({ target, skills, state, next: 'Initialize Git, write the role rows with scripts/mp-setup.mjs init (or fill docs/agents/delegation.json), then follow docs/PR-VALIDATION.md in the skills repository.' }, null, 2));
