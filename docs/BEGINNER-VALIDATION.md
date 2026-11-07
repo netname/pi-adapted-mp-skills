@@ -292,15 +292,20 @@ Then send the same request with `--role spec-review` and the brief `agents/mp-re
 ```text
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/setup-matt-pocock-skills/SKILL.md
 and apply it to /home/netname/code/quote-workflow-lab-01, resolving references
-from the skill directory. Delegation is already written and probed in
-docs/agents/delegation.json; do not change it. Reuse the Herdr session quote-lab.
-Preserve the supplied spec/tests/scope and canonical tracker in AGENTS.md.
-Record the step 6 run evidence and missing capabilities in the lab reports.
-No implementation, worker dispatch or human design acceptance yet.
+from the skill directory. The skill is written for Pi and you are Claude Code:
+treat its Pi checks (available skills, skill commands) as checks of the Pi worker
+environment, and answer them by running pi in this directory (for example
+pi list --approve), not from your own context. Delegation is already written
+and probed in docs/agents/delegation.json; do not change it. Reuse the Herdr
+session quote-lab. Preserve the supplied spec/tests/scope and canonical tracker
+in AGENTS.md. Record the step 6 run evidence and missing capabilities in the
+lab reports. No implementation, worker dispatch or human design acceptance yet.
 Explain changes and remaining questions in plain language for my inspection.
 ```
 
 The role rows, the helper path, the evidence directory and the host checks are already done, so the prompt only names what is left: the tracker, the testing and architecture contracts and the reports. The skill runs `mp-setup.mjs init` itself; it keeps your `delegation.json` and reports what is still missing.
+
+The setup skill is a Pi skill, but here Claude Code runs it by reading the file. Some of its checks assume the reader is Pi: for example, it decides whether `triage` is installed by reading the skill list in its own system prompt, which Claude Code does not have. The prompt's Pi line makes Claude answer those checks from the Pi installation that the workers will use, instead of concluding that a skill is missing.
 
 **Expected:** the agent fills the remaining settings and explains open issues. You should understand who plans, who builds and who reviews. Research stays unavailable for this first run and is not dispatched.
 

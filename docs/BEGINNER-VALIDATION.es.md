@@ -292,15 +292,20 @@ Después envía la misma petición con `--role spec-review` y el brief `agents/m
 ```text
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/setup-matt-pocock-skills/SKILL.md
 and apply it to /home/netname/code/quote-workflow-lab-01, resolving references
-from the skill directory. Delegation is already written and probed in
-docs/agents/delegation.json; do not change it. Reuse the Herdr session quote-lab.
-Preserve the supplied spec/tests/scope and canonical tracker in AGENTS.md.
-Record the step 6 run evidence and missing capabilities in the lab reports.
-No implementation, worker dispatch or human design acceptance yet.
+from the skill directory. The skill is written for Pi and you are Claude Code:
+treat its Pi checks (available skills, skill commands) as checks of the Pi worker
+environment, and answer them by running pi in this directory (for example
+pi list --approve), not from your own context. Delegation is already written
+and probed in docs/agents/delegation.json; do not change it. Reuse the Herdr
+session quote-lab. Preserve the supplied spec/tests/scope and canonical tracker
+in AGENTS.md. Record the step 6 run evidence and missing capabilities in the
+lab reports. No implementation, worker dispatch or human design acceptance yet.
 Explain changes and remaining questions in plain language for my inspection.
 ```
 
 Las filas de rol, la ruta del helper, el directorio de evidencias y las comprobaciones del host ya están hechas, así que el prompt solo nombra lo que falta: el tracker, los contratos de testing y de arquitectura, y los informes. La skill ejecuta `mp-setup.mjs init` por su cuenta; conserva tu `delegation.json` e informa de lo que aún falta.
+
+La skill de setup es una skill de Pi, pero aquí la ejecuta Claude Code leyendo el archivo. Algunas de sus comprobaciones dan por hecho que quien la lee es Pi: por ejemplo, decide si `triage` está instalada leyendo la lista de skills de su propio system prompt, y Claude Code no tiene esa lista. La línea del prompt sobre Pi hace que Claude responda a esas comprobaciones con la instalación de Pi que usarán los workers, en vez de concluir que falta una skill.
 
 **Resultado esperado:** el agente rellena la configuración que falta y explica lo que quede pendiente. Deberías entender quién planifica, quién construye y quién revisa. La investigación sigue no disponible en esta primera ejecución y no se lanza.
 
