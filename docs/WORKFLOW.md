@@ -25,7 +25,7 @@ Work begins by understanding the need and the project's context. In an existing 
 | --- | --- |
 | `AGENTS.md` | Pointers to the relevant instructions |
 | `docs/agents/issue-tracker.md` | The tracker, statuses and ownership rules |
-| `docs/agents/delegation.md` | Role rows (harness, mode, arguments, model, family) and concurrency |
+| `docs/agents/delegation.json` (table in `delegation.md`) | Role rows (harness, mode, exact model, family, tools) and concurrency |
 | `docs/agents/testing.md` | Verification commands and environment rules |
 | `docs/agents/architecture.md` | Design, review and acceptance requirements (the design *process* contract) |
 

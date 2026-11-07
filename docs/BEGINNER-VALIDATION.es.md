@@ -15,7 +15,7 @@ Esta página cubre una ejecución supervisada con éxito. La [guía de validaci�
 | Host | `sen03`, el ordenador Ubuntu donde corren el servidor de Herdr y los agentes |
 | Checkout de skills | `/home/netname/code/pi-skills-validation-01`, las instrucciones y helpers que usan los agentes |
 | Proyecto de laboratorio | `/home/netname/code/quote-workflow-lab-01`, la aplicación aparte que van a construir |
-| Fila de rol | Una línea de `docs/agents/delegation.md` del laboratorio: harness, modo, argumentos, modelo exacto y familia de un tipo de sesión |
+| Fila de rol | Una entrada de `docs/agents/delegation.json` del laboratorio: harness, modo, modelo exacto, familia y herramientas de un tipo de sesión (se muestra como tabla en `delegation.md`) |
 
 Claude Code y Pi son herramientas de agente que llaman a modelos. Herdr ejecuta sus sesiones en paneles que siguen vivos cuando te desconectas. Una fila de rol no es una sesión en marcha. La persona acepta el diseño; la sesión coordinadora gestiona tickets y workers. A/B/C son nombres de tareas, no de modelos. Los commits de Git identifican versiones guardadas exactas; ese identificador largo se llama SHA.
 
@@ -187,41 +187,63 @@ herdr --remote netname@sen03 --session quote-lab
 
 **Esperado:** reaparecen los mismos paneles, con los agentes todavía en marcha o ya terminados. No se reinician. Con otro nombre de sesión se abre una sesión nueva y vacía, así que mantén el nombre `quote-lab`.
 
-Estas son las filas de rol de este laboratorio. Una fila de rol es una receta guardada para un tipo de sesión de agente: qué programa ejecutar, en qué modo, con qué modelo y con qué permisos. Escribir una fila no arranca nada. En el paso 7 la sesión de planificación copia estas filas en el `docs/agents/delegation.md` del laboratorio. A partir de ahí, cada vez que el coordinador necesita una sesión para ese rol, lee la fila y la convierte en un comando `herdr-delegate.mjs launch`. Tú eliges las filas; no escribes los comandos de lanzamiento.
+Estas son las filas de rol de este laboratorio. Una fila de rol es una receta guardada para un tipo de sesión de agente: qué programa ejecutar, en qué modo, con qué modelo y con qué permisos. Escribir una fila no arranca nada. Al final de este paso escribes las filas en el `docs/agents/delegation.json` del laboratorio. A partir de ahí, cada vez que el coordinador necesita una sesión para ese rol, la lanza con `--config docs/agents/delegation.json --role <rol>`, y el helper toma todo lo demás de la fila. Tú eliges las filas; no escribes los comandos de lanzamiento.
 
-| Fila de rol | Quién la arranca y cuándo | Harness / familia de modelo | Modo | Argumentos tras `--` |
-| --- | --- | --- | --- | --- |
-| Planificación / coordinación | Tú, ejecutando `claude` en un panel de Herdr (pasos 6, 7 y 10). El helper nunca la lanza. | Claude Code / Claude | la propia sesión del coordinador | — |
-| Implementación | El coordinador en el paso 10: un worker por ticket (A, B y después C), cada uno en su propio worktree | Pi / DeepSeek | interactive | `--model deepseek/deepseek-flash` |
-| Comprensión y desafío del diseño | El coordinador en el paso 9: dos revisiones separadas, de solo lectura, del diseño (el diagnóstico del paso 6 usa los mismos argumentos) | Pi / DeepSeek | batch | `--model deepseek/deepseek-flash --tools read,grep,find,ls` |
-| Revisión de Spec y de Standards | El coordinador en el paso 10: dos revisiones separadas, de solo lectura, del código de cada ticket (el segundo diagnóstico del paso 6 usa los mismos argumentos) | Claude Code / Claude | batch | `--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk` |
+| Fila de rol | Quién la arranca y cuándo | Harness / familia de modelo | Modo | Modelo | Herramientas |
+| --- | --- | --- | --- | --- | --- |
+| `planning` | Tú, ejecutando `claude` en un panel de Herdr (pasos 6, 7 y 10). El helper nunca la lanza. | Claude Code / Claude | la propia sesión del coordinador | tu modelo de Claude | — |
+| `implementation` | El coordinador en el paso 10: un worker por ticket (A, B y después C), cada uno en su propio worktree | Pi / DeepSeek | interactive | `deepseek/deepseek-flash` | completas |
+| `design-comprehension`, `design-challenge` | El coordinador en el paso 9: dos revisiones separadas del diseño (el diagnóstico del paso 6 usa la primera) | Pi / DeepSeek | batch | `deepseek/deepseek-flash` | solo lectura |
+| `spec-review`, `standards-review` | El coordinador en el paso 10: dos revisiones separadas del código de cada ticket (el segundo diagnóstico del paso 6 usa la primera) | Claude Code / Claude | batch | `anthropic/claude-sonnet-5-5` | solo lectura |
 
 Qué significa cada columna:
 
-- **Harness** es el programa de agente que ejecuta la sesión: `pi` o `claude`. Se convierte en el `--harness pi` o `--harness claude` del helper. La **familia de modelo** es la familia del proveedor que hay detrás del modelo. Los revisores deben usar una familia distinta de la de los autores que revisan: DeepSeek revisa el diseño de Claude y Claude revisa el código de DeepSeek.
+- **Harness** es el programa de agente que ejecuta la sesión: `pi` o `claude`. La **familia de modelo** es la familia del proveedor que hay detrás del modelo. Los revisores deben usar una familia distinta de la de los autores que revisan: DeepSeek revisa el diseño de Claude y Claude revisa el código de DeepSeek. `config check` rechaza las filas que incumplen esta regla.
 - **Modo** indica cómo se ejecuta la sesión. Una sesión **interactive** permanece abierta en un panel de Herdr. Edita archivos en su propio worktree, y puedes conectarte para observarla. Una sesión **batch** se ejecuta una sola vez sin ninguna persona (`pi -p` o `claude -p`). El helper guarda su respuesta final en un archivo de informe, y después la sesión termina. Las revisiones son batch, así que su informe nunca depende de lo que se viera en pantalla.
-- **Argumentos tras `--`** se pasan sin cambios al harness. El helper no los interpreta. `--model` elige el modelo. `--tools` limita la sesión a herramientas de lectura de archivos, de modo que un revisor no puede editar, ejecutar tests ni acceder a la red. (Pi y Claude Code escriben los nombres de las herramientas de forma distinta.) `--permission-mode dontAsk` hace que Claude Code rechace cualquier acción no permitida en vez de esperar una aprobación que nadie va a dar. La implementación no tiene límite de herramientas porque los workers tienen que editar y ejecutar tests.
+- **Modelo** se escribe como `proveedor/id`, la forma en que el helper informa del modelo que respondió de verdad. Para Claude Code es `anthropic/<id>`.
+- **Herramientas** indica lo que la sesión puede hacer. **Solo lectura** limita a un revisor a leer archivos, de modo que no puede editar, ejecutar tests ni acceder a la red. El helper lo traduce a las opciones de cada harness: `--tools read,grep,find,ls` para Pi y `--tools Read,Grep,Glob --permission-mode dontAsk` para Claude Code. `dontAsk` hace que Claude Code rechace cualquier acción no permitida en vez de esperar una aprobación que nadie va a dar. La implementación tiene todas las herramientas porque los workers tienen que editar y ejecutar tests.
 
 Por ejemplo, una revisión de Spec del ticket A se convierte en un lanzamiento como este (el coordinador elige los nombres y las rutas):
 
 ```bash
 node "$MP_SKILLS/scripts/herdr-delegate.mjs" launch \
-  --role spec-review --name spec-a1 --harness claude --mode batch \
+  --config "$MP_LAB/docs/agents/delegation.json" --role spec-review --name spec-a1 \
   --brief "$MP_SKILLS/agents/mp-review-spec.md" \
   --task "$MP_LAB/.scratch/quote-demo/runs/spec-a1.task.md" \
   --record "$MP_LAB/.scratch/quote-demo/runs/spec-a1.json" \
   --output "$MP_LAB/.scratch/quote-demo/runs/spec-a1.report.md" \
-  --cwd /ruta/al/worktree/del/ticket-a \
-  -- --model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk
+  --cwd /ruta/al/worktree/del/ticket-a
 ```
 
-Todo lo que va antes de `--` sale de la propia ejecución: el rol, un nombre de ejecución, el brief, la tarea y la ubicación de los archivos. Todo lo que va después de `--` son los argumentos de la fila de rol. El registro de la ejecución (`spec-a1.json`) guarda esos argumentos como `harnessArgs`. Al ejecutar `herdr-delegate.mjs inspect` sobre el registro se ve qué modelo respondió de verdad. La evidencia es ese modelo, no la fila.
+Las opciones describen la propia ejecución: el rol, un nombre de ejecución, el brief, la tarea y la ubicación de los archivos. El helper añade el harness, el modo y los argumentos de la fila (`--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk`), y rechaza un lanzamiento que intente cambiarlos. También permite a Claude Code leer el brief y la tarea aunque estén fuera del worktree. El registro de la ejecución (`spec-a1.json`) guarda los argumentos como `harnessArgs`, junto con la ruta y el hash de la configuración. Al ejecutar `herdr-delegate.mjs inspect` sobre el registro se comprueba que el modelo que respondió de verdad coincide con la fila. La evidencia es ese modelo, no la fila.
 
 Los IDs de modelo son ejemplos que `sen03` ofrecía durante la preparación. Úsalos solo si `pi --list-models` y tu cuenta de Claude los ofrecen; si no, elige un modelo disponible de la misma familia y anota su ID exacto. No son promesas de acceso ni de mejor rendimiento.
 
-**Resultado esperado:** una sesión de Herdr en marcha con un panel en el laboratorio, y una tabla de roles que entiendes. La planificación con Claude tiene revisión de diseño independiente con DeepSeek; la implementación con DeepSeek tiene revisión de código independiente con Claude. Cada eje de revisión usa una sesión nueva aparte, aunque se reutilice una fila.
+**Escribe las filas.** En un panel del laboratorio (Ubuntu), cambia el modelo de planificación por el que uses y ejecuta:
 
-**Si no coincide:** si `herdr --remote` no conecta, comprueba que `ssh netname@sen03` funciona y que Herdr está instalado en Ubuntu. Para antes de una revisión real si no se puede verificar la independencia.
+```bash
+node "$MP_SKILLS/scripts/mp-setup.mjs" init "$MP_LAB" --session quote-lab \
+  --evidence "$MP_LAB/.scratch/quote-demo/runs" --setup "npm ci" \
+  --role planning=claude:anthropic/claude-opus-5-5:Claude \
+  --role implementation=pi:deepseek/deepseek-flash:DeepSeek \
+  --role design-comprehension=pi:deepseek/deepseek-flash:DeepSeek \
+  --role design-challenge=pi:deepseek/deepseek-flash:DeepSeek \
+  --role spec-review=claude:anthropic/claude-sonnet-5-5:Claude \
+  --role standards-review=claude:anthropic/claude-sonnet-5-5:Claude \
+  --unavailable "research=not exercised in the first run"
+```
+
+Cada `--role` es `ROL=HARNESS:MODELO:FAMILIA`; el modo y las herramientas salen del rol. El comando escribe `docs/agents/delegation.json`, genera las mismas filas como tabla en `docs/agents/delegation.md`, crea el directorio de evidencias, comprueba las filas y busca nombres de skill duplicados. Nunca sobrescribe un archivo que hayas editado: en un laboratorio existente cuyo `delegation.json` ya tenga tus filas, sáltatelo y ejecuta `config check`. Después comprueba que este host puede ejecutar todas las filas:
+
+```bash
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" config probe "$MP_LAB/docs/agents/delegation.json" --live
+```
+
+`--live` envía un prompt corto a cada modelo, lo que puede tener coste. Sin él solo se comprueban el servidor de Herdr, las integraciones, los dos CLI y la lista de modelos de Pi.
+
+**Resultado esperado:** una sesión de Herdr en marcha con un panel en el laboratorio; `init` informa `"ok": true` con `config.table` en `in-sync`; el probe informa `"ok": true`, y con `--live` cada línea de modelo dice `answered by` con el mismo modelo que su fila. La planificación con Claude tiene revisión de diseño independiente con DeepSeek; la implementación con DeepSeek tiene revisión de código independiente con Claude. Cada eje de revisión usa una sesión nueva aparte, aunque se reutilice una fila.
+
+**Si no coincide:** si `herdr --remote` no conecta, comprueba que `ssh netname@sen03` funciona y que Herdr está instalado en Ubuntu. Una línea fallida del probe nombra el problema. Por ejemplo, `401 … invalid` significa que el proveedor rechazó tu clave de API; corrígela en ese harness y reinicia los paneles que lo usan. Los errores de `init` nombran el rol y el ajuste que hay que corregir. Para antes de una revisión real si no se puede verificar la independencia.
 
 ## 6. Comprueba cada harness y un hijo delegado
 
@@ -244,21 +266,24 @@ En la sesión de Claude pega:
 
 ```text
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/_shared/DELEGATION.md.
-Launch exactly one fresh batch session with
+Launch exactly one fresh session with
 node /home/netname/code/pi-skills-validation-01/scripts/herdr-delegate.mjs launch
---mode batch --role exploration --harness pi, the design-review arguments from
-the role table, --cwd /home/netname/code/quote-workflow-lab-01, and a brief,
-task, record and --output you create under .scratch/quote-demo/runs/.
-Its only task: read AGENTS.md and docs/architecture/overview.md and summarize
-the proposed app. Wait until the record's status is completed or failed, then
-run herdr-delegate.mjs inspect <record> --expect-model deepseek/deepseek-flash.
-Report the run ID, the effective model and the summary from --output.
+--config /home/netname/code/quote-workflow-lab-01/docs/agents/delegation.json
+--role design-comprehension, the brief
+/home/netname/code/pi-skills-validation-01/agents/mp-review-design.md,
+--cwd /home/netname/code/quote-workflow-lab-01, and a task, record and --output
+you create under .scratch/quote-demo/runs/. Do not add --harness, --mode or
+arguments after --. The task says this is a transport check, not a review; its
+only work: read AGENTS.md and docs/architecture/overview.md and summarize the
+proposed app in three sentences. Wait until the record's status is completed or
+failed, then run herdr-delegate.mjs inspect <record>. Report the run ID, the
+modelCheck result, the effective model and the summary from --output.
 Do not replace a run whose state is unknown.
 ```
 
-Repite la misma comprobación con la fila de revisión de Claude Code (`--harness claude` y sus argumentos), porque esa fila todavía no se ha probado en vivo con este paquete.
+Después envía la misma petición con `--role spec-review` y el brief `agents/mp-review-spec.md`, para comprobar también en tu host la fila de revisión de Claude Code.
 
-**Resultado esperado:** cada registro muestra `completed`, `inspect --expect-model` pasa y el coordinador devuelve el resumen real del hijo. Puedes ver el panel del hijo con `herdr agent list` / `herdr workspace list`. Al terminar cierra las sesiones de diagnóstico; en el paso 7 usa una sesión de planificación nueva. **Si no coincide:** anota la comprobación previa como fallida o incompleta. Un registro sin modelo efectivo bloquea la puerta de revisión. Nunca sustituyas un hijo en estado desconocido ni sigas suponiendo que todo fue bien.
+**Resultado esperado:** cada registro muestra `completed`, `inspect` termina con un `modelCheck` cuyo `result` es `match`, y el coordinador devuelve el resumen real del hijo. Puedes ver el panel del hijo con `herdr agent list` / `herdr workspace list`. Al terminar cierra las sesiones de diagnóstico; en el paso 7 usa una sesión de planificación nueva. **Si no coincide:** anota la comprobación previa como fallida o incompleta. El `failureDetail` de un registro fallido da el error del proveedor cuando lo hubo. Si el informe dice que la sesión no pudo leer su brief, el checkout de skills es anterior al arreglo de acceso de lectura; actualízalo. Un registro sin modelo efectivo bloquea la puerta de revisión. Nunca sustituyas un hijo en estado desconocido ni sigas suponiendo que todo fue bien.
 
 ## 7. Deja que una sesión de planificación termine la configuración
 
@@ -266,25 +291,25 @@ Repite la misma comprobación con la fila de revisión de Claude Code (`--harnes
 
 ```text
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/setup-matt-pocock-skills/SKILL.md
-and apply it to /home/netname/code/quote-workflow-lab-01. Resolve references
-from the skill directory. Treat Pi checks as checks of the worker environment.
-Reuse the verified host, harnesses and Herdr session quote-lab.
-Write the role rows I chose (harness, mode, arguments, exact model, family) into
-docs/agents/delegation.md, with the helper path and the evidence directory
-.scratch/quote-demo/runs. Do not invent settings or silently substitute models.
+and apply it to /home/netname/code/quote-workflow-lab-01, resolving references
+from the skill directory. Delegation is already written and probed in
+docs/agents/delegation.json; do not change it. Reuse the Herdr session quote-lab.
 Preserve the supplied spec/tests/scope and canonical tracker in AGENTS.md.
-Record preflight run evidence and missing capabilities in the lab reports.
+Record the step 6 run evidence and missing capabilities in the lab reports.
 No implementation, worker dispatch or human design acceptance yet.
 Explain changes and remaining questions in plain language for my inspection.
 ```
 
-**Resultado esperado:** el agente rellena la configuración real y explica lo que quede pendiente. Deberías entender quién planifica, quién construye y quién revisa. La fila de Investigación puede usar otro harness con acceso a fuentes, verificado aparte; si la investigación no entra en esta primera ejecución, anótala como no disponible / no probada y no la lances. Las filas de implementación y revisión, que son obligatorias, deben quedar completas.
+Las filas de rol, la ruta del helper, el directorio de evidencias y las comprobaciones del host ya están hechas, así que el prompt solo nombra lo que falta: el tracker, los contratos de testing y de arquitectura, y los informes. La skill ejecuta `mp-setup.mjs init` por su cuenta; conserva tu `delegation.json` e informa de lo que aún falta.
+
+**Resultado esperado:** el agente rellena la configuración que falta y explica lo que quede pendiente. Deberías entender quién planifica, quién construye y quién revisa. La investigación sigue no disponible en esta primera ejecución y no se lanza.
 
 **Dónde / quién:** terminal de Ubuntu; tú revisas y guardas la configuración:
 
 ```bash
 cd "$MP_LAB" && git status --short && git diff
-cat docs/agents/delegation.md
+cat docs/agents/delegation.json docs/agents/delegation.md
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" config check "$MP_LAB/docs/agents/delegation.json"
 cat docs/agents/testing.md
 cat docs/agents/architecture.md
 ```
@@ -333,9 +358,9 @@ Revisa `components`, `quoteSuccess` y `quoteFailure` junto a la tabla C1-C3 del 
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/review-design/SKILL.md
 and apply it to /home/netname/code/quote-workflow-lab-01.
 Freeze the current spec/design/model/ADR/coverage and quote-plan.md inputs.
-Launch separate fresh comprehension and challenge batch sessions through Herdr
-with the design-review role rows, independent of every design author, and
-verify each run with inspect --expect-model. Collect the real reports with
+Launch separate fresh comprehension and challenge sessions through Herdr with
+--config docs/agents/delegation.json and the design-review roles, independent of
+every design author, and verify each run with inspect. Collect the real reports with
 run/model/input identities. Resolve blockers and preserve findings.
 Check supplied tickets A/B/C and their coverage; do not create duplicate tickets.
 Present what changes, success/failure behavior, alternatives, remaining decisions
@@ -375,9 +400,9 @@ Use the actual accepted design/plan/readiness and project contracts. Use the
 original canonical tracker root from AGENTS.md; verify evidence before dispatch.
 Create a dedicated integration worktree from EXECUTION_SHA. You are the single
 coordinator and tracker/integration writer. Maximum two implementation workers.
-Launch workers and reviewers through Herdr with the implementation and code-review
-role rows and explicit role briefs; give workers the skill files by absolute
-path. Verify every run with inspect --expect-model. Do not implement the
+Launch workers and reviewers through Herdr with --config docs/agents/delegation.json,
+the implementation and code-review roles and explicit role briefs; give workers
+the skill files by absolute path. Verify every run with inspect. Do not implement the
 application yourself.
 Launch A and B in separate worktrees, paused before editing so I can inspect
 their run IDs, effective models, paths and starting revisions. Do not launch C

@@ -23,7 +23,7 @@ Role rows as data (optional): `docs/agents/delegation.json`, from `delegation.te
 
 Replace all placeholders with harnesses and models actually available on this host (`pi --list-models`, a signed-in `claude`).
 Install the Herdr integration for every interactive harness: `herdr integration install pi`, `herdr integration install claude`.
-The coordinator verifies the effective model with `herdr-delegate.mjs inspect <record> --expect-model <provider/model>`, not these names.
+The coordinator verifies the effective model with `herdr-delegate.mjs inspect <record>` (checked against `delegation.json` for a `--config` launch; `--expect-model <provider/model>` for a manual one), not these names.
 Write *Exact model* in the form `inspect` reports it: `<provider>/<id>`. For Pi this is the same value as `--model`. For Claude Code, put `anthropic/` in front of the `--model` ID (`--model claude-sonnet-5-5` → `anthropic/claude-sonnet-5-5`).
 Review family must differ from all implementation families in the candidate.
 Preserve run IDs, revisions, outputs and status in the tracker.

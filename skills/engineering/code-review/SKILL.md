@@ -28,9 +28,9 @@ It rejects dirty worktrees and a head that differs from the checkout, resolves i
 
 ## Dispatch
 
-Launch two fresh **batch** sessions concurrently through Herdr (`scripts/herdr-delegate.mjs launch --mode batch`, one per axis) with the complete role briefs from this package's `agents/mp-review-standards.md` and `agents/mp-review-spec.md` as `--brief`. Put the manifest, diff, commit list, exact candidate source, relevant project standards and spec in the `--task` file. Explicitly include project instructions; do not rely on harness auto-discovery. Copy artifacts and verify revisions if using another host.
+Launch two fresh **batch** sessions concurrently through Herdr (`scripts/herdr-delegate.mjs launch --config <docs/agents/delegation.json> --role spec-review|standards-review`, one per axis; without the JSON, the manual form with `--mode batch`) with the complete role briefs from this package's `agents/mp-review-standards.md` and `agents/mp-review-spec.md` as `--brief`. Put the manifest, diff, commit list, exact candidate source, relevant project standards and spec in the `--task` file. Explicitly include project instructions; do not rely on harness auto-discovery. Copy artifacts and verify revisions if using another host.
 
-Both reviewers must use a model family different from every implementing worker in this target. Verify the effective model with `herdr-delegate.mjs inspect <record> --expect-model <provider/model>` before accepting results. Give the reviewers read-only tool flags after `--` (see `../_shared/DELEGATION.md`), and instruct reviewers not to edit or run tests. If the host cannot enforce read-only access, record that limitation and check the candidate for mutations before accepting findings.
+Both reviewers must use a model family different from every implementing worker in this target. Verify the effective model with `herdr-delegate.mjs inspect <record>` (a `--config` run is checked against its row; a manual run needs `--expect-model <provider/model>`) before accepting results. Give the reviewers read-only tool flags after `--` (see `../_shared/DELEGATION.md`), and instruct reviewers not to edit or run tests. If the host cannot enforce read-only access, record that limitation and check the candidate for mutations before accepting findings.
 
 ## Collect and refresh
 

@@ -191,9 +191,19 @@ printf 'Skills package: %s\nLab project: %s\n' "$MP_SKILLS" "$MP_LAB"
 
 If a value is empty, set it to the actual existing checkout/directory; do not create another lab merely to obtain a path. Variables are shell-specific and may need to be set again in a new terminal.
 
+#### Write the role rows
+
+First write the rows you chose in [role-row setup](MANUAL.md#fill-the-role-rows-on-the-execution-host) with the setup script, from a terminal on the execution host, using the models this host actually offers:
+
+```bash
+node "$MP_SKILLS/scripts/mp-setup.mjs" init "$MP_LAB" --session quote-lab   --evidence "$MP_LAB/.scratch/quote-demo/runs" --setup "npm ci"   --role planning=claude:anthropic/<id>:Claude   --role implementation=pi:deepseek/<id>:DeepSeek   --role design-comprehension=pi:deepseek/<id>:DeepSeek   --role design-challenge=pi:deepseek/<id>:DeepSeek   --role spec-review=claude:anthropic/<id>:Claude   --role standards-review=claude:anthropic/<id>:Claude   --unavailable "research=not exercised in this validation" --probe --live
+```
+
+The generated lab's `delegation.json` is still the template, so `init` replaces it; an edited one is kept. The result should say `"ok": true`, with the probe's live lines answered by each row's model. `--live` sends one short, possibly charged prompt per model. Then prove one delegated child per harness with the [one-child check](MANUAL.md#test-one-delegated-child).
+
 #### Recommended: configure with Claude in Herdr
 
-In the lab pane on the correct host, start a fresh Claude planning session (`claude`), using the role rows you chose in [role-row setup](MANUAL.md#fill-the-role-rows-on-the-execution-host). Replace both placeholders in the complete prompt below with the printed absolute paths before sending it to that session:
+In the lab pane on the correct host, start a fresh Claude planning session (`claude`). Replace both placeholders in the complete prompt below with the printed absolute paths before sending it to that session:
 
 ```text
 Read PACKAGE_PATH/skills/engineering/setup-matt-pocock-skills/SKILL.md and
@@ -207,10 +217,9 @@ tracker path already recorded in the lab's AGENTS.md; do not create another
 tracker in a worktree. Inspect existing project instructions before changing
 anything, and complete them rather than replacing them unnecessarily.
 
-Help me populate docs/agents/delegation.md with the role rows (harness, mode,
-arguments, exact model ID and family) I provide or that can be independently
-verified (pi --list-models, a signed-in claude). Do not invent a model. Preserve
-the configured worker and retry limits unless I decide to change them.
+The role rows are already written and probed in docs/agents/delegation.json;
+do not change them. Report anything its config check or probe flags. Do not
+invent a model.
 
 Do not implement the application, accept the design on my behalf, alter the
 supplied acceptance tests, install or change global packages, create a remote
@@ -233,8 +242,8 @@ Instead of the Claude route, start a Pi session (`pi`) in a Herdr pane in the **
 Configure this quotation lab using its existing instructions and the role
 rows I choose. Preserve the supplied spec, acceptance tests, testing contract, scope
 and canonical absolute tracker path in AGENTS.md. Inspect existing files before
-changing them; resolve all delegation.md placeholders using verified provider,
-model and family information, asking me when information is missing. Do not
+changing them. The role rows are already in docs/agents/delegation.json; keep
+them and report anything its config check flags. Do not
 implement the application, fabricate design acceptance, modify global
 installations, create a remote repository, or launch implementation workers.
 Summarize changes, missing settings and conflicts for my inspection.
@@ -251,7 +260,8 @@ cd "$MP_LAB" &&
 git status --short &&
 git diff &&
 cat AGENTS.md &&
-cat docs/agents/delegation.md &&
+cat docs/agents/delegation.json docs/agents/delegation.md &&
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" config check "$MP_LAB/docs/agents/delegation.json" &&
 cat docs/agents/testing.md &&
 cat docs/agents/architecture.md
 ```
@@ -259,9 +269,9 @@ cat docs/agents/architecture.md
 `git diff` shows tracked changes; new untracked files also appear in `git status`, so open any relevant new file separately. Check:
 
 - `AGENTS.md` points to the lab instructions and its canonical tracker root, `$MP_LAB/.scratch/quote-demo`. All worktrees must use that **original absolute path**.
-- `docs/agents/issue-tracker.md` describes ownership and tracker transitions. `delegation.md` contains real role rows (harness, mode, arguments, model IDs and families), the helper path and the evidence directory, with no unresolved required `configure` placeholders.
+- `docs/agents/issue-tracker.md` describes ownership and tracker transitions. `delegation.json` holds real role rows (harness, mode, exact model IDs, families, tools), the session and the evidence directory; `config check` passes and the table in `delegation.md` is in sync.
 - `testing.md` identifies usable lab commands and resources; `architecture.md` identifies required design review and acceptance. The supplied specification, tests and scope remain intact.
-- Each row has been checked with one delegated run (`herdr-delegate.mjs inspect --expect-model` passes). Design reviewers differ from design authors, and code reviewers differ from every implementation family contributing to their target.
+- Each harness has been checked with one delegated `--config` run (`herdr-delegate.mjs inspect` reports `modelCheck` `match`). Design reviewers differ from design authors, and code reviewers differ from every implementation family contributing to their target.
 - Any missing tools, model identity or unresolved decision is recorded as a blocker. Do not start implementation until the configuration and design-readiness gates are complete.
 
 #### Commit the initial lab baseline
@@ -376,12 +386,13 @@ Use the planning/coordinator session to arrange review through the configured ro
 
 ```text
 Read PACKAGE_PATH/skills/engineering/review-design/SKILL.md and follow it
-for APPLICATION_PATH, launching through Herdr with the design-review role rows.
+for APPLICATION_PATH, launching through Herdr with --config docs/agents/delegation.json
+and the design-review roles.
 
 Freeze and identify the proposal inputs. Launch separate fresh comprehension
 and challenge sessions with the package brief and explicit project paths.
-Verify each run with herdr-delegate.mjs inspect --expect-model and ensure
-independence from the design authors.
+Verify each run with herdr-delegate.mjs inspect (modelCheck must be match) and
+ensure independence from the design authors.
 Preserve their reports under docs/designs/reviews/ and record findings/dispositions.
 Do not change the frozen proposal while reviewers inspect it.
 
@@ -522,8 +533,9 @@ Read project tracker, delegation and testing configuration. Verify the recorded 
 acceptance of the current spec, design and three-ticket plan. Do not invent approval
 or reconfirm an existing decision that covers the current inputs.
 
-Launch through Herdr with the implementation and independent review role rows;
-give workers skill files by absolute path; verify each run with inspect --expect-model.
+Launch through Herdr with --config docs/agents/delegation.json and the implementation
+and independent review roles; give workers skill files by absolute path; verify each
+run with inspect (modelCheck must be match).
 Maximum two implementation workers. You are the sole tracker and integration writer.
 Do not implement code yourself. Never have a worker dispatch its own review.
 
@@ -685,6 +697,8 @@ Expected: the report says Standards incomplete/cancelled and does not synthesize
 ### N4. Wrong model family
 
 Ask the coordinator to launch one review run with the implementation row's model instead of the review row's, as a deliberate probe. Do not change your normal review row.
+
+First as a `--config --role spec-review` launch with the implementation model after `--`. Expected: the helper refuses it ("change delegation.json instead of overriding it") and starts nothing. Then as a manual launch (`--harness`, `--mode` and the implementation model after `--`, no `--config`), checked with the review model.
 
 Expected: `inspect --expect-model <review model>` fails, the coordinator rejects that run for this candidate, records why and relaunches with the compliant row or pauses. The review must not pass merely because its role says “review.” If a provider fallback occurs after launch, inspect the run again.
 
