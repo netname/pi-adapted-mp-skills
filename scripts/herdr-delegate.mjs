@@ -3,24 +3,26 @@
 // actually ran. It does not choose work, judge results or enforce policy; see
 // skills/engineering/_shared/DELEGATION.md.
 //
-//   launch  --record R --role ROLE --name NAME --harness pi|claude --mode interactive|batch
+//   launch  --record R --role ROLE --name NAME (--config DELEGATION_JSON | --harness pi|claude --mode interactive|batch)
 //           --brief FILE --task FILE [--output FILE] (--cwd DIR | --worktree --repo DIR --branch B --base REF)
 //           [--timeout-ms N] [--setup CMD] [--setup-timeout-ms N] [--ports N]
-//           [-- HARNESS_ARGS...]
+//           [-- HARNESS_ARGS...]   (not with --config: the role row supplies them)
 //   exec    R          (runs inside the pane for --mode batch; not for direct use)
-//   inspect R [--expect-model PROVIDER/MODEL]
+//   inspect R [--expect-model PROVIDER/MODEL]   (a --config launch is checked against its row without the flag)
+//   config  check FILE [--doc DELEGATION_MD] | render FILE [--write DELEGATION_MD] | probe FILE [--live]
 //
 // Every path is absolute. The record lives outside the delegated checkout, or in a Git-ignored path.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync, renameSync, openSync, closeSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, mkdtempSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { hostname, tmpdir } from 'node:os';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { LAUNCH_ROLES as ROLES, TOOL_PROFILES, available, launchDefaults, parseConfig, renderTable, replaceTable, tableStatus, validateConfig } from './delegation-config.mjs';
 
 const HELPER = fileURLToPath(import.meta.url);
-const ROLES = ['implementation', 'research', 'spec-review', 'standards-review', 'design-comprehension', 'design-challenge', 'exploration', 'evidence-audit'];
 const BATCH_INSTRUCTION = 'Follow the role brief and the task you were given. Return your complete report as your final answer. Do not modify, create or delete any file.';
 export const DEFAULTS = { timeoutMs: 30 * 60 * 1000, setupTimeoutMs: 10 * 60 * 1000, ports: 0 };
 const PORT_RANGE = { low: 20000, size: 20000 };
@@ -165,6 +167,25 @@ function intOption(o, key, low, high) {
   o[key] = n;
 }
 
+/**
+ * `--config`: harness, mode and harness arguments come only from the role row, so a launch cannot
+ * silently use another model. Per-run choices (paths, name, time limit, setup, ports) stay options.
+ */
+function applyConfig(o, hasHarnessArgs) {
+  need(isAbsolute(o.config), '--config must be an absolute path');
+  need(existsSync(o.config), `--config not found: ${o.config}`);
+  need(o.harness === undefined && o.mode === undefined && !hasHarnessArgs,
+    'with --config the role row supplies --harness, --mode and the harness arguments after --; change delegation.json instead of overriding it');
+  need(o.role, 'missing --role');
+  const source = readFileSync(o.config, 'utf8');
+  const d = launchDefaults(parseConfig(source, o.config), o.role);
+  Object.assign(o, { harness: d.harness, mode: d.mode, harnessArgs: d.harnessArgs, expectedModel: d.model, family: d.family, familyPattern: d.familyPattern });
+  o.configRef = { path: o.config, sha256: createHash('sha256').update(source).digest('hex'), role: o.role };
+  if (d.timeoutMs !== null && o.timeoutMs === undefined) o.timeoutMs = String(d.timeoutMs);
+  // The project's worktree setup applies to new worktrees; a --cwd launch reuses a prepared checkout.
+  if (d.setup !== null && o.worktree && o.setup === undefined) o.setup = d.setup;
+}
+
 export function parseLaunch(argv) {
   const o = { harnessArgs: [], worktree: false };
   const i = argv.indexOf('--');
@@ -175,10 +196,11 @@ export function parseLaunch(argv) {
     if (flag === '--worktree') { o.worktree = true; continue; }
     const key = { '--record': 'record', '--role': 'role', '--name': 'name', '--harness': 'harness', '--mode': 'mode', '--brief': 'brief',
       '--task': 'task', '--output': 'output', '--cwd': 'cwd', '--repo': 'repo', '--branch': 'branch', '--base': 'base',
-      '--timeout-ms': 'timeoutMs', '--setup': 'setup', '--setup-timeout-ms': 'setupTimeoutMs', '--ports': 'ports' }[flag];
+      '--timeout-ms': 'timeoutMs', '--setup': 'setup', '--setup-timeout-ms': 'setupTimeoutMs', '--ports': 'ports', '--config': 'config' }[flag];
     need(key && own[k + 1] !== undefined && !(key in o), `bad or repeated option: ${flag}`);
     o[key] = own[++k];
   }
+  if (o.config !== undefined) applyConfig(o, i !== -1);
   for (const k of ['record', 'role', 'name', 'harness', 'mode', 'brief', 'task']) need(o[k], `missing --${k}`);
   need(ROLES.includes(o.role), `unknown role ${o.role}; use one of ${ROLES.join(', ')}`);
   need(['pi', 'claude'].includes(o.harness), 'harness must be pi or claude');
@@ -256,6 +278,7 @@ async function launch(argv) {
     worktree: o.worktree ? { repo: o.repo, branch: o.branch, base: o.base } : null,
     brief: { path: o.brief, sha256: sha256(o.brief) }, task: { path: o.task, sha256: sha256(o.task) }, output: o.output ?? null,
     harnessArgs: o.harnessArgs, timeoutMs: o.timeoutMs ?? null,
+    config: o.configRef ?? null, expectedModel: o.expectedModel ?? null, family: o.family ?? null, familyPattern: o.familyPattern ?? null,
     resources: { env: resourceEnv(runId, ports), note: 'Ports were free at launch; they are not reserved. Shared services still need a lease.' },
     setup: o.setup ? { command: o.setup, timeoutMs: o.setupTimeoutMs, exitCode: null, timedOut: false, log: `${base(o.record)}.setup.log` } : null,
     status: 'launched', failureReason: null, exitCode: null, effective: null, sessionFile: null, stream: null,
@@ -333,6 +356,30 @@ export function batchStale(record, at = Date.now(), graceMs = 60_000) {
   return at > Date.parse(record.startedAt) + (record.timeoutMs ?? DEFAULTS.timeoutMs) + graceMs;
 }
 
+/**
+ * The model check `inspect` applies (pure). An explicit --expect-model is checked as before: an
+ * unknown model fails. Without it, a record launched with --config is checked against its row once
+ * the model can be known, so polling an unfinished run is not a failure, and a failed batch run is
+ * `not-applicable`: its status already says it failed. When the row's family has a pattern, every
+ * reported model must also match it.
+ */
+export function modelCheck(record, explicit = null) {
+  const expected = explicit ?? record.expectedModel ?? null;
+  if (!expected) return null;
+  const models = record.effective?.models ?? [];
+  const source = explicit ? '--expect-model' : 'delegation.json';
+  const family = record.familyPattern ? { name: record.family, pattern: record.familyPattern } : null;
+  const result = r => ({ expected, source, models, ...(family ? { family } : {}), result: r });
+  if (!models.length) {
+    if (explicit) return result('unknown');
+    if (record.mode === 'batch' && record.status === 'failed') return result('not-applicable');
+    return result(record.mode === 'batch' && record.status === 'completed' ? 'unknown' : 'pending');
+  }
+  if (!models.every(m => m === expected)) return result('mismatch');
+  if (family && !models.every(m => new RegExp(family.pattern).test(m))) return result('family-mismatch');
+  return result('match');
+}
+
 function inspect([file, ...rest]) {
   need(file && isAbsolute(file), 'inspect needs the absolute record path');
   let expect = null;
@@ -354,12 +401,146 @@ function inspect([file, ...rest]) {
     // Printed only: the record is left for `exec` to own, in case it is merely slow to write.
     record.live = { status: 'stale', warning: 'still running past its time limit: its exec process was probably lost (server restart?). Treat the run as failed and relaunch under a new name.' };
   }
-  console.log(JSON.stringify(record, null, 2));
-  if (expect) {
-    const models = record.effective?.models ?? [];
-    need(models.length > 0, 'effective model unknown: independence is unverified');
-    need(models.every(m => m === expect), `effective model ${models.join(', ')} differs from expected ${expect}`);
+  // Printed only; the stored record keeps what the run reported.
+  const check = modelCheck(record, expect);
+  console.log(JSON.stringify(check ? { ...record, modelCheck: check } : record, null, 2));
+  if (check) {
+    need(check.result !== 'unknown', 'effective model unknown: independence is unverified');
+    need(check.result !== 'mismatch', `effective model ${check.models.join(', ')} differs from expected ${check.expected}`);
+    need(check.result !== 'family-mismatch', `effective model ${check.models.join(', ')} does not match the ${check.family?.name} family pattern ${check.family?.pattern}: independence is unverified`);
   }
+}
+
+// ---- config: check, render, probe ----------------------------------------------------------------
+
+function configArgs(rest, flag, takesValue) {
+  if (!rest.length) return null;
+  need(rest[0] === flag && rest.length === (takesValue ? 2 : 1) && (!takesValue || isAbsolute(rest[1])), `unexpected arguments: ${rest.join(' ')}`);
+  return takesValue ? rest[1] : true;
+}
+
+/** Validate the config and, when delegation.md has the generated table, that the table matches. */
+function configCheck(file, rest) {
+  const docArg = configArgs(rest, '--doc', true);
+  if (docArg) need(existsSync(docArg), `--doc not found: ${docArg}`);
+  let cfg = null, errors;
+  try { cfg = JSON.parse(readFileSync(file, 'utf8')); errors = validateConfig(cfg); } catch (e) { errors = [`not valid JSON: ${e.message}`]; }
+  const doc = docArg ?? join(dirname(file), 'delegation.md');
+  // The table is compared only against a valid config.
+  let table = errors.length ? 'not-checked' : 'no-doc';
+  if (!errors.length && existsSync(doc)) {
+    table = tableStatus(readFileSync(doc, 'utf8'), renderTable(cfg));
+    if (table === 'stale') errors.push(`the role table in ${doc} differs from ${file}; run: herdr-delegate.mjs config render ${file} --write ${doc}`);
+  }
+  console.log(JSON.stringify({ config: file, ok: errors.length === 0, errors, table: { doc, status: table } }, null, 2));
+  need(errors.length === 0, `${file} is not valid`);
+}
+
+function configRender(file, rest) {
+  const target = configArgs(rest, '--write', true);
+  const table = renderTable(parseConfig(readFileSync(file, 'utf8'), file));
+  if (!target) { console.log(table); return; }
+  need(existsSync(target), `--write target not found: ${target}`);
+  const next = replaceTable(readFileSync(target, 'utf8'), table);
+  need(next !== null, `${target} has no generated-table markers; add the delegation-roles:start and delegation-roles:end lines from delegation.template.md`);
+  writeFileSync(target, next);
+  console.log(`updated the role table in ${target}`);
+}
+
+// herdr 0.9 prints one `<name>: <state> (<path>)` line per integration. Paths on other lines can
+// contain `.pi`, so only a name at the start of a line counts.
+const INTEGRATION_LINE = /^\s*([a-z][\w-]*)\s*:\s*([^(]+?)\s*(?:\(.*\))?\s*$/i;
+
+/**
+ * One harness's state from `herdr integration status` output (pure). `ok: null` means the output
+ * was not in the expected format, so the state is unknown rather than missing.
+ */
+export function integrationState(output, harnessName) {
+  const lines = (output || '').split(/\r?\n/).map(l => INTEGRATION_LINE.exec(l)).filter(Boolean);
+  if (!lines.length) return { ok: null, detail: 'unrecognized `herdr integration status` output; check it by hand' };
+  const line = lines.find(m => m[1].toLowerCase() === harnessName.toLowerCase());
+  if (!line) return { ok: false, detail: `${harnessName} not listed by herdr integration status` };
+  return { ok: !/not installed|missing|absent|disabled|outdated|error/i.test(line[2]), detail: line[0].trim() };
+}
+
+/** Run a harness CLI with a limit. npm installs pi/claude as .cmd shims on Windows, which need a shell. */
+function harness(cmd, args, options) {
+  return process.platform === 'win32'
+    ? runLimited(cmd, args.map(quoteCmd), { ...options, shell: true })
+    : runLimited(cmd, args, options);
+}
+const firstLine = s => (s || '').trim().split(/\r?\n/)[0] ?? '';
+
+/**
+ * Check that this host can run the config. Offline checks are free: the Herdr server and
+ * integrations, each harness CLI, and each Pi model in `--list-models` (a listing, not access).
+ * `--live` sends one short prompt per model, which may be charged, and compares the model that
+ * answered with the row: the only check here that proves access and the effective model.
+ */
+async function configProbe(file, rest) {
+  const live = configArgs(rest, '--live', false) === true;
+  const cfg = parseConfig(readFileSync(file, 'utf8'), file);
+  const rows = Object.entries(cfg.roles).filter(([, r]) => available(r));
+  const checks = [];
+  const add = (name, ok, detail) => checks.push({ name, ok, detail });
+  const tryRun = (cmd, args) => { try { const r = run(cmd, args); return { ok: r.status === 0, out: `${r.stdout || ''}${r.stderr || ''}` }; } catch (e) { return { ok: false, out: e.message }; } };
+
+  const server = tryRun('herdr', ['status', 'server']);
+  add('herdr server', /status:\s*running/.test(server.out), firstLine(server.out) || 'no output');
+  // The coordinator and interactive workers run in panes; their integration lets them resume after a server restart.
+  const paned = [...new Set(rows.filter(([role, r]) => role === 'planning' || r.mode === 'interactive').map(([, r]) => r.harness))];
+  const integrations = tryRun('herdr', ['integration', 'status']);
+  for (const h of paned) {
+    const state = integrationState(integrations.ok ? integrations.out : '', h);
+    add(`herdr integration ${h}`, state.ok, state.detail);
+  }
+  for (const h of [...new Set(rows.map(([, r]) => r.harness))]) {
+    const r = await harness(h, ['--version'], { timeoutMs: 30_000 });
+    add(`${h} CLI`, r.status === 0, r.status === 0 ? firstLine(r.stdout) : firstLine(r.stderr) || `\`${h}\` did not run`);
+  }
+  const models = [...new Map(rows.map(([, r]) => [`${r.harness} ${r.model}`, r])).values()];
+  for (const r of models.filter(m => m.harness === 'pi')) {
+    const listing = await harness('pi', ['--list-models', r.model.split('/')[0]], { timeoutMs: 60_000 });
+    const id = r.model.slice(r.model.indexOf('/') + 1);
+    add(`pi lists ${r.model}`, listing.status === 0 && listing.stdout.includes(id), listing.status === 0 ? (listing.stdout.includes(id) ? 'listed (availability only; --live checks access)' : 'not in the listing') : firstLine(listing.stderr));
+  }
+  if (!live) {
+    for (const r of models) add(`live ${r.harness} ${r.model}`, null, 'not run; add --live to send one short prompt per model (may be charged)');
+  } else {
+    const dir = mkdtempSync(join(tmpdir(), 'mp-probe-'));
+    try {
+      const prompt = join(dir, 'prompt.md');
+      writeFileSync(prompt, 'Reply with OK.\n');
+      for (const r of models) {
+        const id = r.model.slice(r.model.indexOf('/') + 1);
+        let out, result = null;
+        if (r.harness === 'pi') {
+          const stdin = openSync(prompt, 'r');
+          try { out = await harness('pi', ['-p', '--mode', 'json', '--no-session', '--model', r.model, ...TOOL_PROFILES.pi['read-only']], { stdin, timeoutMs: 120_000, cwd: dir }); } finally { closeSync(stdin); }
+          try { result = piStreamResult(out.stdout); } catch { /* unparsable */ }
+        } else {
+          out = await harness('claude', ['-p', '--output-format', 'json', '--model', id, ...TOOL_PROFILES.claude['read-only'], 'Reply with OK.'], { timeoutMs: 120_000, cwd: dir });
+          try { result = claudeResult(out.stdout); } catch { /* unparsable */ }
+        }
+        const outcome = batchOutcome(out, result);
+        const seen = result?.models ?? [];
+        const ok = outcome.status === 'completed' && seen.length > 0 && seen.every(m => m === r.model);
+        add(`live ${r.harness} ${r.model}`, ok, outcome.status !== 'completed' ? `failed (${outcome.failureReason}): ${firstLine(result?.finalText || out.stderr)}` : `answered by ${seen.join(', ') || 'an unreported model'}`);
+      }
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }
+  const ok = checks.every(c => c.ok !== false);
+  console.log(JSON.stringify({ config: file, host: hostname(), checkedAt: now(), live, ok, checks }, null, 2));
+  need(ok, 'probe found problems; see the failed checks above');
+}
+
+async function config([sub, file, ...rest]) {
+  need(['check', 'render', 'probe'].includes(sub), 'usage: config check FILE [--doc MD] | render FILE [--write MD] | probe FILE [--live]');
+  need(file && isAbsolute(file), `config ${sub} needs the absolute path of delegation.json`);
+  need(existsSync(file), `not found: ${file}`);
+  if (sub === 'check') configCheck(file, rest);
+  else if (sub === 'render') configRender(file, rest);
+  else await configProbe(file, rest);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
@@ -368,6 +549,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     if (command === 'launch') await launch(args);
     else if (command === 'exec') await exec(args);
     else if (command === 'inspect') inspect(args);
-    else throw new Error('usage: herdr-delegate.mjs launch ... | exec RECORD | inspect RECORD [--expect-model P/M]');
+    else if (command === 'config') await config(args);
+    else throw new Error('usage: herdr-delegate.mjs launch ... | exec RECORD | inspect RECORD [--expect-model P/M] | config check|render|probe FILE');
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

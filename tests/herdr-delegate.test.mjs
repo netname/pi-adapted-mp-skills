@@ -4,7 +4,8 @@ import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored, batchOutcome, portCandidates, resourceEnv, batchStale, runLimited, DEFAULTS } from '../scripts/herdr-delegate.mjs';
+import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored, batchOutcome, portCandidates, resourceEnv, batchStale, runLimited, modelCheck, integrationState, DEFAULTS } from '../scripts/herdr-delegate.mjs';
+import { labConfig } from './lab-config.mjs';
 
 const lines = (...objs) => objs.map(o => JSON.stringify(o)).join('\n');
 
@@ -132,6 +133,70 @@ test('launch options: timeout, setup and ports', t => {
   interactive[interactive.indexOf('--mode') + 1] = 'interactive';
   assert.equal(parseLaunch(interactive).timeoutMs, undefined);
   assert.throws(() => parseLaunch([...interactive, '--timeout-ms', '60000']), /batch mode only/);
+});
+
+test('launch --config: harness, mode, arguments and model come from the role row', t => {
+  const dir = files(t);
+  const config = join(dir, 'delegation.json');
+  writeFileSync(config, JSON.stringify(labConfig()));
+  const run = (role, extra = [], mode = 'batch') => ['--record', join(dir, 'r.json'), '--role', role, '--name', 'rev1', '--config', config,
+    '--brief', join(dir, 'brief.md'), '--task', join(dir, 'task.md'), ...(mode === 'batch' ? ['--output', join(dir, 'out.md')] : []), ...extra];
+  const spec = parseLaunch(run('spec-review', ['--cwd', dir]));
+  assert.deepEqual([spec.harness, spec.mode, spec.expectedModel, spec.family, spec.timeoutMs], ['claude', 'batch', 'anthropic/claude-sonnet-5-5', 'Claude', 600_000]);
+  assert.deepEqual(spec.harnessArgs, ['--model', 'claude-sonnet-5-5', '--tools', 'Read,Grep,Glob', '--permission-mode', 'dontAsk']);
+  assert.equal(spec.configRef.role, 'spec-review'); assert.match(spec.configRef.sha256, /^[a-f0-9]{64}$/);
+  assert.equal(spec.setup, undefined, 'a --cwd launch reuses a prepared checkout');
+  assert.equal(parseLaunch(run('spec-review', ['--cwd', dir, '--timeout-ms', '60000'])).timeoutMs, 60_000, 'a per-run limit still wins');
+
+  const worker = parseLaunch(run('implementation', ['--worktree', '--repo', dir, '--branch', 'ticket/a', '--base', 'abc123'], 'interactive'));
+  assert.deepEqual([worker.harness, worker.mode, worker.setup, worker.timeoutMs], ['pi', 'interactive', 'npm ci', undefined]);
+
+  assert.throws(() => parseLaunch(run('spec-review', ['--cwd', dir, '--harness', 'pi'])), /change delegation.json/);
+  assert.throws(() => parseLaunch(run('spec-review', ['--cwd', dir, '--', '--model', 'other'])), /change delegation.json/);
+  assert.throws(() => parseLaunch(run('spec-review', ['--cwd', dir, '--'])), /change delegation.json/);
+  assert.throws(() => parseLaunch(run('research', ['--cwd', dir], 'interactive')), /unavailable/);
+  assert.throws(() => parseLaunch(run('planning', ['--cwd', dir], 'interactive')), /started by hand/);
+  const relative = run('spec-review', ['--cwd', dir]); relative[relative.indexOf('--config') + 1] = 'delegation.json';
+  assert.throws(() => parseLaunch(relative), /absolute/);
+  const bad = join(dir, 'bad.json'); writeFileSync(bad, JSON.stringify({ ...labConfig(), schemaVersion: 2 }));
+  const invalid = run('spec-review', ['--cwd', dir]); invalid[invalid.indexOf('--config') + 1] = bad;
+  assert.throws(() => parseLaunch(invalid), /schemaVersion/);
+});
+
+test('inspect model check: explicit flag as before; a --config record is checked once knowable', () => {
+  const rec = (status, models, extra = {}) => ({ mode: 'batch', status, effective: models ? { models } : null, ...extra });
+  const configured = { expectedModel: 'anthropic/claude-sonnet-5-5' };
+  assert.equal(modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'])), null, 'no expectation without the flag or a config');
+  assert.equal(modelCheck(rec('running', null), 'anthropic/x').result, 'unknown', 'an explicit flag fails on an unknown model');
+  assert.equal(modelCheck(rec('running', null, configured)).result, 'pending', 'polling an unfinished run is not a failure');
+  assert.equal(modelCheck(rec('failed', null, configured)).result, 'not-applicable', 'a failed run already says it failed');
+  assert.equal(modelCheck(rec('failed', null, configured), 'anthropic/claude-sonnet-5-5').result, 'unknown', 'an explicit flag still fails');
+  const fam = { ...configured, family: 'Claude', familyPattern: '^anthropic/' };
+  assert.equal(modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'], fam)).result, 'match');
+  const off = modelCheck(rec('completed', ['openrouter/claude-sonnet-5-5'], fam), 'openrouter/claude-sonnet-5-5');
+  assert.deepEqual([off.result, off.family], ['family-mismatch', { name: 'Claude', pattern: '^anthropic/' }]);
+  assert.equal(modelCheck(rec('completed', null, configured)).result, 'unknown');
+  assert.equal(modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'], configured)).result, 'match');
+  const two = modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5', 'anthropic/claude-haiku-5-5'], configured));
+  assert.equal(two.result, 'mismatch', 'every reported model must match');
+  const explicit = modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'], configured), 'anthropic/claude-opus-5-5');
+  assert.deepEqual([explicit.result, explicit.source], ['mismatch', '--expect-model']);
+  assert.equal(modelCheck({ mode: 'interactive', status: 'running', effective: { models: ['deepseek/deepseek-flash'] }, expectedModel: 'deepseek/deepseek-flash' }).result, 'match');
+});
+
+test('integration status: parsed by line start; unknown output is not "missing"', () => {
+  // Shape observed from herdr 0.9.5 on Windows. Other lines' paths contain `.pi`.
+  const out = [
+    'pi: current (v9) (C:\\Users\\me\\.pi\\agent\\extensions\\herdr-agent-state.ts)',
+    'omp: not installed (C:\\Users\\me\\.omp\\agent\\extensions\\herdr-omp-agent-state.ts)',
+    'claude: not installed (C:\\Users\\me\\.claude\\hooks\\herdr-agent-state.ps1)',
+  ].join('\r\n');
+  assert.equal(integrationState(out, 'pi').ok, true);
+  assert.match(integrationState(out, 'pi').detail, /^pi: current/);
+  assert.equal(integrationState(out, 'claude').ok, false);
+  assert.deepEqual(integrationState(out, 'codex'), { ok: false, detail: 'codex not listed by herdr integration status' });
+  assert.equal(integrationState('', 'pi').ok, null);
+  assert.equal(integrationState('Integrations\n  * pi ✓', 'pi').ok, null, 'a changed format is reported as unknown');
 });
 
 test('runLimited: kills the whole process tree on timeout', async t => {
