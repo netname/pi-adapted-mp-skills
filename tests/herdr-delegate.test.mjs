@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
-import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored, batchOutcome, portCandidates, resourceEnv, batchStale, runLimited, modelCheck, integrationState, DEFAULTS } from '../scripts/herdr-delegate.mjs';
+import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored, batchOutcome, portCandidates, resourceEnv, batchStale, runLimited, modelCheck, integrationState, readDirs, addDirArgs, DEFAULTS } from '../scripts/herdr-delegate.mjs';
 import { labConfig } from './lab-config.mjs';
 
 const lines = (...objs) => objs.map(o => JSON.stringify(o)).join('\n');
@@ -185,6 +185,20 @@ test('inspect model check: explicit flag as before; a --config record is checked
   const explicit = modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'], configured), 'anthropic/claude-opus-5-5');
   assert.deepEqual([explicit.result, explicit.source], ['mismatch', '--expect-model']);
   assert.equal(modelCheck({ mode: 'interactive', status: 'running', effective: { models: ['deepseek/deepseek-flash'] }, expectedModel: 'deepseek/deepseek-flash' }).result, 'match');
+});
+
+test('read access: Claude gets --add-dir for the package, brief and task outside its working directory', () => {
+  // Observed on sen03: in dontAsk mode Claude Code denied reading a brief outside --cwd.
+  const pkg = resolve('/home/u/skills'), lab = resolve('/home/u/lab'), worktree = resolve('/home/u/.herdr/worktrees/lab/ticket-a');
+  const brief = join(pkg, 'agents', 'mp-review-spec.md'), task = join(lab, '.scratch', 'runs', 's.task.md');
+  // A code review: cwd is the candidate worktree; the task lives in the original project.
+  assert.deepEqual(readDirs('claude', worktree, { brief, task }, pkg), [pkg, join(lab, '.scratch', 'runs')]);
+  // The lab itself as cwd: the task is already readable; the brief's directory is inside the package.
+  assert.deepEqual(readDirs('claude', lab, { brief, task }, pkg), [pkg]);
+  assert.deepEqual(readDirs('claude', pkg, { brief, task: join(pkg, 't.md') }, pkg), []);
+  assert.deepEqual(readDirs('pi', worktree, { brief, task }, pkg), [], 'Pi attaches the files with @');
+  assert.deepEqual(addDirArgs([]), []);
+  assert.deepEqual(addDirArgs(['/a', '/b']), ['--add-dir', '/a', '/b']);
 });
 
 test('integration status: parsed by line start; unknown output is not "missing"', () => {

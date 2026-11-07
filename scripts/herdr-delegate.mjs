@@ -251,6 +251,23 @@ export function gitIgnored(cwd) {
   return p => run('git', ['-C', cwd, 'check-ignore', '-q', '--no-index', '--', resolve(p)]).status === 0;
 }
 
+// This package's root: its role briefs live in agents/ and refer to files under skills/.
+const PACKAGE_ROOT = resolve(dirname(HELPER), '..');
+
+/**
+ * Directories outside the working directory that a session must read (pure): the package (briefs
+ * and the files they refer to), and the brief's and task's directories. Claude Code denies reads
+ * outside its working directories in dontAsk mode, so they are granted with --add-dir. Pi receives
+ * the brief and task as @file attachments and needs none.
+ */
+export function readDirs(harnessName, cwd, { brief, task }, packageRoot = PACKAGE_ROOT) {
+  if (harnessName !== 'claude') return [];
+  const candidates = [packageRoot, dirname(brief), dirname(task)].map(d => resolve(d)).filter(d => !inside(d, resolve(cwd)));
+  return [...new Set(candidates)].filter((d, _, all) => !all.some(other => other !== d && inside(d, other)));
+}
+/** `--add-dir` takes several values, so it goes before another option and never last. */
+export const addDirArgs = dirs => (dirs.length ? ['--add-dir', ...dirs] : []);
+
 // ---- Commands ----------------------------------------------------------------------------------
 
 async function launch(argv) {
@@ -281,7 +298,7 @@ async function launch(argv) {
     workspaceId: pane.workspace_id, paneId: pane.pane_id, terminalId: pane.terminal_id, cwd,
     worktree: o.worktree ? { repo: o.repo, branch: o.branch, base: o.base } : null,
     brief: { path: o.brief, sha256: sha256(o.brief) }, task: { path: o.task, sha256: sha256(o.task) }, output: o.output ?? null,
-    harnessArgs: o.harnessArgs, timeoutMs: o.timeoutMs ?? null,
+    harnessArgs: o.harnessArgs, readDirs: readDirs(o.harness, cwd, o), timeoutMs: o.timeoutMs ?? null,
     config: o.configRef ?? null, expectedModel: o.expectedModel ?? null, family: o.family ?? null, familyPattern: o.familyPattern ?? null,
     resources: { env: resourceEnv(runId, ports), note: 'Ports were free at launch; they are not reserved. Shared services still need a lease.' },
     setup: o.setup ? { command: o.setup, timeoutMs: o.setupTimeoutMs, exitCode: null, timedOut: false, log: `${base(o.record)}.setup.log` } : null,
@@ -305,7 +322,7 @@ async function launch(argv) {
   }
 
   if (o.mode === 'interactive') {
-    const started = herdr(['agent', 'start', o.name, '--kind', o.harness, '--pane', pane.pane_id, '--timeout', '120000', ...(o.harnessArgs.length ? ['--', ...o.harnessArgs] : [])]);
+    const started = herdr(['agent', 'start', o.name, '--kind', o.harness, '--pane', pane.pane_id, '--timeout', '120000', ...(record.readDirs.length || o.harnessArgs.length ? ['--', ...addDirArgs(record.readDirs), ...o.harnessArgs] : [])]);
     record.sessionFile = started?.agent?.agent_session?.value ?? null;
     const outputLine = o.output ? ` Write your result to ${o.output}.` : '';
     const env = Object.entries(record.resources.env).map(([k, v]) => `${k}=${v}`).join(' ');
@@ -330,7 +347,7 @@ async function exec([file]) {
   record.status = 'running'; record.stream = `${base(file)}.out`; writeRecord(file, record);
   const args = record.harness === 'pi'
     ? ['-p', '--mode', 'json', '--no-session', ...record.harnessArgs, `@${record.brief.path}`, `@${record.task.path}`]
-    : ['-p', '--output-format', 'json', ...record.harnessArgs, `Role brief: ${record.brief.path}. Task: ${record.task.path}. Read both.`];
+    : ['-p', ...addDirArgs(record.readDirs ?? []), '--output-format', 'json', ...record.harnessArgs, `Role brief: ${record.brief.path}. Task: ${record.task.path}. Read both.`];
   writeFileSync(`${file}.prompt`, BATCH_INSTRUCTION + '\n');
   const stdin = openSync(`${file}.prompt`, 'r');
   const options = { cwd: record.cwd, stdin, timeoutMs: record.timeoutMs ?? DEFAULTS.timeoutMs, env: { ...process.env, ...(record.resources?.env ?? {}) } };
