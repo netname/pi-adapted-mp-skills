@@ -23,19 +23,22 @@ test('pi session file: the last model change is the effective model', () => {
 test('pi print stream: models, final text, aborted and error', () => {
   const reply = (text, extra = {}) => ({ type: 'message_end', message: { role: 'assistant', provider: 'deepseek', model: 'deepseek-flash', content: [{ type: 'thinking', thinking: 'x' }, { type: 'text', text }], ...extra } });
   const ok = piStreamResult(lines({ type: 'agent_start' }, reply('first'), reply('REPORT: done'), { type: 'agent_settled', aborted: false }));
-  assert.deepEqual(ok, { models: ['deepseek/deepseek-flash'], finalText: 'REPORT: done', aborted: false, error: false });
+  assert.deepEqual(ok, { models: ['deepseek/deepseek-flash'], finalText: 'REPORT: done', aborted: false, error: false, errorMessage: null });
   assert.equal(piStreamResult(lines(reply('x'))).aborted, true, 'no agent_settled means not finished');
   assert.equal(piStreamResult(lines(reply('x'), { type: 'agent_settled', aborted: true })).aborted, true);
-  assert.equal(piStreamResult(lines(reply('x', { stopReason: 'error' }), { type: 'agent_settled', aborted: false })).error, true);
+  const failed = piStreamResult(lines(reply('', { stopReason: 'error', errorMessage: '402 Insufficient Balance' }), { type: 'agent_settled', aborted: false }));
+  assert.deepEqual([failed.error, failed.errorMessage], [true, '402 Insufficient Balance'], 'the provider error is kept');
+  assert.equal(piStreamResult(lines(reply('', { stopReason: 'error' }), { type: 'agent_settled', aborted: false })).errorMessage, 'unknown provider error');
   assert.equal(piStreamResult('').finalText, '');
 });
 
 test('claude print result: models from modelUsage; is_error is a failure', () => {
   const ok = claudeResult(JSON.stringify({ type: 'result', is_error: false, result: ' REPORT ', modelUsage: { 'claude-haiku-5-5': {} } }));
-  assert.deepEqual(ok, { models: ['anthropic/claude-haiku-5-5'], finalText: 'REPORT', aborted: false, error: false });
+  assert.deepEqual(ok, { models: ['anthropic/claude-haiku-5-5'], finalText: 'REPORT', aborted: false, error: false, errorMessage: null });
   // Shape observed live from an unauthenticated CLI: success subtype, but is_error true and no usage.
   const denied = claudeResult(JSON.stringify({ type: 'result', subtype: 'success', is_error: true, result: 'Not logged in · Please run /login' }));
   assert.equal(denied.error, true); assert.deepEqual(denied.models, []);
+  assert.equal(denied.errorMessage, 'Not logged in · Please run /login');
   assert.throws(() => claudeResult('garbage'));
 });
 

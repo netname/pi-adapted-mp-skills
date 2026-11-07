@@ -53,14 +53,18 @@ export function piStreamResult(text) {
   const last = replies.at(-1);
   const finalText = (last?.content ?? []).filter(c => c.type === 'text').map(c => c.text).join('\n').trim();
   const settled = events.find(e => e.type === 'agent_settled');
-  return { models, finalText, aborted: settled ? settled.aborted === true : true, error: last?.stopReason === 'error' };
+  const error = last?.stopReason === 'error';
+  // A provider failure arrives as an assistant message whose stopReason is error; errorMessage says why.
+  return { models, finalText, aborted: settled ? settled.aborted === true : true, error, errorMessage: error ? String(last.errorMessage ?? 'unknown provider error') : null };
 }
 
 /** `claude -p --output-format json` result object. */
 export function claudeResult(text) {
   const obj = JSON.parse(text.trim());
   const models = Object.keys(obj.modelUsage ?? {}).map(m => `anthropic/${m}`);
-  return { models, finalText: String(obj.result ?? '').trim(), aborted: false, error: obj.is_error === true };
+  const finalText = String(obj.result ?? '').trim();
+  const error = obj.is_error === true;
+  return { models, finalText, aborted: false, error, errorMessage: error ? finalText || 'unknown error' : null };
 }
 
 /** Claude Code session file (.jsonl): models named on assistant messages. */
@@ -345,7 +349,7 @@ async function exec([file]) {
   record.effective = result ? { models: result.models, source: 'print-stream' } : null;
   const outcome = batchOutcome(r, result);
   if (outcome.status === 'completed') writeFileSync(record.output, result.finalText + '\n');
-  Object.assign(record, outcome, { finishedAt: now() });
+  Object.assign(record, outcome, { failureDetail: outcome.status === 'failed' ? result?.errorMessage ?? null : null, finishedAt: now() });
   writeRecord(file, record);
   console.log(`${record.status}${record.failureReason ? ` (${record.failureReason})` : ''}: ${record.runId} (exit ${r.status})`);
 }
@@ -525,7 +529,7 @@ async function configProbe(file, rest) {
         const outcome = batchOutcome(out, result);
         const seen = result?.models ?? [];
         const ok = outcome.status === 'completed' && seen.length > 0 && seen.every(m => m === r.model);
-        add(`live ${r.harness} ${r.model}`, ok, outcome.status !== 'completed' ? `failed (${outcome.failureReason}): ${firstLine(result?.finalText || out.stderr)}` : `answered by ${seen.join(', ') || 'an unreported model'}`);
+        add(`live ${r.harness} ${r.model}`, ok, outcome.status !== 'completed' ? `failed (${outcome.failureReason}): ${firstLine(result?.errorMessage || result?.finalText || out.stderr) || `exit ${out.status}, no error text`}` : `answered by ${seen.join(', ') || 'an unreported model'}`);
       }
     } finally { rmSync(dir, { recursive: true, force: true }); }
   }
