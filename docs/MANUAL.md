@@ -33,7 +33,7 @@ The **skills package checkout** holds reusable procedures and scripts. The **tar
 | `AGENTS.md` | First set of project instructions and pointers to operating contracts | Maintainer at setup |
 | `GLOSSARY.md`, `CODING_STANDARDS.md` | Meaning of project terms and conventions; adapt to existing files | Maintainer/team |
 | `docs/agents/issue-tracker.md` | Tracker selection, states, claim/closure rules and canonical state root | Maintainer at setup |
-| `docs/agents/delegation.md` | Role rows (harness, mode, arguments, exact model, family), reviewer independence, concurrency and retry policy | Maintainer at setup |
+| `docs/agents/delegation.json` (shown as a table in `delegation.md`) | Role rows (harness, mode, exact model, family, tools), reviewer independence, concurrency and retry policy | Maintainer at setup (`scripts/mp-setup.mjs init`) |
 | `docs/agents/testing.md` | Commands, test boundaries/profiles and resource isolation | Maintainer at setup |
 | `docs/agents/architecture.md` | Rules for authoring, reviewing and accepting designs | Maintainer at setup |
 | `docs/specs/<feature>.md` **or configured tracker spec** | Authoritative behavior and exclusions | Planner, Stage 2 |
@@ -56,7 +56,7 @@ A **skill** is a written procedure (for example `wayfinder`, `to-spec`, `impleme
 | `scripts/frontier.mjs` | Exported JSON ticket graph → ready, unclaimed IDs | 5–7; does not claim, launch, or verify that tracker claims are true |
 | `scripts/design-check.mjs snapshot` / `check` | Selected files → fingerprints; readiness JSON + files → result | 3–5 and rechecks; cannot judge design quality or authenticate approval |
 | `scripts/review-target.mjs` | Clean candidate worktree + base/head Git refs → manifest, diff and commit list | 7–8; prepares review input, does not perform independent review |
-| `scripts/herdr-delegate.mjs launch` / `inspect` | Role row + brief + task → fresh Herdr session and run record; record → effective model check | 3–8; moves sessions and records what ran; does not choose work or judge results ([delegation policy](../skills/engineering/_shared/DELEGATION.md)) |
+| `scripts/herdr-delegate.mjs launch` / `inspect` / `config` | Role row (`--config --role`) + brief + task → fresh Herdr session and run record; record → effective model check against the row; `config check`/`render`/`probe` validate the rows, keep the table in sync and check the host | 3–8; moves sessions and records what ran; does not choose work or judge results ([delegation policy](../skills/engineering/_shared/DELEGATION.md)) |
 | Project-specific test commands | Source/environment → observed test results | 6–8; choose the applicable suite and retain exact revision/exit/logs |
 | `scripts/validate-skills.mjs` (`npm test` in package) | Package files → structural test results | Package maintenance, not evidence that your application or live agents passed |
 
@@ -324,15 +324,15 @@ For a project-scope install, run `pi remove -l "$MP_SKILLS"` from the project di
 
 ### What is a role row?
 
-A **role row** in the project's `docs/agents/delegation.md` says how to launch one kind of session: harness (Pi or Claude Code), mode (interactive or batch), the harness arguments that choose the model and limit its tools, the exact model and its family. Herdr has no saved profiles; the row is the saved setting, and `scripts/herdr-delegate.mjs` applies it at launch.
+A **role row** says how to launch one kind of session: harness (Pi or Claude Code), mode (interactive or batch), the exact model and its family, and the tools it may use. The rows live as data in the project's `docs/agents/delegation.json`; `docs/agents/delegation.md` shows them as a generated table for people. Herdr has no saved profiles; the row is the saved setting, and `scripts/herdr-delegate.mjs launch --config <delegation.json> --role <role>` applies it, refusing a launch that overrides it. A project without the JSON keeps the rows in the table only, and the coordinator copies them into each launch by hand.
 
-For this workflow, the Implementation row might select Pi with `--model deepseek/<id>`. The coordinator gives a fresh worker its actual assignment: “Implement ticket A in this worktree.” The Spec review row selects Claude Code with a review model and read-only tools, then receives the Spec brief and a particular candidate.
+For this workflow, the `implementation` row might select Pi with `deepseek/<id>`. The coordinator gives a fresh worker its actual assignment: “Implement ticket A in this worktree.” The `spec-review` row selects Claude Code with a review model and read-only tools, then receives the Spec brief and a particular candidate.
 
 Keep four concepts separate:
 
 | Concept | Example | What it supplies |
 | --- | --- | --- |
-| Role row | Implementation: Pi, interactive, `--model deepseek/<id>` | Launch settings |
+| Role row | `implementation`: Pi, interactive, `deepseek/<id>`, DeepSeek | Launch settings |
 | Role brief | `agents/mp-review-spec.md` | How to perform a role |
 | Task file | Review ticket A at a specific SHA | The assignment for this run |
 | Run / session | A run record with `<session>:<name>:<terminal id>` | The actual execution and its history |
@@ -362,20 +362,44 @@ herdr integration install pi
 herdr integration install claude
 ```
 
-| Role row | Harness / model family for this example | Mode | Arguments after `--` |
-| --- | --- | --- | --- |
-| Planning / coordination | Claude Code / Claude | the coordinator's own session | — |
-| Implementation | Pi / DeepSeek | interactive | `--model <provider/id>` |
-| Design comprehension, design challenge | Pi / DeepSeek | batch | `--model <provider/id> --tools read,grep,find,ls` |
-| Spec review, Standards review | Claude Code / Claude | batch | `--model <id> --tools Read,Grep,Glob --permission-mode dontAsk` |
+| Role | Harness / model family for this example | Mode | Tools | What the helper passes after `--` |
+| --- | --- | --- | --- | --- |
+| `planning` | Claude Code / Claude | coordinator (its own session) | — | — |
+| `implementation` | Pi / DeepSeek | interactive | full | `--model <provider/id>` |
+| `design-comprehension`, `design-challenge` | Pi / DeepSeek | batch | read-only | `--model <provider/id> --tools read,grep,find,ls` |
+| `spec-review`, `standards-review` | Claude Code / Claude | batch | read-only | `--model <id> --tools Read,Grep,Glob --permission-mode dontAsk` |
 
-Batch mode runs the harness non-interactively (`pi -p --mode json`, `claude -p --output-format json`), so the read-only tool flags apply and the report comes from the harness's structured output, not from the screen. Every batch run has a time limit (`--timeout-ms`, default 30 minutes); record a different value in the row if a review needs it. Interactive mode starts a normal session you can attach to.
+Write them with the setup script, one `--role ROLE=HARNESS:MODEL:FAMILY` per row (mode and tools follow from the role), with the exact model as `provider/id`, the form `inspect` reports:
 
-> **Verification status.** The Pi rows (batch review and interactive worker) were checked live with herdr 0.9.5 and pi 1.4.0. The Claude Code batch row is not yet: confirm it with the one-child check below, using that row, before the first real review. The [delegation policy](../skills/engineering/_shared/DELEGATION.md#limits) keeps the current list.
+```bash
+node <package>/scripts/mp-setup.mjs init <project> --session my-project \
+  --evidence <project>/.scratch/<effort>/runs --setup "npm ci" \
+  --role planning=claude:anthropic/<id>:Claude \
+  --role implementation=pi:deepseek/<id>:DeepSeek \
+  --role design-comprehension=pi:deepseek/<id>:DeepSeek \
+  --role design-challenge=pi:deepseek/<id>:DeepSeek \
+  --role spec-review=claude:anthropic/<id>:Claude \
+  --role standards-review=claude:anthropic/<id>:Claude \
+  --unavailable "research=<why this host has no source-capable researcher>"
+```
+
+It writes `docs/agents/delegation.json`, renders the table in `delegation.md`, creates the evidence directory and its Git-ignore entry, scans for duplicate skill names and validates the rows, including that each reviewer's family differs from the work it reviews. It adds a family pattern (for example `"Claude": "^anthropic/"`) when the rows' models already match one, so a later edit naming another provider's model fails the check. It never overwrites an edited file; `--dry-run` shows what it would do. For another project on the same host, `init <project> --from <first project>/docs/agents/delegation.json` reuses the rows, families, limits and setup command. Edit the JSON directly afterwards, then run `herdr-delegate.mjs config check <delegation.json>`, which fails until the table in `delegation.md` matches; `config render <delegation.json> --write <delegation.md>` regenerates it.
+
+Then check that the host can run every row:
+
+```bash
+node <package>/scripts/herdr-delegate.mjs config probe <project>/docs/agents/delegation.json --live
+```
+
+Without `--live` it checks the Herdr server, the integrations, the harness CLIs and the Pi model listing. With `--live` it also sends one short, possibly charged prompt per model and compares the model that answered with the row; a failure shows the provider's error, such as an invalid API key.
+
+Batch mode runs the harness non-interactively (`pi -p --mode json`, `claude -p --output-format json`), so the read-only tool flags apply and the report comes from the harness's structured output, not from the screen. Every batch run has a time limit: the row's `timeoutMs`, else the config's `limits.batchTimeoutMs`, else 30 minutes. Interactive mode starts a normal session you can attach to.
+
+> **Verification status.** The Pi rows (batch review and interactive worker) were checked live with herdr 0.9.5 and pi 1.4.0 on Windows. On Ubuntu, `config probe --live` and a `--config` Claude Code batch review passed with pi 1.5.0 and Claude Code 2.1.312. Confirm your own rows with the one-child check below before the first real review. The [delegation policy](../skills/engineering/_shared/DELEGATION.md#limits) keeps the current list.
 
 The delegation policy shows a [complete `launch` and `inspect` command](../skills/engineering/_shared/DELEGATION.md#preflight-and-launch) for one review axis. Run records and code-review reports go in a Git-ignored directory of the original project, such as `.scratch/<effort>/runs/`; design-review reports go in `docs/designs/reviews/`.
 
-Record the **actual** harness, arguments, exact model IDs and families in `delegation.md`. Changing an implementation or design-author family can invalidate reviewer independence for the affected candidate. A row is not a guarantee of model identity: the coordinator checks the effective model of every run.
+Record the **actual** harness, exact model IDs and families. Changing an implementation or design-author family can invalidate reviewer independence for the affected candidate. A row is not a guarantee of model identity: the coordinator checks the effective model of every run.
 
 ### Start the Herdr server and the coordinator
 
@@ -396,25 +420,28 @@ In the coordinator session send:
 ```text
 This is a setup check, not an implementation assignment.
 Read <package>/skills/engineering/_shared/DELEGATION.md and docs/agents/delegation.md.
-Without modifying project files, launch exactly one fresh batch session with
-node <package>/scripts/herdr-delegate.mjs launch --mode batch --role exploration,
-using the design-review row's harness and arguments, a brief and task file you
-write in the evidence directory, and --output in that directory. Its only task
-is to read AGENTS.md (and docs/architecture/overview.md in the quotation lab)
-and return a short summary. Wait for the record's status, then run
-herdr-delegate.mjs inspect <record> --expect-model <provider/model>,
-where <provider/model> is the row's model in the form inspect reports it.
-Report the run ID, the effective model and the summary. Do not launch
-replacements if the status is unknown. Report any capability gap.
+Without modifying project files, launch exactly one fresh session with
+node <package>/scripts/herdr-delegate.mjs launch --config <absolute path of
+docs/agents/delegation.json> --role design-comprehension, the brief
+<package>/agents/mp-review-design.md, a task file you write in the evidence
+directory, and --output in that directory. Do not add --harness, --mode or
+arguments after --. The task says this is a transport check, not a review; its
+only work is to read AGENTS.md (and docs/architecture/overview.md in the
+quotation lab) and return a short summary. Wait for the record's status, then
+run herdr-delegate.mjs inspect <record>. Report the run ID, the modelCheck
+result, the effective model and the summary. Do not launch replacements if the
+status is unknown. Report any capability gap.
 ```
 
-For a Claude Code row, `--expect-model` takes `anthropic/` in front of the ID that `--model` takes. With `--model claude-sonnet-5-5`, for example, you check `--expect-model anthropic/claude-sonnet-5-5`. A Pi row uses the same `provider/id` in both places. If you are unsure, run `inspect <record>` without `--expect-model`: it prints the effective model in exactly that form. Copy that value into the row's *Exact model* column.
+Repeat it with `--role spec-review` and `agents/mp-review-spec.md`, so each harness is proven with a row you will use.
 
-Success means the run record shows `completed`, `inspect --expect-model` passes, and the coordinator returns the child's actual summary from `--output`. A record without an effective model is a blocker: the independent-review gate stays unverified until you can establish the model; do not silently weaken the gate.
+Success means the run record shows `completed`, `inspect` ends with a `modelCheck` whose `result` is `match`, and the coordinator returns the child's actual summary from `--output`. A record without an effective model is a blocker: the independent-review gate stays unverified until you can establish the model; do not silently weaken the gate.
+
+Without `delegation.json`, launch with the row's `--harness`, `--mode` and the harness arguments after `--`, and check with `inspect <record> --expect-model <provider/model>`. For a Claude Code row, `--expect-model` takes `anthropic/` in front of the ID that `--model` takes (`--model claude-sonnet-5-5` → `--expect-model anthropic/claude-sonnet-5-5`); a Pi row uses the same `provider/id` in both places. `inspect <record>` without a flag prints the effective model in exactly that form.
 
 ### Reviewer permissions
 
-Code and design reviewers run in batch mode with read-only tool flags, and the helper writes their final answer to the report file outside the candidate worktree. Reviewers never edit the candidate or run tests; the coordinator runs verification and checks candidate cleanliness afterward. Tool flags are the harness's own restriction, not an operating-system sandbox.
+Code and design reviewers run in batch mode with read-only tool flags, and the helper writes their final answer to the report file outside the candidate worktree. Claude Code reviewers also get `--add-dir` for this package and for the brief's and task's directories outside their working directory, because `dontAsk` mode denies reads anywhere else. Reviewers never edit the candidate or run tests; the coordinator runs verification and checks candidate cleanliness afterward. Tool flags are the harness's own restriction, not an operating-system sandbox.
 
 ### Useful observation commands
 
@@ -448,7 +475,7 @@ Expected project artifacts:
 | `docs/adr/…` | Durable decisions when their tradeoffs warrant an ADR |
 | `docs/agents/issue-tracker.md` | Where tasks live and how status/claims/closure work |
 | `docs/agents/triage-labels.md` | Project's labels for incoming work, when configured |
-| `docs/agents/delegation.md` | Real role rows, model families, concurrency and retries |
+| `docs/agents/delegation.json` and `delegation.md` | Real role rows, model families, concurrency and retries |
 | `docs/agents/testing.md` | Commands, test selection, environments and evidence |
 | Spec and ticket files/issues | Behavior and dependency graph for this effort |
 
@@ -556,8 +583,8 @@ Check the actual human acceptance and current input identities.
 Start an integration worktree from APPROVED_BASELINE_SHA only after readiness.
 
 You are the sole coordinator and tracker/integration writer for this effort.
-Launch through Herdr with the configured role rows (scripts/herdr-delegate.mjs);
-inspect each run's effective model with inspect --expect-model.
+Launch through Herdr with --config docs/agents/delegation.json and the role names
+(scripts/herdr-delegate.mjs); check each run's effective model with inspect.
 Launch only eligible tickets in separate worktrees within the documented
 concurrency and resource limits. Workers return committed candidate SHAs
 and required verification evidence. Arrange fresh Spec and Standards review,
@@ -651,7 +678,7 @@ These are the rules that prevent most failures. Each one links to where it is ex
 | --- | --- | --- |
 | Install once, at user scope, from a checkout whose SHA you record | Workers in Herdr worktrees see the same version; you can say which version produced the evidence | [Install](#install-the-skills-in-your-project) |
 | Keep the package version fixed during an effort | Mixed versions make evidence incomparable | [Update](#update-switch-or-remove-the-package) |
-| Review with a different model family from the author, and check it with `inspect --expect-model` | Same-family review repeats the same blind spots; a role name does not prove which model ran | [Delegation](../skills/engineering/_shared/DELEGATION.md#independence) |
+| Review with a different model family from the author, and check it with `inspect` | Same-family review repeats the same blind spots; a role name does not prove which model ran | [Delegation](../skills/engineering/_shared/DELEGATION.md#independence) |
 | Commit before every review; a fix is a new candidate | Reviews and tests describe an exact SHA, not a working tree | [Candidate](#candidate-a-specific-revision-proposed-for-acceptance) |
 | Run exactly one coordinator per effort | Tracker claims are not a distributed lock | [Workflow](WORKFLOW.md#stages-67-run-the-implementation-and-integration-loop) |
 | Pass every worker the same absolute tracker path | Ignored `.scratch/` files do not appear in other worktrees | [Tracker location](#two-setup-checks-command-visibility-and-shared-tracker-paths) |
@@ -672,8 +699,11 @@ These are the rules that prevent most failures. Each one links to where it is ex
 | `/skill:…` works in Pi but not Claude | Pi command syntax used in another harness | Use the exact-file prompt from [project setup](#configure-each-software-project) |
 | `herdr agent start` cannot find Pi/Claude | The Herdr server started before the PATH change | Stop the server and start it from a shell where `pi`/`claude` resolve; check authentication |
 | `inspect` reports no effective model | Session file or output stream lacks model data, or the integration is missing | Install the harness integration; treat independence as unverified until it is established |
-| `inspect --expect-model` fails | The harness chose a different model than the role row | Fix the `--model` argument; do not accept the run |
-| `inspect --expect-model` fails for a Claude row although `--model` is right | The expected value lacks the `anthropic/` prefix | Use `anthropic/<id>`; run `inspect <record>` without `--expect-model` to see the reported value ([format](#test-one-delegated-child)) |
+| `inspect` fails with `mismatch` or `family-mismatch` | The harness ran a different model than the role row, or one outside the family's pattern | Fix the row in `delegation.json` (or the `--model` argument of a manual launch); do not accept the run |
+| A manual launch's `inspect --expect-model` fails for a Claude row although `--model` is right | The expected value lacks the `anthropic/` prefix | Use `anthropic/<id>`; run `inspect <record>` without `--expect-model` to see the reported value ([format](#test-one-delegated-child)) |
+| `launch` says "change delegation.json instead of overriding it" | A `--config` launch also passed `--harness`, `--mode` or arguments after `--` | Leave them out; change the row in `delegation.json` and run `config check` |
+| A Claude reviewer reports that reading its brief or task was denied | The skills checkout predates the `--add-dir` read-access fix, so `dontAsk` mode refused a file outside `--cwd` | Update the checkout and relaunch under a new name; check the record lists `readDirs` |
+| `config probe --live` or a batch record fails with `harness-error` and a `401 … invalid` detail | The provider rejected the API key the harness uses | Fix the key in that harness (an environment variable overrides a saved key); restart the panes that use it |
 | A Claude batch run reports two or more effective models | The CLI may have used an auxiliary model as well as the review model | Treat independence as unverified; record the models and report it ([limits](../skills/engineering/_shared/DELEGATION.md#limits)) |
 | `launch` says ``` `herdr` not found on PATH ``` or returns a Herdr server error | Herdr is not on this shell's PATH, or no server is running for the session | Check `command -v herdr` and `herdr status server`; run the coordinator inside a Herdr pane or set `HERDR_SESSION` |
 | `launch` says ``a Herdr agent named X already exists`` | The run name was used by an earlier launch | Use a new `--name` for every launch; stop the old session only after checking its record |
@@ -690,7 +720,7 @@ These are the rules that prevent most failures. Each one links to where it is ex
 | Verification fails immediately | Required module not implemented yet or wrong profile | Check ticket stage and command; final all-suite failures remain blockers |
 | Verification dirties source | Evidence written into tracked tree or test mutation | Use ignored/external evidence; inspect source mutation and reverify |
 | Combined code breaks despite green isolated candidates | Integration result was not checked | Create and verify a combined candidate |
-| Review run used a different model | Fallback or host configuration changed | `inspect --expect-model` fails; invalidate unverified approval and relaunch |
+| Review run used a different model | Fallback or host configuration changed | `inspect` fails; invalidate unverified approval and relaunch |
 | Pi blocks push | Optional git-guardrails enabled | Inspect its configuration; inspect project policy; do not disable blindly |
 | Coordinator keeps asking to launch the next ticket | Loop instruction not followed | Record failure; supply the coordinator skill and durable state, not repeated manual dispatch |
 | Setup insists commands are unreachable with discovery disabled | An older or shadowed setup skill may be loaded | Inspect skill provenance; the corrected setup only reports visibility and does not block |

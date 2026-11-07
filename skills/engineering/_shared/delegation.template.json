@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "herdrSession": "<herdr session name>",
+  "evidenceDir": "<absolute, Git-ignored directory in the original project, for example <project>/.scratch/<effort>/runs>",
+  "limits": {
+    "implementationWorkers": 2,
+    "researchWorkers": 3,
+    "repairAttempts": 2,
+    "batchTimeoutMs": 1800000,
+    "interactiveWaitMs": 3600000
+  },
+  "worktreeSetup": "<setup command from docs/agents/testing.md, for example npm ci>",
+  "families": { "Claude": "^anthropic/", "DeepSeek": "^deepseek/" },
+  "roles": {
+    "planning": { "harness": "claude", "mode": "coordinator", "model": "anthropic/<id>", "family": "Claude" },
+    "implementation": { "harness": "pi", "mode": "interactive", "model": "<provider>/<id>", "family": "<family>" },
+    "spec-review": { "harness": "claude", "mode": "batch", "tools": "read-only", "model": "anthropic/<id>", "family": "Claude" },
+    "standards-review": { "harness": "claude", "mode": "batch", "tools": "read-only", "model": "anthropic/<id>", "family": "Claude" },
+    "design-comprehension": { "harness": "pi", "mode": "batch", "tools": "read-only", "model": "<provider>/<id>", "family": "<differs from design authors>" },
+    "design-challenge": { "harness": "pi", "mode": "batch", "tools": "read-only", "model": "<provider>/<id>", "family": "<differs from design authors>" },
+    "research": { "unavailable": "<configure a source-capable harness, or say why research is not available>" }
+  }
+}

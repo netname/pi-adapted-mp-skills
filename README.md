@@ -82,11 +82,11 @@ The remaining diagnosis, architecture, productivity and guardrail skills remain 
 
 ## Roles and prerequisites
 
-Use the role rows in `docs/agents/delegation.md` to choose actual harnesses and models on your host. A useful starting point is Claude Code for planning and both review axes, with Pi/DeepSeek for implementation. The reviewer family must differ from **all** implementation families in its candidate. The harness name alone does not establish independence. No model subscriptions or global packages are changed by this package.
+Use the role rows in `docs/agents/delegation.json` to choose actual harnesses and models on your host; `node scripts/mp-setup.mjs init <project> --role ROLE=HARNESS:MODEL:FAMILY ...` writes them, and `--from <other project's delegation.json>` reuses them. A useful starting point is Claude Code for planning and both review axes, with Pi/DeepSeek for implementation. The reviewer family must differ from **all** implementation families in its candidate. The harness name alone does not establish independence. No model subscriptions or global packages are changed by this package.
 
 Herdr delegation and primary-source access are required only by work that uses them. Planning works without those capabilities. `pi-subagents` and `pi-web-access` are no longer mandatory. The files in `agents/` are portable task briefs passed explicitly by the coordinator; they are not registered Pi subagents and Herdr does not load them.
 
-Run the coordinator in a Herdr pane and launch through `scripts/herdr-delegate.mjs`, which records each run and checks its effective model. See [Herdr agent automation](https://herdr.dev/tui/docs/agent-automation/) and the [delegation policy](skills/engineering/_shared/DELEGATION.md). This package remains Pi-native: it does not automatically install skills into Claude Code. Supply relevant project instructions and role briefs explicitly to delegated sessions.
+Run the coordinator in a Herdr pane and launch through `scripts/herdr-delegate.mjs launch --config <delegation.json> --role <role>`, which takes the launch settings from the row, records each run and checks its effective model against the row. See [Herdr agent automation](https://herdr.dev/tui/docs/agent-automation/) and the [delegation policy](skills/engineering/_shared/DELEGATION.md). This package remains Pi-native: it does not automatically install skills into Claude Code. Supply relevant project instructions and role briefs explicitly to delegated sessions.
 
 ## Tests and helpers
 
@@ -98,7 +98,11 @@ npm test
 npm run smoke
 node scripts/frontier.mjs /path/to/graph.json
 node scripts/review-target.mjs --repo /absolute/worktree --base BASE --head HEAD
-node scripts/herdr-delegate.mjs inspect /absolute/run-record.json --expect-model PROVIDER/MODEL
+node scripts/herdr-delegate.mjs inspect /absolute/run-record.json
+node scripts/herdr-delegate.mjs config check /absolute/docs/agents/delegation.json
+node scripts/herdr-delegate.mjs config probe /absolute/docs/agents/delegation.json
+node scripts/mp-setup.mjs init /absolute/project --dry-run
+node scripts/skill-collisions.mjs --cwd /absolute/project
 ```
 
 The frontier helper validates dependencies and prints ready IDs. The review helper rejects staged, unstaged and untracked work, pins commits, and writes a manifest/diff outside the worktree. The delegation helper launches a fresh Herdr session per role (`launch`) and checks the model that actually ran (`inspect`); see the [delegation policy](skills/engineering/_shared/DELEGATION.md). None of them is a standalone background scheduler. `implement-spec` drives the loop through Herdr, with durable state in the tracker.

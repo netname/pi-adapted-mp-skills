@@ -33,9 +33,9 @@ Steps 3–5 are short for a small change: a design note of a few paragraphs, two
 ## Before the first small change (once per project)
 
 1. Install the package at user scope and run `/skill:setup-matt-pocock-skills` ([manual](MANUAL.md#configure-each-software-project)).
-2. In `docs/agents/delegation.md`, fill the role rows. The implementer and both code-review rows must use different model families.
+2. Write the role rows with `scripts/mp-setup.mjs init` (or `--from` another project's `delegation.json`), then run `herdr-delegate.mjs config probe` ([manual](MANUAL.md#fill-the-role-rows-on-the-execution-host)). The implementer and both code-review rows must use different model families; `config check` refuses rows that do not.
 3. In `docs/agents/testing.md`, fill the Fast and Verify change commands and the worktree setup command.
-4. Check one batch review run with `herdr-delegate.mjs inspect --expect-model` ([manual](MANUAL.md#test-one-delegated-child)). Until that passes, the review gate is unverified.
+4. Check one `--config` batch review run with `herdr-delegate.mjs inspect` ([manual](MANUAL.md#test-one-delegated-child)). Until its `modelCheck` says `match`, the review gate is unverified.
 
 ## Step by step
 

@@ -2,9 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
-import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored, batchOutcome, portCandidates, resourceEnv, batchStale, runLimited, DEFAULTS } from '../scripts/herdr-delegate.mjs';
+import { piSessionModel, piStreamResult, claudeResult, claudeSessionModels, parseLaunch, checkPaths, gitIgnored, batchOutcome, portCandidates, resourceEnv, batchStale, runLimited, modelCheck, integrationState, readDirs, addDirArgs, DEFAULTS } from '../scripts/herdr-delegate.mjs';
+import { labConfig } from './lab-config.mjs';
 
 const lines = (...objs) => objs.map(o => JSON.stringify(o)).join('\n');
 
@@ -22,19 +23,22 @@ test('pi session file: the last model change is the effective model', () => {
 test('pi print stream: models, final text, aborted and error', () => {
   const reply = (text, extra = {}) => ({ type: 'message_end', message: { role: 'assistant', provider: 'deepseek', model: 'deepseek-flash', content: [{ type: 'thinking', thinking: 'x' }, { type: 'text', text }], ...extra } });
   const ok = piStreamResult(lines({ type: 'agent_start' }, reply('first'), reply('REPORT: done'), { type: 'agent_settled', aborted: false }));
-  assert.deepEqual(ok, { models: ['deepseek/deepseek-flash'], finalText: 'REPORT: done', aborted: false, error: false });
+  assert.deepEqual(ok, { models: ['deepseek/deepseek-flash'], finalText: 'REPORT: done', aborted: false, error: false, errorMessage: null });
   assert.equal(piStreamResult(lines(reply('x'))).aborted, true, 'no agent_settled means not finished');
   assert.equal(piStreamResult(lines(reply('x'), { type: 'agent_settled', aborted: true })).aborted, true);
-  assert.equal(piStreamResult(lines(reply('x', { stopReason: 'error' }), { type: 'agent_settled', aborted: false })).error, true);
+  const failed = piStreamResult(lines(reply('', { stopReason: 'error', errorMessage: '402 Insufficient Balance' }), { type: 'agent_settled', aborted: false }));
+  assert.deepEqual([failed.error, failed.errorMessage], [true, '402 Insufficient Balance'], 'the provider error is kept');
+  assert.equal(piStreamResult(lines(reply('', { stopReason: 'error' }), { type: 'agent_settled', aborted: false })).errorMessage, 'unknown provider error');
   assert.equal(piStreamResult('').finalText, '');
 });
 
 test('claude print result: models from modelUsage; is_error is a failure', () => {
   const ok = claudeResult(JSON.stringify({ type: 'result', is_error: false, result: ' REPORT ', modelUsage: { 'claude-haiku-5-5': {} } }));
-  assert.deepEqual(ok, { models: ['anthropic/claude-haiku-5-5'], finalText: 'REPORT', aborted: false, error: false });
+  assert.deepEqual(ok, { models: ['anthropic/claude-haiku-5-5'], finalText: 'REPORT', aborted: false, error: false, errorMessage: null });
   // Shape observed live from an unauthenticated CLI: success subtype, but is_error true and no usage.
   const denied = claudeResult(JSON.stringify({ type: 'result', subtype: 'success', is_error: true, result: 'Not logged in · Please run /login' }));
   assert.equal(denied.error, true); assert.deepEqual(denied.models, []);
+  assert.equal(denied.errorMessage, 'Not logged in · Please run /login');
   assert.throws(() => claudeResult('garbage'));
 });
 
@@ -132,6 +136,84 @@ test('launch options: timeout, setup and ports', t => {
   interactive[interactive.indexOf('--mode') + 1] = 'interactive';
   assert.equal(parseLaunch(interactive).timeoutMs, undefined);
   assert.throws(() => parseLaunch([...interactive, '--timeout-ms', '60000']), /batch mode only/);
+});
+
+test('launch --config: harness, mode, arguments and model come from the role row', t => {
+  const dir = files(t);
+  const config = join(dir, 'delegation.json');
+  writeFileSync(config, JSON.stringify(labConfig()));
+  const run = (role, extra = [], mode = 'batch') => ['--record', join(dir, 'r.json'), '--role', role, '--name', 'rev1', '--config', config,
+    '--brief', join(dir, 'brief.md'), '--task', join(dir, 'task.md'), ...(mode === 'batch' ? ['--output', join(dir, 'out.md')] : []), ...extra];
+  const spec = parseLaunch(run('spec-review', ['--cwd', dir]));
+  assert.deepEqual([spec.harness, spec.mode, spec.expectedModel, spec.family, spec.timeoutMs], ['claude', 'batch', 'anthropic/claude-sonnet-5-5', 'Claude', 600_000]);
+  assert.deepEqual(spec.harnessArgs, ['--model', 'claude-sonnet-5-5', '--tools', 'Read,Grep,Glob', '--permission-mode', 'dontAsk']);
+  assert.equal(spec.configRef.role, 'spec-review'); assert.match(spec.configRef.sha256, /^[a-f0-9]{64}$/);
+  assert.equal(spec.setup, undefined, 'a --cwd launch reuses a prepared checkout');
+  assert.equal(parseLaunch(run('spec-review', ['--cwd', dir, '--timeout-ms', '60000'])).timeoutMs, 60_000, 'a per-run limit still wins');
+
+  const worker = parseLaunch(run('implementation', ['--worktree', '--repo', dir, '--branch', 'ticket/a', '--base', 'abc123'], 'interactive'));
+  assert.deepEqual([worker.harness, worker.mode, worker.setup, worker.timeoutMs], ['pi', 'interactive', 'npm ci', undefined]);
+
+  assert.throws(() => parseLaunch(run('spec-review', ['--cwd', dir, '--harness', 'pi'])), /change delegation.json/);
+  assert.throws(() => parseLaunch(run('spec-review', ['--cwd', dir, '--', '--model', 'other'])), /change delegation.json/);
+  assert.throws(() => parseLaunch(run('spec-review', ['--cwd', dir, '--'])), /change delegation.json/);
+  assert.throws(() => parseLaunch(run('research', ['--cwd', dir], 'interactive')), /unavailable/);
+  assert.throws(() => parseLaunch(run('planning', ['--cwd', dir], 'interactive')), /started by hand/);
+  const relative = run('spec-review', ['--cwd', dir]); relative[relative.indexOf('--config') + 1] = 'delegation.json';
+  assert.throws(() => parseLaunch(relative), /absolute/);
+  const bad = join(dir, 'bad.json'); writeFileSync(bad, JSON.stringify({ ...labConfig(), schemaVersion: 2 }));
+  const invalid = run('spec-review', ['--cwd', dir]); invalid[invalid.indexOf('--config') + 1] = bad;
+  assert.throws(() => parseLaunch(invalid), /schemaVersion/);
+});
+
+test('inspect model check: explicit flag as before; a --config record is checked once knowable', () => {
+  const rec = (status, models, extra = {}) => ({ mode: 'batch', status, effective: models ? { models } : null, ...extra });
+  const configured = { expectedModel: 'anthropic/claude-sonnet-5-5' };
+  assert.equal(modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'])), null, 'no expectation without the flag or a config');
+  assert.equal(modelCheck(rec('running', null), 'anthropic/x').result, 'unknown', 'an explicit flag fails on an unknown model');
+  assert.equal(modelCheck(rec('running', null, configured)).result, 'pending', 'polling an unfinished run is not a failure');
+  assert.equal(modelCheck(rec('failed', null, configured)).result, 'not-applicable', 'a failed run already says it failed');
+  assert.equal(modelCheck(rec('failed', null, configured), 'anthropic/claude-sonnet-5-5').result, 'unknown', 'an explicit flag still fails');
+  const fam = { ...configured, family: 'Claude', familyPattern: '^anthropic/' };
+  assert.equal(modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'], fam)).result, 'match');
+  const off = modelCheck(rec('completed', ['openrouter/claude-sonnet-5-5'], fam), 'openrouter/claude-sonnet-5-5');
+  assert.deepEqual([off.result, off.family], ['family-mismatch', { name: 'Claude', pattern: '^anthropic/' }]);
+  assert.equal(modelCheck(rec('completed', null, configured)).result, 'unknown');
+  assert.equal(modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'], configured)).result, 'match');
+  const two = modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5', 'anthropic/claude-haiku-5-5'], configured));
+  assert.equal(two.result, 'mismatch', 'every reported model must match');
+  const explicit = modelCheck(rec('completed', ['anthropic/claude-sonnet-5-5'], configured), 'anthropic/claude-opus-5-5');
+  assert.deepEqual([explicit.result, explicit.source], ['mismatch', '--expect-model']);
+  assert.equal(modelCheck({ mode: 'interactive', status: 'running', effective: { models: ['deepseek/deepseek-flash'] }, expectedModel: 'deepseek/deepseek-flash' }).result, 'match');
+});
+
+test('read access: Claude gets --add-dir for the package, brief and task outside its working directory', () => {
+  // Observed on sen03: in dontAsk mode Claude Code denied reading a brief outside --cwd.
+  const pkg = resolve('/home/u/skills'), lab = resolve('/home/u/lab'), worktree = resolve('/home/u/.herdr/worktrees/lab/ticket-a');
+  const brief = join(pkg, 'agents', 'mp-review-spec.md'), task = join(lab, '.scratch', 'runs', 's.task.md');
+  // A code review: cwd is the candidate worktree; the task lives in the original project.
+  assert.deepEqual(readDirs('claude', worktree, { brief, task }, pkg), [pkg, join(lab, '.scratch', 'runs')]);
+  // The lab itself as cwd: the task is already readable; the brief's directory is inside the package.
+  assert.deepEqual(readDirs('claude', lab, { brief, task }, pkg), [pkg]);
+  assert.deepEqual(readDirs('claude', pkg, { brief, task: join(pkg, 't.md') }, pkg), []);
+  assert.deepEqual(readDirs('pi', worktree, { brief, task }, pkg), [], 'Pi attaches the files with @');
+  assert.deepEqual(addDirArgs([]), []);
+  assert.deepEqual(addDirArgs(['/a', '/b']), ['--add-dir', '/a', '/b']);
+});
+
+test('integration status: parsed by line start; unknown output is not "missing"', () => {
+  // Shape observed from herdr 0.9.5 on Windows. Other lines' paths contain `.pi`.
+  const out = [
+    'pi: current (v9) (C:\\Users\\me\\.pi\\agent\\extensions\\herdr-agent-state.ts)',
+    'omp: not installed (C:\\Users\\me\\.omp\\agent\\extensions\\herdr-omp-agent-state.ts)',
+    'claude: not installed (C:\\Users\\me\\.claude\\hooks\\herdr-agent-state.ps1)',
+  ].join('\r\n');
+  assert.equal(integrationState(out, 'pi').ok, true);
+  assert.match(integrationState(out, 'pi').detail, /^pi: current/);
+  assert.equal(integrationState(out, 'claude').ok, false);
+  assert.deepEqual(integrationState(out, 'codex'), { ok: false, detail: 'codex not listed by herdr integration status' });
+  assert.equal(integrationState('', 'pi').ok, null);
+  assert.equal(integrationState('Integrations\n  * pi ✓', 'pi').ok, null, 'a changed format is reported as unknown');
 });
 
 test('runLimited: kills the whole process tree on timeout', async t => {

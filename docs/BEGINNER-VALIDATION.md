@@ -15,7 +15,7 @@ This page covers one successful supervised run. The [full validation reference](
 | Host | `sen03`, the Ubuntu computer running the Herdr server and the agents |
 | Skills checkout | `/home/netname/code/pi-skills-validation-01`, instructions and helpers used by agents |
 | Lab project | `/home/netname/code/quote-workflow-lab-01`, the separate application they will build |
-| Role row | A line in the lab's `docs/agents/delegation.md`: harness, mode, arguments, exact model and family for one kind of session |
+| Role row | One entry in the lab's `docs/agents/delegation.json`: harness, mode, exact model, family and tools for one kind of session (shown as a table in `delegation.md`) |
 
 Claude Code and Pi are agent tools that call models. Herdr runs their sessions in panes that keep running when you disconnect. A role row is not a running session. The human accepts the design; the coordinator session manages tickets and workers. A/B/C are task names, not model names. Git commits identify exact saved versions; the long identifier is called a SHA.
 
@@ -29,13 +29,13 @@ If someone already prepared the host or lab, verify that work in steps 1–4 and
 | 10–11: implementation | Verified integrated code, reviews and a manual demonstration |
 | 12: assessment | Evidence retained; performed and unperformed checks distinguished |
 
-Some failures are intentional only at a particular stage:
+Some failures are normal early in the run and become real failures later. Use this table to tell which is which:
 
-| Observation | Before implementation | At final delivery |
+| What you see | In steps 1–9 (before implementation) | In steps 10–12 (implementation and delivery) |
 | --- | --- | --- |
-| Missing `src/` modules / failing application acceptance tests | Expected scaffold state; record stage rather than repairing by changing tests | Failure; implementation/checks need repair |
-| Draft readiness check fails | Expected until real review and acceptance are recorded | Must have passed before affected worker dispatch |
-| Package tests, provider sign-in or required rendering fail | Setup/review blocker | Still a blocker; never assume a pass |
+| The application's `src/` modules are missing, or its acceptance tests fail | **Normal.** The lab ships with tests but no application code. Note which step you are at; never edit the tests to make them pass. | **A real failure.** The implementation or its checks must be fixed. |
+| The design readiness check (step 9's design-check helper) fails | **Normal** until the independent design reviews and your acceptance have been recorded. | **Not allowed.** It must pass before the coordinator launches any worker for the affected tickets. |
+| The skills package tests (`npm test`) fail, a harness cannot sign in to its provider, or a required diagram view does not render | **Blocker.** Stop and fix it before continuing. | **Still a blocker.** Never treat it as passed. |
 
 ## 1. Connect to Ubuntu and check the tools
 
@@ -171,22 +171,79 @@ or, from **Windows**, let the Ubuntu server own the panes while your terminal on
 herdr --remote netname@sen03 --session quote-lab
 ```
 
-Open a pane in the lab directory (`cd "$MP_LAB"` inside it). Detach with `Ctrl+B q` and reattach with the same command; the panes keep running. This is where the coordinator and every delegated session will live.
+Open a pane in the lab directory (`cd "$MP_LAB"` inside it). This Herdr session is where the coordinator and every delegated session will live.
 
-These are the role rows for this lab. You will have the planning session write them into `docs/agents/delegation.md` in step 7:
+**Leaving and returning.** Press `Ctrl+B q` to detach: your terminal goes back to the normal shell prompt, while the Herdr server on Ubuntu keeps the session and all its panes running. Closing the terminal or losing the SSH connection has the same effect. To return, run the same command you used to start it, with the same session name. If you started from the SSH terminal and it is still open, run this there:
 
-| Role row | Harness / model family | Mode | Arguments after `--` |
-| --- | --- | --- | --- |
-| Planning / coordination | Claude Code / Claude | the coordinator's own session | — |
-| Implementation | Pi / DeepSeek | interactive | `--model deepseek/deepseek-flash` |
-| Design comprehension, design challenge | Pi / DeepSeek | batch | `--model deepseek/deepseek-flash --tools read,grep,find,ls` |
-| Spec review, Standards review | Claude Code / Claude | batch | `--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk` |
+```bash
+herdr --session quote-lab
+```
+
+If the SSH connection was closed, first reconnect from **Windows** with `ssh sen03`, then run the same `herdr --session quote-lab` command on Ubuntu. If you used the Windows route, run its command again from PowerShell:
+
+```powershell
+herdr --remote netname@sen03 --session quote-lab
+```
+
+**Expected:** the same panes reappear, with agents still running or finished. They do not restart. A different session name opens a new, empty session instead, so keep the name `quote-lab`.
+
+These are the role rows for this lab. A role row is a saved recipe for one kind of agent session: which program to run, in which mode, with which model and which permissions. Writing a row down starts nothing. You write the rows into the lab's `docs/agents/delegation.json` at the end of this step. From then on, each time the coordinator needs a session for that role, it launches with `--config docs/agents/delegation.json --role <role>`, and the helper takes everything else from the row. You choose the rows; you do not type the launch commands.
+
+| Role row | Who starts it, and when | Harness / model family | Mode | Model | Tools |
+| --- | --- | --- | --- | --- | --- |
+| `planning` | You, by running `claude` in a Herdr pane (steps 6, 7 and 10). The helper never launches it. | Claude Code / Claude | the coordinator's own session | your Claude model | — |
+| `implementation` | The coordinator in step 10: one worker per ticket (A, B, then C), each in its own worktree | Pi / DeepSeek | interactive | `deepseek/deepseek-flash` | full |
+| `design-comprehension`, `design-challenge` | The coordinator in step 9: two separate reviews of the design (step 6 uses the first for its diagnostic) | Pi / DeepSeek | batch | `deepseek/deepseek-flash` | read-only |
+| `spec-review`, `standards-review` | The coordinator in step 10: two separate reviews of each ticket's code (step 6 uses the first for its second diagnostic) | Claude Code / Claude | batch | `anthropic/claude-sonnet-5-5` | read-only |
+
+What the columns mean:
+
+- **Harness** is the agent program that runs the session: `pi` or `claude`. The **model family** is the vendor family behind the model. Reviewers must use a different family from the authors they review: DeepSeek reviews Claude's design, and Claude reviews DeepSeek's code. `config check` refuses rows that break this rule.
+- **Mode** says how the session runs. An **interactive** session stays open in a Herdr pane. It edits files in its own worktree, and you can attach to watch it. A **batch** session runs once without a human (`pi -p` or `claude -p`). The helper saves its final answer to a report file, and then the session exits. Reviews are batch, so their report never depends on what was on screen.
+- **Model** is written as `provider/id`, the form the helper reports for the model that actually answered. For Claude Code that is `anthropic/<id>`.
+- **Tools** says what the session may do. **Read-only** limits a reviewer to reading files, so it cannot edit, run tests or reach the network. The helper turns it into each harness's own flags: `--tools read,grep,find,ls` for Pi, and `--tools Read,Grep,Glob --permission-mode dontAsk` for Claude Code. `dontAsk` makes Claude Code refuse any action it was not allowed, instead of waiting for an approval that nobody will give. Implementation has full tools because workers must edit and test.
+
+For example, a Spec review of ticket A becomes a launch like this (the coordinator chooses the names and paths):
+
+```bash
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" launch \
+  --config "$MP_LAB/docs/agents/delegation.json" --role spec-review --name spec-a1 \
+  --brief "$MP_SKILLS/agents/mp-review-spec.md" \
+  --task "$MP_LAB/.scratch/quote-demo/runs/spec-a1.task.md" \
+  --record "$MP_LAB/.scratch/quote-demo/runs/spec-a1.json" \
+  --output "$MP_LAB/.scratch/quote-demo/runs/spec-a1.report.md" \
+  --cwd /path/to/ticket-a/worktree
+```
+
+The options describe the run itself: the role, a run name, the brief, the task and the file locations. The helper adds the row's harness, mode and arguments (`--model claude-sonnet-5-5 --tools Read,Grep,Glob --permission-mode dontAsk`), and refuses a launch that tries to override them. It also lets Claude Code read the brief and task where they live outside the worktree. The run record (`spec-a1.json`) keeps the arguments as `harnessArgs`, with the config's path and hash. Running `herdr-delegate.mjs inspect` on the record then checks that the model that actually answered matches the row. That model, not the row, is the evidence.
 
 The model IDs are examples that `sen03` offered during preparation. Choose them only if `pi --list-models` and your Claude account offer them; otherwise choose an available model in the same family and record its exact ID. They are not promises of access or benchmark superiority.
 
-**Expected:** a running Herdr session with a pane in the lab, and a role table you understand. Claude planning has independent DeepSeek design review; DeepSeek implementation has independent Claude code review. Each review axis will use a separate fresh session even when a row is reused.
+**Write the rows.** In a pane of the lab (Ubuntu), replace the planning model with the one you use, then run:
 
-**If different:** if `herdr --remote` cannot connect, check that `ssh netname@sen03` works and Herdr is installed on Ubuntu. Stop before a real review if independence cannot be verified.
+```bash
+node "$MP_SKILLS/scripts/mp-setup.mjs" init "$MP_LAB" --session quote-lab \
+  --evidence "$MP_LAB/.scratch/quote-demo/runs" --setup "npm ci" \
+  --role planning=claude:anthropic/claude-opus-5-5:Claude \
+  --role implementation=pi:deepseek/deepseek-flash:DeepSeek \
+  --role design-comprehension=pi:deepseek/deepseek-flash:DeepSeek \
+  --role design-challenge=pi:deepseek/deepseek-flash:DeepSeek \
+  --role spec-review=claude:anthropic/claude-sonnet-5-5:Claude \
+  --role standards-review=claude:anthropic/claude-sonnet-5-5:Claude \
+  --unavailable "research=not exercised in the first run"
+```
+
+Each `--role` is `ROLE=HARNESS:MODEL:FAMILY`; the mode and the tools follow from the role. The command writes `docs/agents/delegation.json`, renders the same rows as a table in `docs/agents/delegation.md`, creates the evidence directory, checks the rows and scans for duplicate skill names. It never overwrites a file you edited: in an existing lab whose `delegation.json` already holds your rows, skip it and run `config check` instead. Then check that this host can run every row:
+
+```bash
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" config probe "$MP_LAB/docs/agents/delegation.json" --live
+```
+
+`--live` sends one short prompt to each model, which may be charged. Leave it out to check only the Herdr server, the integrations, both CLIs and the Pi model listing.
+
+**Expected:** a running Herdr session with a pane in the lab; `init` reports `"ok": true` with `config.table` `in-sync`; the probe reports `"ok": true`, and with `--live` each model line says `answered by` the same model as its row. Claude planning has independent DeepSeek design review; DeepSeek implementation has independent Claude code review. Each review axis will use a separate fresh session even when a row is reused.
+
+**If different:** if `herdr --remote` cannot connect, check that `ssh netname@sen03` works and Herdr is installed on Ubuntu. A failed probe line names the problem. For example, `401 … invalid` means the provider rejected your API key; fix it in that harness and restart the panes that use it. `init` errors name the role and setting to correct. Stop before a real review if independence cannot be verified.
 
 ## 6. Prove each harness and one delegated child work
 
@@ -209,21 +266,24 @@ In the Claude session paste:
 
 ```text
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/_shared/DELEGATION.md.
-Launch exactly one fresh batch session with
+Launch exactly one fresh session with
 node /home/netname/code/pi-skills-validation-01/scripts/herdr-delegate.mjs launch
---mode batch --role exploration --harness pi, the design-review arguments from
-the role table, --cwd /home/netname/code/quote-workflow-lab-01, and a brief,
-task, record and --output you create under .scratch/quote-demo/runs/.
-Its only task: read AGENTS.md and docs/architecture/overview.md and summarize
-the proposed app. Wait until the record's status is completed or failed, then
-run herdr-delegate.mjs inspect <record> --expect-model deepseek/deepseek-flash.
-Report the run ID, the effective model and the summary from --output.
+--config /home/netname/code/quote-workflow-lab-01/docs/agents/delegation.json
+--role design-comprehension, the brief
+/home/netname/code/pi-skills-validation-01/agents/mp-review-design.md,
+--cwd /home/netname/code/quote-workflow-lab-01, and a task, record and --output
+you create under .scratch/quote-demo/runs/. Do not add --harness, --mode or
+arguments after --. The task says this is a transport check, not a review; its
+only work: read AGENTS.md and docs/architecture/overview.md and summarize the
+proposed app in three sentences. Wait until the record's status is completed or
+failed, then run herdr-delegate.mjs inspect <record>. Report the run ID, the
+modelCheck result, the effective model and the summary from --output.
 Do not replace a run whose state is unknown.
 ```
 
-Repeat the same check with the Claude Code review row (`--harness claude` and its arguments), because that row has not been checked live with this package yet.
+Then send the same request with `--role spec-review` and the brief `agents/mp-review-spec.md`, so the Claude Code review row is proven on your host too.
 
-**Expected:** each record shows `completed`, `inspect --expect-model` passes, and the coordinator reports the child's real summary. You can see the child's pane with `herdr agent list` / `herdr workspace list`. Exit the diagnostic sessions after completion; use a new planning session in step 7. **If different:** record a failed/incomplete preflight. A record without an effective model blocks the review gate. Never replace an unknown running child or proceed on assumed success.
+**Expected:** each record shows `completed`, `inspect` ends with a `modelCheck` whose `result` is `match`, and the coordinator reports the child's real summary. You can see the child's pane with `herdr agent list` / `herdr workspace list`. Exit the diagnostic sessions after completion; use a new planning session in step 7. **If different:** record a failed/incomplete preflight. A failed record's `failureDetail` gives the provider's error when there was one. A report saying the session could not read its brief means the skills checkout is older than the read-access fix; update it. A record without an effective model blocks the review gate. Never replace an unknown running child or proceed on assumed success.
 
 ## 7. Let a planning session finish the lab configuration
 
@@ -231,25 +291,30 @@ Repeat the same check with the Claude Code review row (`--harness claude` and it
 
 ```text
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/setup-matt-pocock-skills/SKILL.md
-and apply it to /home/netname/code/quote-workflow-lab-01. Resolve references
-from the skill directory. Treat Pi checks as checks of the worker environment.
-Reuse the verified host, harnesses and Herdr session quote-lab.
-Write the role rows I chose (harness, mode, arguments, exact model, family) into
-docs/agents/delegation.md, with the helper path and the evidence directory
-.scratch/quote-demo/runs. Do not invent settings or silently substitute models.
-Preserve the supplied spec/tests/scope and canonical tracker in AGENTS.md.
-Record preflight run evidence and missing capabilities in the lab reports.
-No implementation, worker dispatch or human design acceptance yet.
+and apply it to /home/netname/code/quote-workflow-lab-01, resolving references
+from the skill directory. The skill is written for Pi and you are Claude Code:
+treat its Pi checks (available skills, skill commands) as checks of the Pi worker
+environment, and answer them by running pi in this directory (for example
+pi list --approve), not from your own context. Delegation is already written
+and probed in docs/agents/delegation.json; do not change it. Reuse the Herdr
+session quote-lab. Preserve the supplied spec/tests/scope and canonical tracker
+in AGENTS.md. Record the step 6 run evidence and missing capabilities in the
+lab reports. No implementation, worker dispatch or human design acceptance yet.
 Explain changes and remaining questions in plain language for my inspection.
 ```
 
-**Expected:** the agent fills actual settings and explains remaining issues. You should understand who plans, who builds and who reviews. The Research row can use a separately verified source-capable harness; if research is not part of this first run, record it as unavailable/not exercised and do not dispatch it. Required implementation/review rows must be complete.
+The role rows, the helper path, the evidence directory and the host checks are already done, so the prompt only names what is left: the tracker, the testing and architecture contracts and the reports. The skill runs `mp-setup.mjs init` itself; it keeps your `delegation.json` and reports what is still missing.
+
+The setup skill is a Pi skill, but here Claude Code runs it by reading the file. Some of its checks assume the reader is Pi: for example, it decides whether `triage` is installed by reading the skill list in its own system prompt, which Claude Code does not have. The prompt's Pi line makes Claude answer those checks from the Pi installation that the workers will use, instead of concluding that a skill is missing.
+
+**Expected:** the agent fills the remaining settings and explains open issues. You should understand who plans, who builds and who reviews. Research stays unavailable for this first run and is not dispatched.
 
 **Where / who:** Ubuntu terminal, you inspect and save setup:
 
 ```bash
 cd "$MP_LAB" && git status --short && git diff
-cat docs/agents/delegation.md
+cat docs/agents/delegation.json docs/agents/delegation.md
+node "$MP_SKILLS/scripts/herdr-delegate.mjs" config check "$MP_LAB/docs/agents/delegation.json"
 cat docs/agents/testing.md
 cat docs/agents/architecture.md
 ```
@@ -298,9 +363,9 @@ Inspect `components`, `quoteSuccess` and `quoteFailure` alongside the design's C
 Read /home/netname/code/pi-skills-validation-01/skills/engineering/review-design/SKILL.md
 and apply it to /home/netname/code/quote-workflow-lab-01.
 Freeze the current spec/design/model/ADR/coverage and quote-plan.md inputs.
-Launch separate fresh comprehension and challenge batch sessions through Herdr
-with the design-review role rows, independent of every design author, and
-verify each run with inspect --expect-model. Collect the real reports with
+Launch separate fresh comprehension and challenge sessions through Herdr with
+--config docs/agents/delegation.json and the design-review roles, independent of
+every design author, and verify each run with inspect. Collect the real reports with
 run/model/input identities. Resolve blockers and preserve findings.
 Check supplied tickets A/B/C and their coverage; do not create duplicate tickets.
 Present what changes, success/failure behavior, alternatives, remaining decisions
@@ -340,9 +405,9 @@ Use the actual accepted design/plan/readiness and project contracts. Use the
 original canonical tracker root from AGENTS.md; verify evidence before dispatch.
 Create a dedicated integration worktree from EXECUTION_SHA. You are the single
 coordinator and tracker/integration writer. Maximum two implementation workers.
-Launch workers and reviewers through Herdr with the implementation and code-review
-role rows and explicit role briefs; give workers the skill files by absolute
-path. Verify every run with inspect --expect-model. Do not implement the
+Launch workers and reviewers through Herdr with --config docs/agents/delegation.json,
+the implementation and code-review roles and explicit role briefs; give workers
+the skill files by absolute path. Verify every run with inspect. Do not implement the
 application yourself.
 Launch A and B in separate worktrees, paused before editing so I can inspect
 their run IDs, effective models, paths and starting revisions. Do not launch C

@@ -29,7 +29,7 @@ Run these checks in order. **a** and **b** are capability-scoped: record the res
 because setup itself needs neither package. **c** is blocking: if it fails, stop, print its remedy, and write nothing.
 **d** is a nonblocking discoverability check.
 
-**a. Delegation capability (nonblocking for setup).** Read `../_shared/DELEGATION.md`. Discover Herdr availability (`herdr status server`, `herdr integration status`) and the harnesses and models each role row needs; report missing capabilities without installing packages or integrations. Planning does not require delegation.
+**a. Delegation capability (nonblocking for setup).** Read `../_shared/DELEGATION.md`. Discover Herdr availability and the harnesses and models each role row needs; report missing capabilities without installing packages or integrations. Planning does not require delegation. Once `docs/agents/delegation.json` exists (step 7), `node <package>/scripts/herdr-delegate.mjs config probe <its absolute path>` performs these checks; add `--live` only with the user's agreement, because it sends one short, possibly charged prompt per model.
 
 **b. Source capability (nonblocking for setup).** Check whether the selected researcher can retrieve primary sources. Do not require particular Pi tool names. A local-only investigation may use repository sources.
 
@@ -46,23 +46,14 @@ defines and check each for a second definition.
   whose entries carry `sourceInfo: { path, source, scope, origin, baseDir? }`. It is an extension
   API, not a tool, so read the resolved view from the startup header. Two limits matter: **it
   reports only the winner of a collision** — a shadowed copy does not appear at all — and it only
-  sees registered commands. Pair it with this on-disk scan, run with `bash` (Node is always
-  present because Pi requires it). It scans the user/project skill directories plus every package
-  that `pi list --approve` resolves, which includes path and git installs that a fixed
-  `node_modules` glob would miss, and prints every name declared more than once:
+  sees registered commands. Pair it with this package's on-disk scan, run with `bash` (Node is
+  always present because Pi requires it). It scans the user/project skill directories plus every
+  package that `pi list --approve` resolves (each package's `pi.skills` directories), which
+  includes path and git installs that a fixed `node_modules` glob would miss. It prints JSON and
+  exits 1 when any name is declared more than once:
 
   ```bash
-  node -e '
-  const fs=require("fs"),cp=require("child_process"),path=require("path");
-  const home=process.env.HOME||process.env.USERPROFILE||"";
-  const roots=[path.join(home,".pi/agent/skills"),path.join(home,".agents/skills"),".pi/skills",".agents/skills"];
-  try{for(const l of cp.execSync("pi list --approve",{encoding:"utf8"}).split(/\r?\n/)){const m=/^\s{4}(\S.*)$/.exec(l);if(m)roots.push(path.join(m[1].trim(),"skills"));}}catch{}
-  const found=new Map();
-  const walk=(d)=>{if(!fs.existsSync(d))return;for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())walk(p);else if(e.name==="SKILL.md"){const m=/^name:\s*"?([^"\s]+)"?/m.exec(fs.readFileSync(p,"utf8"));if(m)(found.get(m[1])??found.set(m[1],[]).get(m[1])).push(p);}}};
-  roots.forEach(walk);
-  let n=0;for(const [name,ps] of [...found.entries()].sort())if(ps.length>1){n++;console.log("collision: "+name+"\n  "+ps.join("\n  "));}
-  console.log(n?n+" collision(s)":"no skill-name collisions detected");
-  '
+  node <package>/scripts/skill-collisions.mjs --cwd <target repo>
   ```
 
 On a collision, report the colliding name and every path found, and ask the user to remove, rename,
@@ -193,11 +184,12 @@ Add a short pointer-only block — lines that point at the files and facts, neve
 For a local tracker inside the repository, ignore its canonical state root (normally `.scratch/`); do not untrack existing files. For other trackers, ensure `.scratch/handoffs/` and `.scratch/reports/` are git-ignored (D5). Add the patterns to the
 repo's `.gitignore` if they are not already covered, and record in `AGENTS.md` that both are
 ignored by default and that a repo may opt in to committing either. Do not create the directories
-themselves.
+themselves. The one exception is the delegation evidence directory: `mp-setup.mjs init` (step 7)
+creates it and its Git-ignore entry, because every delegated run writes its record there.
 
 ### 7. Shared execution configuration
 
-Create or update `docs/agents/delegation.md` from `../_shared/delegation.template.md` and `docs/agents/testing.md` from `../_shared/testing.template.md`. Populate commands from existing CI/scripts and role rows (harness, mode, arguments, exact model) from the harnesses and models actually available on this host. Preserve existing user choices. Link both documents from the project's agent instructions. Include the same pointers explicitly in Claude Code worker prompts; this Pi package does not install Claude Code skills automatically. Unresolved placeholders block execution of the affected gate, not planning.
+Run `node <package>/scripts/mp-setup.mjs init <target repo>` for the mechanical part. It never overwrites an edited file, and `--dry-run` shows what it would do. It copies `../_shared/delegation.template.md`, `testing.template.md` and `architecture.template.md` where they are missing, writes `docs/agents/delegation.json` from the role rows, renders the delegation table from it, creates the evidence directory, adds its Git-ignore entry, runs the collision scan and checks the config. Give the role rows the user confirmed with `--role ROLE=HARNESS:MODEL:FAMILY` (exact model as `provider/id`; mode and read-only tools follow from the role), `--unavailable ROLE=REASON` for a role this host cannot run, `--session`, `--evidence` and `--setup` (the worktree setup command from the repository's scripts, for example `npm ci`; record the same command in `testing.md`). Choose rows only from harnesses and models actually available on this host. For another project on the same host, `--from <its delegation.json>` reuses its rows. Report the result's `next` list. Then populate `testing.md` commands from existing CI/scripts. Preserve existing user choices. Link both documents from the project's agent instructions. Include the same pointers explicitly in Claude Code worker prompts; this Pi package does not install Claude Code skills automatically. Unresolved placeholders block execution of the affected gate, not planning.
 
 For existing projects, inspect legacy domain glossary files before adopting `GLOSSARY.md`; preserve content and update references together, never create competing glossaries. The domain context map remains `CONTEXT-MAP.md`.
 
